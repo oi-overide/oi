@@ -1,4 +1,14 @@
 {
   "projectName": "default-project",
-  "ignore": []
+  "ignore": [
+    "node_modules",
+    ".gitignore",
+    "package-lock.json",
+    "package.json",
+    ".env",
+    ".git",
+    "oi-config.json",
+    "oi-dependency.json"
+  ],
+  "dependency": "oi-dependency.json"
 }

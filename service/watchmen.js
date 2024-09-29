@@ -1,8 +1,7 @@
 const fs = require('fs');
 const chokidar = require('chokidar');
-const path = require('path');
-
-const {generateCode} = require('./ollama')
+const config = require('./config');
+const {generateCode} = require('./generate')
 
 // Regex to match comments that follow your pattern: //> prompt <
 const commentRegex = /\/\/>\s*(.*?)\s*<\//g;
@@ -28,27 +27,23 @@ const checkForPromptAndGenerate = async (filePath) => {
     }
 };
 
-//> Write a function to add two numbers in nodejs <//
-
-const startWatching = () => {
-    // Get the current directory
-    const currentDir = process.cwd();
-    const configPath = path.join(currentDir, 'oi-config.json');
-
+const startWatching = async () => {
     // Ensure 'oi-config.json' exists
-    if (!fs.existsSync(configPath)) {
+    if (!config.configExists()) {
         console.error('Error: oi-config.json file not found in the current directory.');
         process.exit(1);
     }
 
     // Read ignored files from 'oi-config.json'
-    const configFile = fs.readFileSync(configPath, 'utf8');
-    const ignoredFiles = JSON.parse(configFile)['ignore'] || [];
+    const ignoredFiles = await (config.getConfigJsonValue('ignore')) || [];
 
     // Add additional patterns to ignore temporary and backup files (like VS Code's autosave)
     ignoredFiles.push('/(^|[\/\\])\../'); // Ignore dotfiles and hidden files
-    ignoredFiles.push('node_modules');  // Ignore node_modules folder
-    ignoredFiles.push('*.swp');         // Ignore temporary swap files
+    ignoredFiles.push('node_modules'); // Ignore node_modules folder
+    ignoredFiles.push('*.swp'); // Ignore temporary swap files
+
+    // Get the current directory
+    const currentDir = config.getCurrentDirectory();
 
     // Watch all files recursively with polling
     const watcher = chokidar.watch(`${currentDir}`, {

@@ -13,9 +13,10 @@ const displayAsciiArt = () => {
   `);
   console.log("Oi at your service!");
   console.log("Next steps:");
-  console.log("1. Run 'oi start' to begin watching the project.");
-  console.log("2. Add code generation prompts to your files.");
-  console.log("3. Run 'oi code' to generate code based on prompts.");
+  console.log("1. Start the local server.");
+  console.log("2. Run 'oi depend' to generate the dependency graph.");
+  console.log("3. If you have specific prompts, you can run 'oi code' to generate code based on them.");
+  console.log("4. For continuous code generation in real-time, run 'oi start' to watch the project.");
 };
 
 const initializeProject = (options) => {
@@ -43,14 +44,18 @@ const initializeProject = (options) => {
   // Check if the project directory already exists
   if (fs.existsSync(outputPath)) {
     console.log(`Already initialised oi in project..`)
-    // console.error(`Error: Config file already exists at ${outputPath}`);
     process.exit(1);
   }
+
+  // Add ignored files.
+  ignoreFiles.push("oi-config.json");
+  ignoreFiles.push("oi-dependency.json");
 
   // Create the configuration file
   const config = {
     projectName: projectName,
     ignore: ignoreFiles,
+    dependency: "oi-dependency.json",
   };
 
   try {

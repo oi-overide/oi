@@ -4,7 +4,7 @@
   "description": "This is a CLI base Code Generation Tool which uses Ollama as Backend.",
   "main": "index.js",
   "bin": {
-    "oi": "index.js" 
+    "oi": "index.js"
   },
   "scripts": {
     "start": "node index.js",
@@ -16,7 +16,9 @@
     "axios": "^1.7.7",
     "chalk": "^5.3.0",
     "chokidar": "^4.0.0",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "openai": "^4.65.0"
   },
   "type": "commonjs"
 }
