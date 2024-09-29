@@ -3,7 +3,6 @@
 const { Command } = require('commander');
 
 const { initializeProject } = require('./commands/initialize');
-const { codeCommand } = require('./commands/code');
 const { depend } = require('./commands/depend');
 const { addIgnoreFiles } = require('./commands/ignore');
 
