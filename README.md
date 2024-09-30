@@ -18,19 +18,19 @@
 
 Install Oi-Override via Homebrew:
 
-\`\`\`bash
+```bash
 brew install oi
-\`\`\`
+```
 
 ### Manual Installation
 
 Alternatively, you can clone the repository and install it manually:
 
-\`\`\`bash
+```bash
 git clone https://github.com/your-username/oi-override.git
 cd oi-override
 npm install
-\`\`\`
+```
 
 ## Usage
 
@@ -38,9 +38,9 @@ npm install
 
 To initialize Oi-Override in your project, run the following command in your project directory:
 
-\`\`\`bash
+```bash
 oi init
-\`\`\`
+```
 
 This will create a configuration file and set up Oi to work with your project.
 
@@ -48,9 +48,9 @@ This will create a configuration file and set up Oi to work with your project.
 
 Once Oi is initialized, you can start monitoring the project files for code generation prompts:
 
-\`\`\`bash
+```bash
 oi start
-\`\`\`
+```
 
 Oi will continuously watch the project directory and respond to any prompts it detects.
 
@@ -58,9 +58,9 @@ Oi will continuously watch the project directory and respond to any prompts it d
 
 Place prompts in your code files to indicate where Oi should generate code. For example:
 
-\`\`\`javascript
+```javascript
 //> Generate a function to add two numbers <//
-\`\`\`
+```
 
 Oi will then generate the required code and insert it directly into the file at the prompt location.
 
@@ -68,9 +68,9 @@ Oi will then generate the required code and insert it directly into the file at 
 
 You can generate or update the project dependency graph by running:
 
-\`\`\`bash
+```bash
 oi depend
-\`\`\`
+```
 
 This will create a \`.oi-dependency.json\` file that tracks the structure of your project and its dependencies.
 
@@ -80,13 +80,13 @@ Oi-Override uses an \`oi-config.json\` file for customization. You can define th
 
 Example configuration:
 
-\`\`\`json
+```json
 {
   "service": "http://localhost:8000",
   "ignore": ["node_modules", "*.test.js"],
   "verbose": true
 }
-\`\`\`
+```
 
 ### Key Options
 
