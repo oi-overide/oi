@@ -15,8 +15,9 @@ const displayAsciiArt = () => {
   console.log("Next steps:");
   console.log("1. Start the local server.");
   console.log("2. Run 'oi depend' to generate the dependency graph.");
-  console.log("3. If you have specific prompts, you can run 'oi code' to generate code based on them.");
-  console.log("4. For continuous code generation in real-time, run 'oi start' to watch the project.");
+  console.log("3. Use 'oi config' to define the model name");
+  console.log("4. If you have specific prompts, you can run 'oi code' to generate code based on them.");
+  console.log("5. For continuous code generation in real-time, run 'oi start' to watch the project.");
 };
 
 const initializeProject = (options) => {
@@ -56,6 +57,9 @@ const initializeProject = (options) => {
     projectName: projectName,
     ignore: ignoreFiles,
     dependency: "oi-dependency.json",
+    port: 11434,
+    host: "http://localhost",
+    model: "deepseek-coder"
   };
 
   try {

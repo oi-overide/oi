@@ -1,6 +1,6 @@
 const fs = require('fs');
 const chokidar = require('chokidar');
-const config = require('./config');
+const config = require('../utils/utils');
 const network = require('./network');
 
 let lockCodeGeneration = false; // Global lock variable

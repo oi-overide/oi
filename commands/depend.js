@@ -2,7 +2,7 @@
 const path = require('path');
 const fs = require('fs');
 const network = require('../service/network');
-const configFS = require('../service/config');
+const configFS = require('../utils/utils');
 
 const parseDependencyJson = (response) => {
     try {

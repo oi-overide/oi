@@ -12,7 +12,7 @@ const dependencyExists = () => {
     const depPath = getDependencyFilePath();
     try {
         return fs.existsSync(depPath) || false;
-    } catch (e){
+    } catch (e) {
         console.log(`Error: File not found in directory ${depPath}`);
         process.exit(1);
     }
@@ -26,7 +26,7 @@ const configExists = () => {
     const configPath = getConfigFilePath();
     try {
         return fs.existsSync(configPath) || false;
-    } catch (e){
+    } catch (e) {
         console.log(`Error: File not found in directory ${configPath}`);
         process.exit(1);
     }
@@ -82,15 +82,15 @@ const getConfigJsonValue = async (key) => {
     } catch (error) {
         console.error(`Error: Error Reading config file or key: ${error.message}`);
         return null; // or throw error depending on how you want to handle this
-    } 
+    }
 }
 
 const extractCodeFromResponse = (response) => {
     try {
-       // Ensure the response is valid and contains choices
-       if (!response || !response.choices || response.choices.length === 0) {
-        throw new Error("Invalid response format or no choices available.");
-    }
+        // Ensure the response is valid and contains choices
+        if (!response || !response.choices || response.choices.length === 0) {
+            throw new Error("Invalid response format or no choices available.");
+        }
 
         // Extract the message content from the first choice
         const messageContent = response.choices[0].message.content;
@@ -109,4 +109,4 @@ const extractCodeFromResponse = (response) => {
 };
 
 
-module.exports = {getConfigJsonValue, getConfigFilePath, configExists, getCurrentDirectory, dependencyExists, extractCodeFromResponse}
+module.exports = { getConfigJsonValue, getConfigFilePath, configExists, getCurrentDirectory, dependencyExists, extractCodeFromResponse, }

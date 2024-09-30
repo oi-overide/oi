@@ -16,9 +16,6 @@ program
   .option('-i, --ignore <files...>', 'Specify files or directories to ignore')
   .option('-v, --verbose', 'Enable verbose output')
   .option('-n, --project-name <name>', 'Specify a project name')
-  .option('--service <service>', 'Specify the service to use for code generation (codex, other)')
-  .option('--api-key <key>', 'API key for the specified service')
-  .option('--dry-run', 'Simulate the initialization process without making changes')
   .action((options) => {
     initializeProject(options);
   });
@@ -50,6 +47,17 @@ program
       process.exit(1);
     }
     addIgnoreFiles(options.files);  // Call the function to add files to ignore list
+  });
+
+  program
+  .command('config')
+  .description('Update project settings in oi-config.json')
+  .option('-n, --project-name <ProjectName>', 'Update project name')
+  .option('-p, --port <PortNumber>', 'Set custom port for local LLM')
+  .option('-u, --host <Url>', 'Set custom URL for local LLM')
+  .option('-m, --model <Model>', 'Set model name')
+  .action((options) => {
+    updateConfig(options)
   });
 
 
