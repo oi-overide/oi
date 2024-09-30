@@ -27,18 +27,7 @@ const generateCode = async (prompt, model = 'gpt-3.5-turbo') => {
             frequency_penalty: 0,
             presence_penalty: 0,
         });
-
-        // const response = {
-        //     choices: [
-        //       {
-        //         message: {
-        //           role: "assistant",
-        //           content: "```javascript\nfunction reverseString(str) {\n  return str.split('').reverse().join('');\n}\n```"
-        //         }
-        //       }
-        //     ]
-        //   };
-
+        
         return response;
     } catch (error) {
         console.error(`Error generating code: ${error.message}`);

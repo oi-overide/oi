@@ -4,29 +4,27 @@ const fs = require('fs');
 const network = require('../service/network');
 const configFS = require('../service/config');
 
-// Parse the JSON response
 const parseDependencyJson = (response) => {
     try {
-        // Check if the response is an array and has elements
-        if (!Array.isArray(response) || response.length === 0) {
-            throw new Error("Response is not in expected format or is empty.");
+        // Ensure the response has the correct structure
+        if (!response || !response.choices || response.choices.length === 0) {
+            throw new Error("Response is not in the expected format or is empty.");
         }
   
-        // Extract the message
-        const message = response[0].message;
+        // Extract the message content from the first choice
+        const message = response.choices[0].message;
   
-        // Check if message is defined and contains content
         if (!message || !message.content) {
             throw new Error("Message content is missing in the response.");
         }
   
-        // Clean the content to remove Markdown formatting (like backticks)
+        // Clean the message content to remove any Markdown formatting
         let cleanContent = message.content
             .replace(/```json/g, '')  // Remove the opening code block for JSON
             .replace(/```/g, '')      // Remove the closing code block
-            .trim();                  // Trim whitespace
+            .trim();                  // Trim any remaining whitespace
   
-        // Parse the cleaned content into JSON
+        // Attempt to parse the cleaned content as JSON
         const dependencyGraph = JSON.parse(cleanContent);
   
         // Output or use the parsed dependency graph
@@ -34,9 +32,9 @@ const parseDependencyJson = (response) => {
         return dependencyGraph;
     } catch (error) {
         console.error("Error parsing the response:", error.message);
-        return null; // or handle the error as needed
+        return null; // Return null or handle the error appropriately
     }
-  };
+};
 
 // Gather files recursively
 const gatherFilesRecursively = (dirPath, fileContents, ignoreList = [], verbose = false) => {
