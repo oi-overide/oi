@@ -4,6 +4,40 @@ const fs = require('fs');
 const network = require('../service/network');
 const configFS = require('../service/config');
 
+// Parse the JSON response
+const parseDependencyJson = (response) => {
+    try {
+        // Check if the response is an array and has elements
+        if (!Array.isArray(response) || response.length === 0) {
+            throw new Error("Response is not in expected format or is empty.");
+        }
+  
+        // Extract the message
+        const message = response[0].message;
+  
+        // Check if message is defined and contains content
+        if (!message || !message.content) {
+            throw new Error("Message content is missing in the response.");
+        }
+  
+        // Clean the content to remove Markdown formatting (like backticks)
+        let cleanContent = message.content
+            .replace(/```json/g, '')  // Remove the opening code block for JSON
+            .replace(/```/g, '')      // Remove the closing code block
+            .trim();                  // Trim whitespace
+  
+        // Parse the cleaned content into JSON
+        const dependencyGraph = JSON.parse(cleanContent);
+  
+        // Output or use the parsed dependency graph
+        console.log("Parsed Dependency Graph:", dependencyGraph);
+        return dependencyGraph;
+    } catch (error) {
+        console.error("Error parsing the response:", error.message);
+        return null; // or handle the error as needed
+    }
+  };
+
 // Gather files recursively
 const gatherFilesRecursively = (dirPath, fileContents, ignoreList = [], verbose = false) => {
     const files = fs.readdirSync(dirPath);
@@ -47,28 +81,6 @@ const generateDependencyGraph = async (ignoredFiles, verbose) => {
 
     // Recursively gather all files and their contents
     gatherFilesRecursively(projectDir, fileContents, ignoredFiles, verbose);
-
-    // // Create a prompt for Code Llama
-    // const prompt = `
-    //     Given the following project files and their contents, generate a JSON structure 
-    //     that represents the project's dependency graph, including functions, classes, 
-    //     and imports for each file:
-
-    //     ${JSON.stringify(fileContents, null, 2)}
-
-    //     The output should look like this:
-    //     {
-    //         "projectName": "example",
-    //         "files": {
-    //             "file1.js": {
-    //                 "functions": ["func1", "func2"],
-    //                 "classes": ["Class1"],
-    //                 "imports": ["module1", "module2"]
-    //             },
-    //             ...
-    //         }
-    //     }
-    // `;
 
     // Create an enhanced prompt for the code generation model
     const prompt = `
@@ -115,12 +127,14 @@ const generateDependencyGraph = async (ignoredFiles, verbose) => {
 
     const response = await network.generateCode(prompt);
 
+    const dependencyGraph = parseDependencyJson(response);
+
     if (verbose) {
-        console.log('Received dependency graph from Code Llama:');
+        console.log('Received dependency graph:');
         console.log(JSON.stringify(response, null, 2));
     }
 
-    return response;
+    return dependencyGraph;
 };
 
 // Command implementation for oi depend

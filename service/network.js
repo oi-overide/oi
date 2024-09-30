@@ -10,39 +10,6 @@ const openai = new OpenAI({
     project: "proj_KXJHh8FNqFn7EiKyvFjCJ32o" 
 });
 
-const processCodexResponse = (response) => {
-  try {
-      // Check if the response is an array and has elements
-      if (!Array.isArray(response) || response.length === 0) {
-          throw new Error("Response is not in expected format or is empty.");
-      }
-
-      // Extract the message
-      const message = response[0].message;
-
-      // Check if message is defined and contains content
-      if (!message || !message.content) {
-          throw new Error("Message content is missing in the response.");
-      }
-
-      // Clean the content to remove Markdown formatting (like backticks)
-      let cleanContent = message.content
-          .replace(/```json/g, '')  // Remove the opening code block for JSON
-          .replace(/```/g, '')      // Remove the closing code block
-          .trim();                  // Trim whitespace
-
-      // Parse the cleaned content into JSON
-      const dependencyGraph = JSON.parse(cleanContent);
-
-      // Output or use the parsed dependency graph
-      console.log("Parsed Dependency Graph:", dependencyGraph);
-      return dependencyGraph;
-  } catch (error) {
-      console.error("Error parsing the response:", error.message);
-      return null; // or handle the error as needed
-  }
-};
-
 /**
  * Generate code using OpenAI Codex.
  * @param {string} prompt - The user prompt to generate code for.
@@ -61,13 +28,18 @@ const generateCode = async (prompt, model = 'gpt-3.5-turbo') => {
             presence_penalty: 0,
         });
 
-        // Log the response for debugging
-        console.log(response.choices);
+        // const response = {
+        //     choices: [
+        //       {
+        //         message: {
+        //           role: "assistant",
+        //           content: "```javascript\nfunction reverseString(str) {\n  return str.split('').reverse().join('');\n}\n```"
+        //         }
+        //       }
+        //     ]
+        //   };
 
-        // Extract the generated text
-        const generatedCode = processCodexResponse(response.choices);
-
-        return generatedCode;
+        return response;
     } catch (error) {
         console.error(`Error generating code: ${error.message}`);
         throw error;

@@ -1,14 +1,14 @@
 {
   "projectName": "default-project",
   "ignore": [
-    "node_modules",
-    ".gitignore",
-    "package-lock.json",
-    "package.json",
-    ".env",
-    ".git",
     "oi-config.json",
-    "oi-dependency.json"
+    "oi-dependency.json",
+    ".git",
+    ".gitignote",
+    "node_modules",
+    ".env",
+    "package-lock.json",
+    "package.json"
   ],
   "dependency": "oi-dependency.json"
 }

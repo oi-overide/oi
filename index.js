@@ -5,6 +5,7 @@ const { Command } = require('commander');
 const { initializeProject } = require('./commands/initialize');
 const { depend } = require('./commands/depend');
 const { addIgnoreFiles } = require('./commands/ignore');
+const { startWatching } = require('./service/watchmen');
 
 const program = new Command();
 
@@ -26,7 +27,6 @@ program
   .command('start')
   .description('Start watching files and upload them to Ollama')
   .action(() => {
-    const { startWatching } = require('./utils/watchmen');
     console.log('Starting file watcher...');
     startWatching();
   });

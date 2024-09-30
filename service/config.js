@@ -4,7 +4,6 @@
 const path = require('path');
 const fs = require('fs');
 
-
 /**
  * Checks if the oi-dependency file exists in the root of the project.
  * @returns {bool} - Defaults to false, true if file exists.
@@ -86,4 +85,28 @@ const getConfigJsonValue = async (key) => {
     } 
 }
 
-module.exports = {getConfigJsonValue, getConfigFilePath, configExists, getCurrentDirectory, dependencyExists}
+const extractCodeFromResponse = (response) => {
+    try {
+       // Ensure the response is valid and contains choices
+       if (!response || !response.choices || response.choices.length === 0) {
+        throw new Error("Invalid response format or no choices available.");
+    }
+
+        // Extract the message content from the first choice
+        const messageContent = response.choices[0].message.content;
+
+        // Remove markdown code block syntax and language tags
+        const cleanedCode = messageContent
+            .replace(/```[a-zA-Z]*/g, '')  // Remove any ``` with or without language tag (e.g., ```javascript)
+            .replace(/```/g, '')           // Remove closing backticks
+            .trim();                       // Trim any excess whitespace
+
+        return `${cleanedCode}`;  // Return the cleaned code
+    } catch (error) {
+        console.error("Error extracting code from response:", error.message);
+        return null;
+    }
+};
+
+
+module.exports = {getConfigJsonValue, getConfigFilePath, configExists, getCurrentDirectory, dependencyExists, extractCodeFromResponse}
