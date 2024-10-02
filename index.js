@@ -6,6 +6,7 @@ const { initializeProject } = require('./commands/initialize');
 const { depend } = require('./commands/depend');
 const { addIgnoreFiles } = require('./commands/ignore');
 const { startWatching } = require('./service/watchmen');
+const { updateConfig } = require('./commands/config');
 
 const program = new Command();
 

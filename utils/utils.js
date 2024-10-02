@@ -87,26 +87,24 @@ const getConfigJsonValue = async (key) => {
 
 const extractCodeFromResponse = (response) => {
     try {
-        // Ensure the response is valid and contains choices
-        if (!response || !response.choices || response.choices.length === 0) {
-            throw new Error("Invalid response format or no choices available.");
+        // Regular expression to match the content inside the triple backticks
+        const codeBlockRegex = /```[a-zA-Z]*\n([\s\S]*?)```/g;
+
+        // Match all code blocks (if there are multiple)
+        const codeBlocks = [...response.matchAll(codeBlockRegex)];
+
+        if (codeBlocks.length === 0) {
+            throw new Error("No code block found in the response.");
         }
 
-        // Extract the message content from the first choice
-        const messageContent = response.choices[0].message.content;
+        // Extract the first code block content
+        const code = codeBlocks[0][1].trim(); // [0] is the first match, [1] is the capture group with the code
 
-        // Remove markdown code block syntax and language tags
-        const cleanedCode = messageContent
-            .replace(/```[a-zA-Z]*/g, '')  // Remove any ``` with or without language tag (e.g., ```javascript)
-            .replace(/```/g, '')           // Remove closing backticks
-            .trim();                       // Trim any excess whitespace
-
-        return `${cleanedCode}`;  // Return the cleaned code
+        return code;  // Return the extracted code
     } catch (error) {
         console.error("Error extracting code from response:", error.message);
         return null;
     }
 };
-
 
 module.exports = { getConfigJsonValue, getConfigFilePath, configExists, getCurrentDirectory, dependencyExists, extractCodeFromResponse, }

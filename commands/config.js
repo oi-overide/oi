@@ -1,8 +1,9 @@
 const utils = require('../utils/utils');
+const fs = require('fs');
 
 const updateConfig = (options)=>{
     if (options.projectName) {
-        updateConfig('projectName', options.projectName);  // Function to update project name in oi-config.json
+        updateConfigValue('projectName', options.projectName);  // Function to update project name in oi-config.json
       }
   
       if (options.port) {
@@ -11,21 +12,23 @@ const updateConfig = (options)=>{
           console.error("Invalid port number.");
           process.exit(1);
         }
-        updateConfig('port', port);  // Function to update port number in oi-config.json
+        updateConfigValue('port', port);  // Function to update port number in oi-config.json
       }
   
       if (options.host) {
-        updateConfig('host', options.host);  // Function to update host URL in oi-config.json
+        updateConfigValue('host', options.host);  // Function to update host URL in oi-config.json
       }
   
       if (options.model) {
-        updateConfig('model', options.model);  // Function to update model name in oi-config.json
+        updateConfigValue('model', options.model);  // Function to update model name in oi-config.json
       }
   
       console.log("Config updated successfully.");
 }
 
-function updateConfig(key, value) {
+function updateConfigValue(key, value) {
+    const configPath = utils.getConfigFilePath();
+
     // Load the oi-config.json file
     if (!utils.configExists()) {
       console.error("oi-config.json not found in the current directory.");
@@ -42,3 +45,5 @@ function updateConfig(key, value) {
   
     console.log(`${key} updated to ${value}`);
   }
+
+module.exports = {updateConfig};

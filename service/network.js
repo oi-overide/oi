@@ -1,38 +1,49 @@
-const { Configuration, OpenAIApi, default: OpenAI } = require('openai');
-
-// Load environment variables (make sure to set OPENAI_API_KEY in .env file)
-require('dotenv').config();
-
-// Initialize OpenAI API with your API key
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // Make sure this is in your .env
-    organisation: process.env.OPENAI_ORG_ID,
-    project: "proj_KXJHh8FNqFn7EiKyvFjCJ32o" 
-});
+const axios = require('axios');
+const { getConfigJsonValue } = require('../utils/utils');
 
 /**
- * Generate code using OpenAI Codex.
- * @param {string} prompt - The user prompt to generate code for.
- * @param {string} model - Optional. The model to use for code generation, defaults to 'gpt-3.5-turbo'.
+ * Generate code using DeepSeek Coder.
+ * @param {string} prefix - The code before the target generation block.
+ * @param {string} suffix - The code after the target generation block.
  * @returns {string} - The generated code response.
  */
-const generateCode = async (prompt, model = 'gpt-3.5-turbo') => {
+const generateCode = async (prefix, suffix, mid) => {
     try {
-        const response = await openai.chat.completions.create({
-            model: model,  // You can use 'gpt-3.5-turbo' or 'gpt-4'
-            messages: [{ role: "user", content: prompt }],  // Wrap the prompt in messages array
-            max_tokens: 1000,  // Set a limit based on how much code you want
-            temperature: 0.5,  // Adjust to control randomness
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-        });
+        // Load configuration from oi-config.json
+        const host = await getConfigJsonValue('host');  // Custom URL for local LLM
+        const port = await getConfigJsonValue('port');  // Custom port for local LLM
+        const model = await getConfigJsonValue('model');  // Model name for local LLM
+
+
+        // Create the URL dynamically from host and port
+        const url = `http://${host}:${port}/api/generate`;
+
+        // Prepare the prompt with <PRE> <SUF> <MID> structure for code infilling
+        const prompt = `<PRE>${prefix}<SUF>${suffix}<MID>${mid}`;
+
+        console.log(prompt);
         
-        return response;
+        // Make the request to DeepSeek API
+        const response = await axios.post(url, {
+            model: model,  // Use the model from oi-config
+            prompt: prompt,  // Pass the infilling prompt with tags
+            stream: false,  // Disable streaming
+            keep_alive: 1000,
+            options: {
+                temperature: 0.5,  // Adjust randomness as needed
+                max_tokens: 1000,  // Limit the response length
+                presence_penalty: 0,
+                frequency_penalty: 0,
+            }
+        });
+
+        console.log(response.data.response);
+
+        return response.data.response;  // Return the generated code
     } catch (error) {
         console.error(`Error generating code: ${error.message}`);
         throw error;
     }
 };
 
-module.exports = {generateCode};
+module.exports = { generateCode };

@@ -54,13 +54,53 @@ const handleUserResponse = (filePath, fileContent) => {
     }
 };
 
+// Function to read the file and fetch lines around the prompt
+const getSurroundingLines = async (filePath, promptText, linesToFetch = 20) => {
+    try {
+        const fileContent = await fs.readFileSync(filePath, 'utf-8'); // Use fs.promises.readFile
+        const lines = fileContent.split('\n');
+        const promptIndex = lines.findIndex(line => line.includes(promptText));
+
+        if (promptIndex === -1) {
+            throw new Error('Prompt not found in the file.');
+        }
+
+        // Get max 20 lines above and below the prompt
+        const startLine = Math.max(0, promptIndex - linesToFetch);
+        const endLine = Math.min(lines.length, promptIndex + linesToFetch + 1);
+
+        const surroundingLines = lines.slice(startLine, endLine);
+        return surroundingLines.join('\n');
+    } catch (error) {
+        console.error(`Error reading surrounding lines: ${error.message}`);
+        throw error;
+    }
+};
 const handlePrompt = async (filePath, promptText, unprocessedPromptText) => {
     console.log(`Handling prompt: ${promptText}`);
-    const response = await network.generateCode(promptText);
+
+    // Fetch surrounding lines from the file
+    const surroundingContent = await getSurroundingLines(filePath, promptText);
+    const surroundingLines = surroundingContent.split('\n');
+
+    // Find the index of the prompt in the surrounding lines
+    const promptIndex = surroundingLines.findIndex(line => line.includes(promptText));
+    if (promptIndex === -1) {
+        console.error('Prompt not found in the surrounding lines.');
+        return;
+    }
+
+    // Prepare <PRE>, <SUF>, and <MID> sections
+    const prefix = surroundingLines.slice(0, promptIndex).join('\n');  // Lines above the prompt
+    const suffix = surroundingLines.slice(promptIndex + 1).join('\n'); // Lines below the prompt
+    const promptInMid = promptText;  // The prompt itself
+
+    // Generate code using the prepared sections
+    const response = await network.generateCode(prefix, suffix, promptInMid);
     const generatedCode = config.extractCodeFromResponse(response);
 
     // Insert the generated code into the file with the confirmation prompt
-    const codeToInsert = `//- ${promptText}\n${generatedCode}\n//> Accept the changes (y/n): -/`;
+    const codeToInsert = `//- ${promptInMid}\n${generatedCode}\n//> Accept the changes (y/n): -/`;
     updateFileContent(filePath, unprocessedPromptText, codeToInsert); // Function to update the file with generated code.
 };
 

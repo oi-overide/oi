@@ -1,5 +1,5 @@
 {
-  "projectName": "default-project",
+  "projectName": "oi-cli",
   "ignore": [
     "oi-config.json",
     "oi-dependency.json",
@@ -10,5 +10,8 @@
     "package-lock.json",
     "package.json"
   ],
-  "dependency": "oi-dependency.json"
+  "dependency": "oi-dependency.json",
+  "host": "localhost",
+  "port": "11434",
+  "model": "deepseek-coder"
 }
