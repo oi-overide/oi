@@ -52,6 +52,11 @@ const initializeProject = (options) => {
   ignoreFiles.push("oi-config.json");
   ignoreFiles.push("oi-dependency.json");
 
+  // Add additional patterns to ignore temporary and backup files (like VS Code's autosave)
+  ignoreFiles.push('/(^|[/\\])../'); // Ignore dotfiles and hidden files
+  ignoreFiles.push('node_modules'); // Ignore node_modules folder
+  ignoreFiles.push('*.swp'); // Ignore temporary swap files
+
   // Create the configuration file
   const config = {
     projectName: projectName,

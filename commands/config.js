@@ -1,4 +1,4 @@
-const utils = require('../utils/utils');
+const dih = require('../helpers/help.directory');
 const fs = require('fs');
 
 const updateConfig = (options)=>{
@@ -27,10 +27,10 @@ const updateConfig = (options)=>{
 }
 
 function updateConfigValue(key, value) {
-    const configPath = utils.getConfigFilePath();
+    const configPath = dih.getConfigFilePath();
 
     // Load the oi-config.json file
-    if (!utils.configExists()) {
+    if (!dih.configExists()) {
       console.error("oi-config.json not found in the current directory.");
       process.exit(1);
     }
