@@ -1,18 +1,22 @@
 const fs = require('fs');
 const psh = require('../../helpers/help.parser');
+const context = require('./parse.context');
 
 class Parser {
 
+    // Handle prompt case.
+    async handlePrompt(content, filePath) {
+       const processedPrompt = await context.createContext(content, filePath)
+       console.log(processedPrompt);
+    }
+
     // Helper function to identify and parse prompt cases
-    handleParseCase(text) {
+    handleParseCase(text, filePath) {
         const [caseType, content] = psh.identifyPromptCase(text); // Get case type and content as a tuple
 
         switch (caseType) {
             case 'prompt':
-                console.log(`Prompt content: ${content}`);
-                break;
-            case 'generated':
-                console.log(`Generated content: ${content}`);
+                this.handlePrompt(content, filePath);
                 break;
             case 'acceptance':
                 console.log(`Acceptance response: ${content}`);
@@ -58,7 +62,7 @@ class Parser {
 
                         // Join all lines in the buffer into a single string for parsing
                         const fullBlock = promptBuffer.join(' ');
-                        this.handleParseCase(fullBlock); // Use the helper function for multiline blocks
+                        this.handleParseCase(fullBlock, filePath); // Use the helper function for multiline blocks
 
                         // Reset the buffer
                         promptBuffer = [];
@@ -67,7 +71,7 @@ class Parser {
                 }
 
                 // Process single-line prompts, generated blocks, comments, context, and complete markers
-                this.handleParseCase(trimmedLine);
+                this.handleParseCase(trimmedLine, filePath);
             }
         } catch (err) {
             console.error(`Error processing file ${filePath}:`, err.message);

@@ -3,9 +3,9 @@ class ParserHelper {
     static regGenerated = /\/\/-\s*([\s\S]*?)\s*-\/\//g;
     static regAcceptance = /\/\/>\s*Accept the changes \(y\/n\):\s*([ynYN])\s*-\/\//;
 
-    static regComment = /\/\/@\s*(.*?)(?=\n|$)/g;
-    static regContext = /\/\/@\s*context:\s*(.*?)(?=\n|$)/g;
-    static regComplete = /\/\/@\s*complete:\s*(.*?)(?=\n|$)/g;
+    static regComment = /\/\/@\s*comment\s*$/g;  // Matches //@comment with no extra text after it
+    static regContext = /\/\/@\s*context\s*$/g;  // Matches //@context with no extra text after it
+    static regComplete = /\/\/@\s*complete\s*$/g; // Matches //@complete with no extra text after it
 
     matchRegex(regex, text) {
         return text.match(regex);
