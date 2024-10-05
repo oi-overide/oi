@@ -3,36 +3,47 @@ class ParserHelper {
     static regGenerated = /\/\/-\s*([\s\S]*?)\s*-\/\//g;
     static regAcceptance = /\/\/>\s*Accept the changes \(y\/n\):\s*([ynYN])\s*-\/\//;
 
+    static regComment = /\/\/@\s*(.*?)(?=\n|$)/g;
+    static regContext = /\/\/@\s*context:\s*(.*?)(?=\n|$)/g;
+    static regComplete = /\/\/@\s*complete:\s*(.*?)(?=\n|$)/g;
+
     matchRegex(regex, text) {
         return text.match(regex);
     }
 
-    matchUserPrompt(text) {
-        return this.matchRegex(ParserHelper.regUserPrompt, text);
-    }
-
-    matchConfirmationPrompt(text) {
-        return this.matchRegex(ParserHelper.regConfirmationWithResponse, text);
-    }
-
-    matchGeneratedPrompt(text) {
-        return this.matchRegex(ParserHelper.regGeneratedBlock, text);
-    }
-
+    // Identify the case type based on the matched prompt and return a tuple with the type and content
     identifyPromptCase(text) {
-        const userPrompt = this.matchUserPrompt(text);
-        const confirmationPrompt = this.matchConfirmationPrompt(text);
-        const generatedPrompt = this.matchGeneratedPrompt(text);
-
+        const userPrompt = this.matchRegex(ParserHelper.regPrompt, text);
         if (userPrompt) {
-            return 'prompt';
-        } else if (confirmationPrompt) {
-            return 'generated';
-        } else if (generatedPrompt) {
-            return 'acceptance';
-        } else {
-            return null;
+            return ['prompt', userPrompt[1]]; // Return type 'prompt' and the captured content
         }
+
+        const generatedBlock = this.matchRegex(ParserHelper.regGenerated, text);
+        if (generatedBlock) {
+            return ['generated', generatedBlock[1]]; // Return type 'generated' and the captured content
+        }
+
+        const acceptancePrompt = this.matchRegex(ParserHelper.regAcceptance, text);
+        if (acceptancePrompt) {
+            return ['acceptance', acceptancePrompt[1]]; // Return type 'acceptance' and the captured response (y/n)
+        }
+
+        const comment = this.matchRegex(ParserHelper.regComment, text);
+        if (comment) {
+            return ['comment', comment[1]]; // Return type 'comment' and the captured content
+        }
+
+        const context = this.matchRegex(ParserHelper.regContext, text);
+        if (context) {
+            return ['context', context[1]]; // Return type 'context' and the captured content
+        }
+
+        const complete = this.matchRegex(ParserHelper.regComplete, text);
+        if (complete) {
+            return ['complete', complete[1]]; // Return type 'complete' and the captured content
+        }
+
+        return [null, null]; // No match found, return nulls
     }
 }
 

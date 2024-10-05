@@ -4,9 +4,8 @@ const { Command } = require('commander');
 
 const { initializeProject } = require('./commands/initialize');
 const { depend } = require('./commands/depend');
-const { addIgnoreFiles } = require('./commands/ignore');
 const watchmen = require('./core/storage/directory/watchmen');
-const { updateConfig } = require('./commands/config');
+const { updateConfig, addIgnoreFiles } = require('./commands/config');  // Import addIgnoreFiles here
 
 const program = new Command();
 
@@ -39,27 +38,18 @@ program
   });
 
 program
-  .command('ignore')
-  .description('Add files or directories to the ignore list in oi-config.json')
-  .option('-f, --files <files...>', 'Specify files or directories to ignore')
-  .action((options) => {
-    if (!options.files || options.files.length === 0) {
-      console.error("Please provide at least one file to ignore.");
-      process.exit(1);
-    }
-    addIgnoreFiles(options.files);  // Call the function to add files to ignore list
-  });
-
-  program
   .command('config')
   .description('Update project settings in oi-config.json')
   .option('-n, --project-name <ProjectName>', 'Update project name')
   .option('-p, --port <PortNumber>', 'Set custom port for local LLM')
   .option('-u, --host <Url>', 'Set custom URL for local LLM')
   .option('-m, --model <Model>', 'Set model name')
+  .option('-i, --ignore <files...>', 'Specify files or directories to ignore')  // Add the ignore option here
   .action((options) => {
-    updateConfig(options)
+    if (options.ignore && options.ignore.length > 0) {
+      addIgnoreFiles(options.ignore);  // Handle ignoring files as part of config
+    }
+    updateConfig(options);
   });
-
 
 program.parse(process.argv);

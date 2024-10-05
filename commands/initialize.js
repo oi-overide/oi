@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const dih = require('../helpers/help.directory');
+
 const displayAsciiArt = () => {
   console.log(`
   ____    _      
@@ -11,13 +13,52 @@ const displayAsciiArt = () => {
  \\____/  |_|
                  
   `);
-  console.log("Oi at your service!");
-  console.log("Next steps:");
-  console.log("1. Start the local server.");
+  console.log("Oi Project initialized!");
+  console.log("\nNext steps:");
+  console.log("1. Use 'oi config' to define the model name, host url and port.");
   console.log("2. Run 'oi depend' to generate the dependency graph.");
-  console.log("3. Use 'oi config' to define the model name");
-  console.log("4. If you have specific prompts, you can run 'oi code' to generate code based on them.");
-  console.log("5. For continuous code generation in real-time, run 'oi start' to watch the project.");
+  console.log("3. Run 'oi start' to start getting code suggestions.");
+};
+
+const addIgnoreFiles = (files) => {
+  const configPath = dih.getConfigFilePath();
+
+  // Check if oi-config.json exists
+  if (!dih.configExists()) {
+    console.error(`Error: oi-config.json not found at ${configPath}`);
+    process.exit(1);
+  }
+
+  try {
+    // Read the current config file
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+
+    // Ensure 'ignore' field exists
+    if (!Array.isArray(config.ignore)) {
+      config.ignore = [];
+    }
+
+    // Convert single file string to an array
+    if (typeof files === 'string') {
+      files = [files];
+    }
+
+    // Add new files to the ignore list if they don't already exist
+    files.forEach(file => {
+      if (!config.ignore.includes(file)) {
+        config.ignore.push(file);
+        console.log(`Added ${file} to ignore list.`);
+      } else {
+        console.log(`${file} is already in the ignore list.`);
+      }
+    });
+
+    // Write the updated config back to oi-config.json
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    console.log('Updated oi-config.json with new ignore files.');
+  } catch (error) {
+    console.error(`Error updating oi-config.json: ${error.message}`);
+  }
 };
 
 const initializeProject = (options) => {
@@ -48,19 +89,16 @@ const initializeProject = (options) => {
     process.exit(1);
   }
 
-  // Add ignored files.
-  ignoreFiles.push("oi-config.json");
-  ignoreFiles.push("oi-dependency.json");
+  // Add default files to ignore list
+  const defaultIgnoreFiles = ['oi-config.json', 'oi-dependency.json', '/(^|[/\\])../', 'node_modules', '*.swp'];
 
-  // Add additional patterns to ignore temporary and backup files (like VS Code's autosave)
-  ignoreFiles.push('/(^|[/\\])../'); // Ignore dotfiles and hidden files
-  ignoreFiles.push('node_modules'); // Ignore node_modules folder
-  ignoreFiles.push('*.swp'); // Ignore temporary swap files
+  // Add user specified files to ignore list
+  const combinedIgnoreFiles = [...new Set([...ignoreFiles, ...defaultIgnoreFiles])]; // Ensure no duplicates
 
   // Create the configuration file
   const config = {
     projectName: projectName,
-    ignore: ignoreFiles,
+    ignore: combinedIgnoreFiles,
     dependency: "oi-dependency.json",
     port: 11434,
     host: "http://localhost",
@@ -86,4 +124,4 @@ const initializeProject = (options) => {
   }
 };
 
-module.exports = { initializeProject };
+module.exports = { initializeProject, addIgnoreFiles };
