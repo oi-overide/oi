@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 const { Command } = require('commander');
-const { initializeProject } = require('./commands/initialize');
-const { depend } = require('./commands/depend');
 
-const watchmen = require('./core/storage/directory/watchmen');
-const config = require('./commands/config');  // Import addIgnoreFiles here
+const Initialize = require('./commands/initialize');
+const Depend = require('./commands/depend');
+const Watchmen = require('./core/storage/directory/watchmen');
+const Config = require('./commands/config');  // Import addIgnoreFiles here
 
+
+// Init commander
 const program = new Command();
 
 program
@@ -16,7 +18,7 @@ program
   .option('-v, --verbose', 'Enable verbose output')
   .option('-n, --project-name <name>', 'Specify a project name')
   .action((options) => {
-    initializeProject(options);
+    Initialize.initializeProject(options);
   });
 
 program
@@ -24,7 +26,7 @@ program
   .description('Start watching files and upload them to Ollama')
   .action(() => {
     console.log('Starting file watcher...');
-    watchmen.watchFiles();
+    Watchmen.watchFiles();
   });
 
 program
@@ -33,7 +35,7 @@ program
   .option('-o, --output <path>', 'Specify a custom output file path')
   .option('-v, --verbose', 'Enable verbose output')
   .action((options) => {
-    depend(options);
+    Depend.depend(options);
   });
 
 program
@@ -45,7 +47,7 @@ program
   .option('-m, --model', 'Set model name')
   .option('-i, --ignore <files...>', 'Specify files or directories to ignore')  // Add the ignore option here
   .action(async (options) => {
-    config.handleConfigUpdate(options);
+    Config.handleConfigUpdate(options);
   });
 
 program.parse(process.argv);

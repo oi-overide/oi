@@ -2,8 +2,26 @@ const dih = require('../../helpers/help.directory')
 
 class FormatRequest {
     model() {
-        this.modelType = dih.getConfigJsonValue('modelType');
+        this.modelType = dih.getConfigJsonValue('model_type');
         return this;
+    }
+
+    // get the request url
+    getUrl() {
+        switch (this.modelType) {
+            case 'openai':
+                return `http://${dih.getConfigJsonValue('host')}/api/generate`;
+
+            case 'ollama':
+                console.log(`https://${dih.getConfigJsonValue('host')}:${dih.getConfigJsonValue('port')}/api/generate`);
+                return `http://${dih.getConfigJsonValue('host')}:${dih.getConfigJsonValue('port')}/api/generate`;
+
+            case 'anthropic':
+                return `http://${dih.getConfigJsonValue('host')}:${dih.getConfigJsonValue('port')}/api/generate`;
+
+            default:
+                throw new Error(`Unknown model type: ${this.modelType}`);
+        }
     }
 
     // General method to format the request

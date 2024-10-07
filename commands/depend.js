@@ -4,6 +4,8 @@ const path = require('path');
 const dih = require('../helpers/help.directory');
 const network = require('../core/network/network');
 const directory = require('../core/storage/directory/directory');
+const formatRequest = require('../core/formatter/format.request');
+const formatResponse = require('../core/formatter/format.response');
 
 class Depend {
     constructor(options) {  // Initialize the Depend class with the provided options
@@ -47,7 +49,7 @@ class Depend {
 
             File content:
 
-            ${fileContents}
+            ${JSON.stringify(fileContents)}
         `;
 
         if (verbose) {
@@ -55,16 +57,19 @@ class Depend {
             console.log(prompt);
         }
 
-        const response = await network.doRequest(prompt);
+        const requestObject = formatRequest.model().formatRequest(prompt);
+        const url = formatRequest.model().getUrl();
+        const response = await network.doRequest(requestObject, url);
 
-        // const dependencyGraph = parseDependencyJson(response);
+        // console.log(requestObject)
+        const dependencyGraph = formatResponse.model().formatResponse(response, true);
 
         if (verbose) {
             console.log('Received dependency graph:');
             console.log(JSON.stringify(response, null, 2));
         }
 
-        return response;
+        return dependencyGraph;
     };
 
     depend = async (args) => {
@@ -91,10 +96,11 @@ class Depend {
 
         // Generate the dependency graph
         const ignoredFiles = await dih.getConfigJsonValue("ignore");
+        console.log(ignoredFiles);
         const response = await this.generateDependencyGraph(ignoredFiles, verbose);
 
         // Write to the specified output file
-        fs.writeFileSync(dependencyFilePath, JSON.stringify(response, null, 2));
+        fs.writeFileSync(dependencyFilePath, JSON.stringify(response));
         if (verbose) {
             console.log(`Dependency graph generated and saved to "${outputFileName}".`);
         }

@@ -56,7 +56,7 @@ class DirectoryHelper {
      */
     async getDependencyFilePath() {
         const currentDir = this.getCurrentDirectory();
-        const dependencyFileName = this.getConfigJsonValue("dependencyFile");
+        const dependencyFileName = this.getConfigJsonValue("dependency");
         const filePath = path.join(currentDir, dependencyFileName);
         return filePath;
     }
