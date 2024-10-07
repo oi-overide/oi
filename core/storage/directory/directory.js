@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 class Directory {
-    // Gather files recursively
+    // Gather files recursively for generating the dependency graph.
     gatherFilesRecursively = (dirPath, fileContents, ignoreList = [], verbose = false) => {
         const files = fs.readdirSync(dirPath);
 

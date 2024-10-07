@@ -1,12 +1,15 @@
 const fs = require('fs');
 const psh = require('../../helpers/help.parser');
 const context = require('./parse.context');
+const freq = require('../formatter/format.request');
 
 class Parser {
 
     // Handle prompt case.
     async handlePrompt(content, filePath) {
-       const processedPrompt = await context.createContext(content, filePath)
+       const processedPrompt = await context.createContext(content, filePath);
+       const requestObject = freq.formatRequest(processedPrompt);
+       console.log(requestObject);
        console.log(processedPrompt);
     }
 

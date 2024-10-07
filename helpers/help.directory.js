@@ -3,6 +3,15 @@ const path = require('path');
 
 class DirectoryHelper {
     static configFileName = "oi-config.json";
+
+    /**
+     * Get the content of a file.
+     * @param {string} filePath 
+     * @returns {string} content of the file.
+     */
+    async readFileContent(filePath) {
+        return fs.promises.readFile(filePath, 'utf8');
+    }
     
     /** 
      * Check if the oi-config.json file exists in the current directory.

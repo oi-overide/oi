@@ -18,6 +18,7 @@
     "chokidar": "^4.0.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
+    "inquirer": "^11.1.0",
     "openai": "^4.65.0"
   },
   "type": "commonjs",

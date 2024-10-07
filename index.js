@@ -1,11 +1,10 @@
 #!/usr/bin/env node
-
 const { Command } = require('commander');
-
 const { initializeProject } = require('./commands/initialize');
 const { depend } = require('./commands/depend');
+
 const watchmen = require('./core/storage/directory/watchmen');
-const { updateConfig, addIgnoreFiles } = require('./commands/config');  // Import addIgnoreFiles here
+const config = require('./commands/config');  // Import addIgnoreFiles here
 
 const program = new Command();
 
@@ -43,13 +42,10 @@ program
   .option('-n, --project-name <ProjectName>', 'Update project name')
   .option('-p, --port <PortNumber>', 'Set custom port for local LLM')
   .option('-u, --host <Url>', 'Set custom URL for local LLM')
-  .option('-m, --model <Model>', 'Set model name')
+  .option('-m, --model', 'Set model name')
   .option('-i, --ignore <files...>', 'Specify files or directories to ignore')  // Add the ignore option here
-  .action((options) => {
-    if (options.ignore && options.ignore.length > 0) {
-      addIgnoreFiles(options.ignore);  // Handle ignoring files as part of config
-    }
-    updateConfig(options);
+  .action(async (options) => {
+    config.handleConfigUpdate(options);
   });
 
 program.parse(process.argv);
