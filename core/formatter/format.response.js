@@ -33,7 +33,22 @@ class FormatResponse {
     }
 
     formatOllamaDGR(response) {
-        return response.response;
+        try{ 
+            console.log(response.data.response);
+            const content = response.data.response;
+            return content;
+            // Use a regular expression to capture the code block inside ```
+            // const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
+
+            // if (codeMatch && codeMatch[1]) {
+            // return codeMatch[1];  // Return the extracted code
+            // } else {
+            //     throw new Error("No code block found in the response");
+            // }
+        } catch (error){
+            console.error("Error formatting Open AI response:", error.message);
+            return null;
+        } 
     }
 
     /**
@@ -58,6 +73,29 @@ class FormatResponse {
             console.error("Error formatting Ollama response:", error.message);
             return null;
         }
+    }
+
+    /**
+     * 
+     * @param {string} response 
+     * @returns {JSON} dependency graph.
+     */
+    formatOpenAiDGR(response){
+        try{ 
+            console.log(response.choices[0].message.content);
+            const content = response.choices[0].message.content;
+            // Use a regular expression to capture the code block inside ```
+            const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
+
+            if (codeMatch && codeMatch[1]) {
+                return codeMatch[1];  // Return the extracted code
+            } else {
+                throw new Error("No code block found in the response");
+            }
+        } catch (error){
+            console.error("Error formatting Open AI response:", error.message);
+            return null;
+        } 
     }
 
     /**

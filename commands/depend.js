@@ -14,41 +14,119 @@ class Depend {
         this.config = dih.getConfigJsonValue();
     }
 
+    addDependencyIncrementally = async (dependency) => {
+        console.log("HERE");
+        const outputFileName = 'oi-dependency.json';
+        const dependencyFilePath = path.join(process.cwd(), outputFileName);
+        const dependencyGraph = JSON.parse(fs.readFileSync(dependencyFilePath, 'utf-8'));
+        dependencyGraph.data.files[dependencyGraph.file] = dependency.data.classes;
+        fs.writeFileSync(dependencyFilePath, dependency);
+    }
+
     // // Generate the dependency graph by prompting Code Llama
     generateDependencyGraph = async (ignoredFiles, verbose) => {
+        const model = dih.getConfigJsonValue('model_type');
         const projectDir = process.cwd();
         const fileContents = {};
 
         // Recursively gather all files and their contents
         directory.gatherFilesRecursively(projectDir, fileContents, ignoredFiles, verbose);
 
+        if (model == "ollama") {
+
+            for (const filePath in fileContents) {
+                const fileContent = fileContents[filePath];
+
+                // Follow Sliding window protocol to generate the nodes of the dependency graph.
+                // This should happen one file at a time.
+                const prompt = `
+                    You are given the contents of a JavaScript file. 
+                    Your task is to generate a structured JSON representation of the file's 
+                    dependency graph. The JSON should represent all functions, classes, and 
+                    import statements for the file.
+
+                    The JSON should include the following structure:
+                    
+                    {
+                        "language": "JavaScript",
+                        "file1.js": {
+                            "classes": [
+                                {
+                                    "name": "class1",
+                                    "functions": [
+                                        {
+                                            "name": "func1",
+                                            "type": "function",
+                                            "parameters": {
+                                                "param1": "number",
+                                                "param2": "string"
+                                            },
+                                            "returns": "boolean"
+                                        }
+                                    ],
+                                }
+                            ],
+                            "imports": ["module1", "module2", "file1", "file2"]
+                        },
+                    }     
+
+                    File contents:
+                    ${fileContent} 
+                `;
+
+                if (verbose) {
+                    console.log('Sending the following prompt as request:');
+                    console.log(prompt);
+                }
+
+                const requestObject = formatRequest.model().formatRequest(prompt);
+                const url = formatRequest.model().getUrl();
+                const response = await network.doRequest(requestObject, url);
+
+                const dependencyGraph = formatResponse.model().formatResponse(response, true);
+
+                if (verbose) {
+                    console.log('Received dependency graph:');
+                    console.log(dependencyGraph);
+                }
+
+                await this.addDependencyIncrementally(dependencyGraph);
+            }
+            return;
+        }
+
         // Create an enhanced prompt for the code generation model
         const prompt = `
-            Given the following file content, generate a JSON structure that represents the file's
-            dependency graph, including functions, classes, and imports. Please include the inferred
-            type information for functions (if available), and indicate the programming language.
+            You are given the contents of several project files from a JavaScript project. 
+            Your task is to generate a structured JSON representation of the project's 
+            dependency graph. The JSON should represent all functions, classes, and 
+            import statements for each file.
 
-            The file uses JavaScript/TypeScript. The JSON should include the following structure:
+            The JSON should include the following structure:
 
             {
                 "language": "JavaScript",
-                "functions": [
+                "file": "file1.js",
+                "classes": [
                     {
-                        "name": "func1",
-                        "type": "function",
-                        "parameters": {
-                            "param1": "number",
-                            "param2": "string"
-                        },
-                        "returns": "boolean"
+                        "name": "class1",
+                         "functions": [
+                            {
+                                "name": "func1",
+                                "type": "function",
+                                "parameters": {
+                                    "param1": "number",
+                                    "param2": "string"
+                                },
+                                "returns": "boolean"
+                            }
+                        ],
                     }
                 ],
-                "classes": [],
-                "imports": ["module1", "module2"]
+                "imports": ["module1", "module2", "file1", "file2"]
             }
 
-            File content:
-
+            Project file contents:
             ${JSON.stringify(fileContents)}
         `;
 
@@ -61,12 +139,11 @@ class Depend {
         const url = formatRequest.model().getUrl();
         const response = await network.doRequest(requestObject, url);
 
-        // console.log(requestObject)
         const dependencyGraph = formatResponse.model().formatResponse(response, true);
 
         if (verbose) {
             console.log('Received dependency graph:');
-            console.log(JSON.stringify(response, null, 2));
+            console.log(JSON.stringify(dependencyGraph, null, 2));
         }
 
         return dependencyGraph;
@@ -96,11 +173,10 @@ class Depend {
 
         // Generate the dependency graph
         const ignoredFiles = await dih.getConfigJsonValue("ignore");
-        console.log(ignoredFiles);
         const response = await this.generateDependencyGraph(ignoredFiles, verbose);
 
         // Write to the specified output file
-        fs.writeFileSync(dependencyFilePath, JSON.stringify(response));
+        fs.writeFileSync(dependencyFilePath, `${response}`);
         if (verbose) {
             console.log(`Dependency graph generated and saved to "${outputFileName}".`);
         }

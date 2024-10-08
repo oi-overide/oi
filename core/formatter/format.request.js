@@ -1,5 +1,6 @@
 const dih = require('../../helpers/help.directory')
 
+
 class FormatRequest {
     model() {
         this.modelType = dih.getConfigJsonValue('model_type');
@@ -10,10 +11,9 @@ class FormatRequest {
     getUrl() {
         switch (this.modelType) {
             case 'openai':
-                return `http://${dih.getConfigJsonValue('host')}/api/generate`;
+                return `USING_FUNCTIONALITY`;
 
             case 'ollama':
-                console.log(`https://${dih.getConfigJsonValue('host')}:${dih.getConfigJsonValue('port')}/api/generate`);
                 return `http://${dih.getConfigJsonValue('host')}:${dih.getConfigJsonValue('port')}/api/generate`;
 
             case 'anthropic':
@@ -68,7 +68,7 @@ class FormatRequest {
             model: model,
             messages: [{ role: 'user', content: finalPrompt }],
             temperature: 0.7,        // You can adjust temperature based on randomness
-            max_tokens: 1000,        // Limit token length of the response (adjust as needed)
+            max_tokens: isDependencyGraph? 10000: 1000,        // Limit token length of the response (adjust as needed)
             n: 1,                    // Number of completions to generate
             stream: false,           // Whether to stream back partial progress
             presence_penalty: 0,     // Encourages/discourages new ideas
@@ -100,7 +100,6 @@ class FormatRequest {
             format: "json",
             options: {
                 temperature: 0.5,  // Adjust randomness as needed
-                max_tokens: 1000,  // Limit the response length
                 presence_penalty: 0,
                 frequency_penalty: 0,
             }
