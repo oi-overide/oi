@@ -10,19 +10,19 @@ class FormatResponse {
     formatResponse(response, isDependencyGraph = false) {
         switch (this.modelType) {
             case 'openai':
-                if(isDependencyGraph) { 
+                if (isDependencyGraph) {
                     return this.formatOpenAiDGR(response);
                 }
                 return this.createOpenAIResponse(response);
 
             case 'ollama':
-                if(isDependencyGraph) { 
+                if (isDependencyGraph) {
                     return this.formatOllamaDGR(response);
                 }
                 return this.createOllamaResponse(response);
 
             case 'anthropic':
-                if(isDependencyGraph) { 
+                if (isDependencyGraph) {
                     return this.formatAnthropicDGR(response);
                 }
                 return this.createAnthropicResponse(response);
@@ -33,22 +33,14 @@ class FormatResponse {
     }
 
     formatOllamaDGR(response) {
-        try{ 
-            console.log(response.data.response);
+        try {
             const content = response.data.response;
+            console.log(`FORMAT OLLAMA RESPONSE: ${content}`);
             return content;
-            // Use a regular expression to capture the code block inside ```
-            // const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-
-            // if (codeMatch && codeMatch[1]) {
-            // return codeMatch[1];  // Return the extracted code
-            // } else {
-            //     throw new Error("No code block found in the response");
-            // }
-        } catch (error){
+        } catch (error) {
             console.error("Error formatting Open AI response:", error.message);
             return null;
-        } 
+        }
     }
 
     /**
@@ -80,8 +72,8 @@ class FormatResponse {
      * @param {string} response 
      * @returns {JSON} dependency graph.
      */
-    formatOpenAiDGR(response){
-        try{ 
+    formatOpenAiDGR(response) {
+        try {
             console.log(response.choices[0].message.content);
             const content = response.choices[0].message.content;
             // Use a regular expression to capture the code block inside ```
@@ -92,10 +84,10 @@ class FormatResponse {
             } else {
                 throw new Error("No code block found in the response");
             }
-        } catch (error){
+        } catch (error) {
             console.error("Error formatting Open AI response:", error.message);
             return null;
-        } 
+        }
     }
 
     /**
@@ -107,10 +99,10 @@ class FormatResponse {
         try {
             // Extract the content from the first choice
             const content = response.choices[0].message.content;
-    
+
             // Use a regular expression to capture the code block inside ```
             const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-    
+
             if (codeMatch && codeMatch[1]) {
                 return codeMatch[1];  // Return the extracted code
             } else {

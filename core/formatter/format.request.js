@@ -99,9 +99,11 @@ class FormatRequest {
             keep_alive: 1000,
             format: "json",
             options: {
-                temperature: 0.5,  // Adjust randomness as needed
-                presence_penalty: 0,
-                frequency_penalty: 0,
+                temperature: 0.3,  // Adjust randomness as needed
+                top_k: 20,
+                seed: 1,
+                num_ctx: 8102,
+                top_p: 0.9
             }
         };
     }
