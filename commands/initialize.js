@@ -100,9 +100,6 @@ class Initialize {
       projectName: projectName,
       ignore: combinedIgnoreFiles,
       dependency: "oi-dependency.json",
-      port: 11434,
-      host: "http://localhost",
-      model: "deepseek-coder"
     };
   
     try {

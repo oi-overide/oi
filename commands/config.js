@@ -1,6 +1,5 @@
 const dih = require('../helpers/help.directory');
 const fs = require('fs');
-const inquirer = require('inquirer');
 
 class Config {
   constructor(options) {
@@ -71,30 +70,6 @@ class Config {
   }
 
   async handleConfigUpdate(options) {
-    // Interactive prompt for model selection if the --model option is provided
-    if (options.model) {
-      const { modelType } = await inquirer.default.prompt([
-        {
-          type: 'list',
-          name: 'modelType',
-          message: 'Select the model type:',
-          choices: ['OpenAI', 'Ollama', 'Anthropic'],
-        },
-      ]);
-
-      const { modelName } = await inquirer.default.prompt([
-        {
-          type: 'input',
-          name: 'modelName',
-          message: `Enter the model name for ${modelType}:`,
-          validate: input => input ? true : 'Model name cannot be empty.',
-        },
-      ]);
-
-      // Assign the selected model type and name to options
-      options.model = `${modelType.toLowerCase()}~${modelName}`;
-    }
-
     if (options.ignore && options.ignore.length > 0) {
       this.addIgnoreFiles(options.ignore); // Placeholder for handling ignored files
     }
