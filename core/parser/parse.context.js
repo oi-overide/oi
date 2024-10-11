@@ -1,86 +1,82 @@
-const fs = require('fs');
 const dih = require('../../helpers/help.directory');
+const Directory = require('../storage/directory/directory');
+const Network = require('../network/network');
+const FormatRequest = require('../formatter/format.request');
+const FormatResponse = require('../formatter/format.response');
 
 class Context {
-    getFileDependencies(filePath) {
-        // Get the list of dependencies from oi-dependency.json
-        const dependencyFilePath = dih.getDependencyFilePath();
-        const dependencyFile = fs.readFileSync(dependencyFilePath, 'utf-8');
-        const dependencyJson = JSON.parse(dependencyFile);
 
-        // Get the list of files from oi-config.json
-        const files = dih.getConfigJsonValue('files');
+    // Context will store all the files in the project.
+    fileContents = {};
 
-        // Check if the file is in the list of files
-        if (files.includes(filePath)) {
-            // Get the list of dependencies for the current file
-            const dependencies = dependencyJson[filePath];
+    async createContext(verbose) {
+        try {
+            // Get Ignore Files
+            const ignoredFiles = await dih.getConfigJsonValue("ignore");
+            await Directory.gatherFilesRecursively(process.cwd(), this.fileContents, ignoredFiles, verbose);
 
-            // Check if the dependencies exist in the list of files
-            if (dependencies) {
-                return dependencies;
+            const prompt = `
+                {{ .System }}
+                ### Instruction: Remember the following code from a project. Respond with success or failure. 
+
+                ${JSON.stringify(this.fileContents)}
+            `;
+
+            if(verbose){
+                console.log(`Sending Project Context \n${prompt}\n`)
             }
-        }
-        return [];
-    }
 
-    getCurrentFileInfo(filePath) {
-        const dependencyFilePath = dih.getDependencyFilePath();
-        const dependencyFile = fs.readFileSync(dependencyFilePath, 'utf-8');
-        const dependencyJson = JSON.parse(dependencyFile);
+            // Get the formated request
+            const request = FormatRequest.model().formatRequest(prompt, true);
 
-        // Return the information of the current file
-        return dependencyJson[filePath] || null;
-    }
-
-    getCalledFunctions(content) {
-        // Regular expression to match function calls in the content
-        const functionCallRegex = /\b(\w+)\s*\(/g;
-        const calledFunctions = new Set();
-        let match;
-
-        // Find all function calls in the content
-        while ((match = functionCallRegex.exec(content)) !== null) {
-            calledFunctions.add(match[1]); // Add function name to the set
-        }
-
-        return Array.from(calledFunctions); // Convert Set back to Array
-    }
-
-    getFunctionInfo(functionName) {
-        const dependencyFilePath = dih.getDependencyFilePath();
-        const dependencyFile = fs.readFileSync(dependencyFilePath, 'utf-8');
-        const dependencyJson = JSON.parse(dependencyFile);
-
-        // Search for the function info across all files
-        for (const file in dependencyJson) {
-            const fileInfo = dependencyJson[file];
-
-            const functionInfo = fileInfo.functions.find(fn => fn.name === functionName);
-            if (functionInfo) {
-                return {
-                    file: file,
-                    ...functionInfo
-                };
+            if(verbose){
+                console.log(`Request Structure \n${request}\n`)
             }
+
+            // Get the URL for the selected model.
+            const url = FormatRequest.model().getUrl();
+
+            // Make the network call.
+            const response = await Network.doRequest(request, url, verbose);
+
+            // Format the response.
+            if(verbose){
+                await FormatResponse.model().formatResponse(response, verbose);
+            }
+        } catch (error) {
+            console.error("Error creating context:", error);
         }
-        return null; // Function not found
     }
 
-    async createContext(content, filePath) {
-        // Grab current file info
-        const currentFileInfo = this.getCurrentFileInfo(filePath);
-        console.log('Current File Info:', currentFileInfo);
+    async createPromptContext(index, fileContent, prompt, verbose) {
+        try {
+            
+            if(verbose){
+                console.log('Creating Prompt Context');
+            }
 
-        // Check the functions that are being called in this file
-        const calledFunctions = this.getCalledFunctions(content);
-        console.log('Called Functions:', calledFunctions);
+            const lines = fileContent.split('\n');
+            const preContextBuffer = [];
+            const postContextBuffer = [];
 
-        // Grab those function information from the dependency graph
-        const functionsInfo = calledFunctions.map(fn => this.getFunctionInfo(fn));
-        console.log('Functions Information:', functionsInfo);
+            for(let [curIndex, line] of lines.entries()){
+                // Keeping the window size of 10 lines before the prompt.
+                if(curIndex >= (index-10) && curIndex < index){
+                    preContextBuffer.push(line);
+                }
 
-        return content; // Returning the original content (modify as needed)
+                if(curIndex > index && curIndex <= (index+10)){
+                    postContextBuffer.push(line);
+                }
+            }
+
+            const trimmedPrompt = prompt.replace('//>', '').replace('<//', '').trim();
+
+            return [preContextBuffer.join('\n'), trimmedPrompt, postContextBuffer.join('\n')];
+        } catch (e) {
+            console.error("Error creating prompt context:", e);
+            throw e;
+        }   
     }
 }
 

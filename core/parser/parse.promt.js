@@ -1,45 +1,61 @@
 const fs = require('fs');
 const psh = require('../../helpers/help.parser');
 const context = require('./parse.context');
-const freq = require('../formatter/format.request');
+const FormatRequest = require('../formatter/format.request');
+const Network = require('../network/network');
 
 class Parser {
-
     // Handle prompt case.
-    async handlePrompt(content, filePath) {
-       const processedPrompt = await context.createContext(content, filePath);
-       const requestObject = freq.formatRequest(processedPrompt);
-       console.log(requestObject);
-       console.log(processedPrompt);
+    async handlePrompt(index, fileContent, prompt) {
+        try {
+            const promptArray = await context.createPromptContext(index, fileContent, prompt);
+            const requestObject = FormatRequest.model().formatRequest(promptArray, false);
+            const url = FormatRequest.model().getUrl();
+            const response = await Network.doRequest(requestObject, url);
+            return response;
+        } catch (e){
+           console.log(e);
+           throw e;
+        } 
     }
 
     // Helper function to identify and parse prompt cases
-    handleParseCase(text, filePath) {
-        const [caseType, content] = psh.identifyPromptCase(text); // Get case type and content as a tuple
+    handleParseCase(index, fileContent, prompt, verbose) {
+        const [caseType, content] = psh.identifyPromptCase(prompt); // Get case type and content as a tuple
 
         switch (caseType) {
             case 'prompt':
-                this.handlePrompt(content, filePath);
+                if(verbose){
+                    console.log(`Prompt content: ${content}`);
+                }
+                this.handlePrompt(index, fileContent, prompt);
                 break;
             case 'acceptance':
-                console.log(`Acceptance response: ${content}`);
+                if (verbose) {
+                    console.log(`Acceptance response: ${content}`);
+                }
                 break;
             case 'comment':
-                console.log(`Comment content: ${content}`);
+                if (verbose) {
+                    console.log(`Comment content: ${content}`);
+                }
                 break;
             case 'context':
-                console.log(`Context content: ${content}`);
+                if (verbose) {
+                    console.log(`Context content: ${content}`);
+                }
                 break;
             case 'complete':
-                console.log(`Complete content: ${content}`);
+                if (verbose) {
+                    console.log(`Complete content: ${content}`);
+                }
                 break;
             default:
-                console.log('No valid case found.');
                 break;
         }
     }
 
-    async parseFile(filePath) {
+    async parseFile(filePath, verbose) {
         try {
             const fileContent = fs.readFileSync(filePath, 'utf-8');
             const lines = fileContent.split('\n');
@@ -47,7 +63,7 @@ class Parser {
             let promptBuffer = [];
             let isMultiline = false;
 
-            for (let line of lines) {
+            for (let [index, line] of lines.entries()) {
                 const trimmedLine = line.trim();
 
                 // Start of a multiline prompt or generated block
@@ -65,7 +81,7 @@ class Parser {
 
                         // Join all lines in the buffer into a single string for parsing
                         const fullBlock = promptBuffer.join(' ');
-                        this.handleParseCase(fullBlock, filePath); // Use the helper function for multiline blocks
+                        this.handleParseCase(index, fileContent, fullBlock, verbose); // Use the helper function for multiline blocks
 
                         // Reset the buffer
                         promptBuffer = [];
@@ -74,7 +90,7 @@ class Parser {
                 }
 
                 // Process single-line prompts, generated blocks, comments, context, and complete markers
-                this.handleParseCase(trimmedLine, filePath);
+                this.handleParseCase(index, fileContent, trimmedLine, verbose);
             }
         } catch (err) {
             console.error(`Error processing file ${filePath}:`, err.message);

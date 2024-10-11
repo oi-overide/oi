@@ -2,10 +2,9 @@
 const { Command } = require('commander');
 
 const Initialize = require('./commands/initialize');
-const Depend = require('./commands/depend');
 const Watchmen = require('./core/storage/directory/watchmen');
 const Config = require('./commands/config');  // Import addIgnoreFiles here
-
+const Context = require('./core/parser/parse.context');
 
 // Init commander
 const program = new Command();
@@ -24,18 +23,11 @@ program
 program
   .command('start')
   .description('Start watching files and upload them to Ollama')
-  .action(() => {
-    console.log('Starting file watcher...');
-    Watchmen.watchFiles();
-  });
-
-program
-  .command('depend')
-  .description('Generate a dependency graph for the project')
-  .option('-o, --output <path>', 'Specify a custom output file path')
   .option('-v, --verbose', 'Enable verbose output')
-  .action((options) => {
-    Depend.depend(options);
+  .action(async (options) => {
+    console.log('Starting file watcher...');
+    Context.createContext(options.verbose);
+    Watchmen.watchFiles(options.verbose);
   });
 
 program

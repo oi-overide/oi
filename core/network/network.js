@@ -11,10 +11,14 @@ class Network {
      * @param {string} suffix - The code after the target generation block.
      * @returns {string} - The generated code response.
      */
-    doRequest = async (requestData, url) => {
+    doRequest = async (requestData, url, verbose) => {
       try {
         // Get the model type from oi-config.json
         const modelType = dih.getConfigJsonValue('model_type');
+
+        if(verbose){
+          console.log(`Request data : ${requestData}`)
+        }
 
         if(modelType == "openai"){
           const openai = new OpenAI.OpenAI({
@@ -27,6 +31,11 @@ class Network {
         }
 
         const response = await axios.post(url, requestData);
+
+        if(verbose){
+          console.log(`Response received : ${response}`)
+        }
+
         return response;  // Return the response data
       } catch (error) {
           console.error(`Error generating code: ${error.message}`);

@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 class Directory {
+
+    //> Write a new function to split the file contents into chunks. Add it to this class. <// 
+
     // Gather files recursively for generating the dependency graph.
     gatherFilesRecursively = (dirPath, fileContents, ignoreList = [], verbose = false) => {
         const files = fs.readdirSync(dirPath);
