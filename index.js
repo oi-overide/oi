@@ -23,9 +23,10 @@ program
 program
   .command('start')
   .description('Start watching files and upload them to Ollama')
-  .action(() => {
+  .option('-v, --verbose', 'Enable verbose output')
+  .action((options) => {
     console.log('Starting file watcher...');
-    Watchmen.watchFiles();
+    Watchmen.watchFiles(options.verbose||false);
   });
 
 program

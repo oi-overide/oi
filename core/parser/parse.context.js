@@ -56,23 +56,29 @@ class Context {
             }
 
             const lines = fileContent.split('\n');
+            const importsBuffer = [];
             const preContextBuffer = [];
             const postContextBuffer = [];
 
             for(let [curIndex, line] of lines.entries()){
+
+                if(index < 10){
+                    importsBuffer.push(line.trim());
+                }
+
                 // Keeping the window size of 10 lines before the prompt.
                 if(curIndex >= (index-10) && curIndex < index){
-                    preContextBuffer.push(line);
+                    preContextBuffer.push(line.trim());
                 }
 
                 if(curIndex > index && curIndex <= (index+10)){
-                    postContextBuffer.push(line);
+                    postContextBuffer.push(line.trim());
                 }
             }
 
-            const trimmedPrompt = prompt.replace('//>', '').replace('<//', '').trim();
+            const trimmedPrompt = prompt.replace('//>', '').replace('<//', '').replace('\n', '').replace('//','').trim();
 
-            return [preContextBuffer.join('\n'), trimmedPrompt, postContextBuffer.join('\n')];
+            return [importsBuffer.join('\n'),preContextBuffer.join('\n'), trimmedPrompt, postContextBuffer.join('\n')];
         } catch (e) {
             console.error("Error creating prompt context:", e);
             throw e;

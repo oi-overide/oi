@@ -1,27 +1,43 @@
-const dih = require('../../helpers/help.directory')
-
-
 class FormatRequest {
     // Format request for OpenAI models
-    createOpenAIRequest(prompt, isDependencyGraph = false) {
-        // Get the model name from oi-config.json
-        const model = dih.getConfigJsonValue('model');
+    createOpenAIRequest(prompt, promptArray, verbose) {
 
-        if (!model) {
-            throw new Error('Model not specified in oi-config.json');
-        }
+        const context = `
+            <First 10 lines of the file>
+            ${promptArray[0]}
 
-        let finalPrompt = prompt;
+            <10 lines before the insertion>
+            ${promptArray[1]}
 
-        // Skip infilling prompt when generating the dependency graph
-        if (!isDependencyGraph) {
-            finalPrompt = `Complete the code based on the following context:\n\n${prompt}\n\nFill in the missing part here.`;
+            <10 lines after the insertion>
+            ${promptArray[3]}
+        `;
+
+        // Construct a clearer and more informative prompt
+        let finalPrompt = `You are a coding assistant specialized in generating accurate and efficient code completions. 
+            Below is the current code context and an incomplete code block that needs to be completed.
+
+            Context:
+            ${context}
+
+            Incomplete code:
+            ${prompt}
+
+            Please generate the missing code to ensure the functionality is correct, 
+            efficient, and follows best practices. If necessary, include comments explaining the code.`;
+
+        
+        if(verbose){
+            console.log(`Prompt Text : ${finalPrompt}`);
         }
 
         // Construct the request body for OpenAI API
         return {
-            model: model,
-            messages: [{ role: 'user', content: finalPrompt }],
+            model: "gpt-4o",
+            messages: [
+                { role: 'system', content: 'You are a coding assistant api.' },
+                { role: 'user', content: finalPrompt },
+            ],
             temperature: 0.7,        // You can adjust temperature based on randomness
             max_tokens: 1000,        // Limit token length of the response (adjust as needed)
             n: 1,                    // Number of completions to generate

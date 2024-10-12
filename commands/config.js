@@ -5,7 +5,6 @@ class Config {
   constructor(options) {
     this.options = options;
     this.configPath = dih.getConfigFilePath();
-    this.config = dih.getConfigJsonValue();
   }
 
   updateConfig(options) {

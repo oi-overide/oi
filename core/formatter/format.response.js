@@ -4,7 +4,7 @@ class FormatResponse {
      * @param {string} response - The response from the OpenAI API
      * @returns {string} - The code that needs to be inserted.
      */
-    formatOpenAIResponse(response) {
+    formatOpenAIResponse(response, verbose) {
         try {
             // Extract the content from the first choice
             const content = response.choices[0].message.content;
@@ -13,6 +13,11 @@ class FormatResponse {
             const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
 
             if (codeMatch && codeMatch[1]) {
+
+                if(verbose){
+                    console.log(`Code Block : ${codeMatch[1]}`);
+                }
+
                 return codeMatch[1];  // Return the extracted code
             } else {
                 throw new Error("No code block found in the response");

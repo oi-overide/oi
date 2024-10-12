@@ -1,8 +1,6 @@
 const chokidar = require('chokidar');
 const dih = require('../../../helpers/help.directory');
 const ps = require('../../parser/parse.promt');
-const depend = require('../../../commands/depend');
-
 class Watchmen {
     async watchFiles(verbose) {
         // Ensure 'oi-config.json' exists
@@ -32,17 +30,13 @@ class Watchmen {
                 if (verbose) {
                     console.log(`File ${filePath} has been added`);
                 }
-                
-                
             })
             .on('change', async (filePath) => {
                 if(verbose) {
                     console.log(`File ${filePath} has been changed`);
-                }
-                
+                }                
                 // Parse and update dependency graph for the added file
                 await ps.parseFile(filePath);
-                await depend.generateDependencyGraph(filePath, await dih.readFileContent(filePath), verbose);
             })
             .on('unlink', filePath => {
                 if(verbose) {

@@ -5,32 +5,10 @@
 
 ## Key Features
 
-- **AI-Powered Code Generation**: Automatically generate code based on embedded prompts in your files, using services like OpenAI’s Codex or other AI models.
+- **IDE Agnostic**: Oi-Override is designed to work with any IDE, allowing you to seamlessly integrate code generation into your development workflow.
+- **AI-Powered Code Generation**: Automatically generate code based on embedded prompts in your files, using OpenAI’s API.
 - **Live File Monitoring**: Continuously monitor your project files for updates and code generation prompts.
-- **Simple Prompting Syntax**: Use intuitive patterns like `//> <//` to guide AI in generating or completing code snippets in specific locations.
-- **Project Context Management**: Oi-Override tracks the project’s structure and dependencies using a lightweight `.oi-dependency.json` file, keeping project-wide context in sync.
-- **Customizable AI Backends**: Easily switch between AI services such as OpenAI or self-hosted models (e.g., Code Llama), giving you flexibility over how code is generated.
-- **Unlimited Generations**: Generate code as often as needed, with no hard limits on usage (service dependent).
-
-## Installation
-
-### Using Homebrew
-
-Install Oi-Override via Homebrew:
-
-```bash
-brew install oi
-```
-
-### Manual Installation
-
-Alternatively, you can clone the repository and install it manually:
-
-```bash
-git clone https://github.com/your-username/oi-override.git
-cd oi-override
-npm install
-```
+- **Simple Prompting Syntax**: Use intuitive patterns like `//> <//` or `//@complete` to guide AI in generating or completing code snippets in specific locations.
 
 ## Usage
 
@@ -64,7 +42,17 @@ Place prompts in your code files to indicate where Oi should generate code. For 
 
 Oi will then generate the required code and insert it directly into the file at the prompt location.
 
-### Generate Dependency Graph
+```javascript
+  //- Generate a function to add two numbers
+  const function = sum(a, b) {
+    return a + b;
+  }
+  //> Accept the changes (y/n): -//
+```
+
+Based on the user's response, Oi will either keep the changes or discard them.
+
+### Generate Dependency Graph - IN DEV
 
 You can generate or update the project dependency graph by running:
 
@@ -82,7 +70,6 @@ Example configuration:
 
 ```json
 {
-  "service": "http://localhost:8000",
   "ignore": ["node_modules", "*.test.js"],
   "verbose": true
 }
@@ -94,6 +81,12 @@ Example configuration:
 - **ignore**: Files or directories to exclude from monitoring.
 - **verbose**: Enable verbose logging to track detailed operations.
 
+## Version 2.0 Plan
+
+- **Project Context Management**: Oi allows to create a tracks the project’s structure and dependencies using a lightweight `.oi-dependency.json` file, keeping project-wide context in sync. 
+- **Customizable AI Backends**: Easily switch between AI services such as OpenAI or self-hosted models (e.g., Code Llama), giving you flexibility over how code is generated.
+- **Unlimited Generations**: Generate code as often as needed, with no hard limits on usage (service dependent).
+
 ## Contributing
 
 We welcome contributions from the community! Here’s how you can help:
@@ -104,9 +97,13 @@ We welcome contributions from the community! Here’s how you can help:
 
 Feel free to open issues for bugs, feature requests, or general feedback!
 
+## Community 
+
+Join our [Discord](https://discord.com/invite/Z7F4vRq3n8) community to discuss and collaborate on projects, share ideas, and stay up-to-date with the latest developments in the Oi-Override ecosystem.
+
 ## License
 
-Oi-Override is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+Oi-Override is licensed under the GNU GPL-2.0 License. See the [LICENSE](LICENSE) file for more details.
 
 ---
 

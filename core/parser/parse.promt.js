@@ -1,80 +1,109 @@
 const fs = require('fs');
 const psh = require('../../helpers/help.parser');
-const context = require('./parse.context');
-const freq = require('../formatter/format.request');
+const Context = require('./parse.context');
+const FormatRequest = require('../formatter/format.request');
+const Network = require('../network/network');
+const FormatResponse = require('../formatter/format.response');
+const Directory = require('../storage/directory/directory');
 
 class Parser {
 
-    // Handle prompt case.
-    async handlePrompt(content, filePath) {
-       const processedPrompt = await context.createContext(content, filePath);
-       const requestObject = freq.formatRequest(processedPrompt);
-       console.log(requestObject);
-       console.log(processedPrompt);
+    //-This is single line
+    processData(data) {
+        const results = [];
+        const limit = 10;  // Maximum number of users to process
+        if (!data || data.length === 0) {
+            return 'No data to process';
+        }
+
+        for (let i = 0; i < Math.min(data.length, limit); i++) {
+            // Process each user data and push the result
+            const processedUser = {
+                id: data[i].id,
+                name: data[i].name.toUpperCase(),
+                isActive: data[i].active ? 'Active' : 'Inactive'
+            };
+            results.push(processedUser);
+        }
+
+        return results;
     }
+    
 
-    // Helper function to identify and parse prompt cases
-    handleParseCase(text, filePath) {
-        const [caseType, content] = psh.identifyPromptCase(text); // Get case type and content as a tuple
+    // Handle the acceptance response
+    async handleAcceptance(acceptanceLine, codeBlock, response, fileContent, filePath) {
+        console.log(response);
+        if(response === 'n'){            
+            Directory.removeCodeBlock(fileContent, filePath, codeBlock);
+            return;
+        }
 
-        switch (caseType) {
-            case 'prompt':
-                this.handlePrompt(content, filePath);
-                break;
-            case 'acceptance':
-                console.log(`Acceptance response: ${content}`);
-                break;
-            case 'comment':
-                console.log(`Comment content: ${content}`);
-                break;
-            case 'context':
-                console.log(`Context content: ${content}`);
-                break;
-            case 'complete':
-                console.log(`Complete content: ${content}`);
-                break;
-            default:
-                console.log('No valid case found.');
-                break;
+        if(response === 'y'){
+            Directory.removeAcceptanceMessage(fileContent, filePath, acceptanceLine);
+            return;
         }
     }
 
-    async parseFile(filePath) {
+
+    // This is to handle the prompts.
+    async handlePrompt(index, fileContent, prompt, filePath) {
+        try {
+            // Creating the request prompt.
+            const promptArray = await Context.createPromptContext(index, fileContent, prompt);
+            // Getting the request object.
+            const requestObject = FormatRequest.createOpenAIRequest(prompt, promptArray);
+
+            // Making the request.
+            const response = await Network.doRequest(requestObject);
+
+            // Parse the response
+            const codeData = FormatResponse.formatOpenAIResponse(response);
+
+            // Insert the code into the file.
+            Directory.insertCodeBlock(filePath, prompt, codeData);
+        } catch (e) {
+            console.log(e);
+            throw e;
+        }
+    }
+
+    async parseFile(filePath, verbose) {
         try {
             const fileContent = fs.readFileSync(filePath, 'utf-8');
-            const lines = fileContent.split('\n');
+            const promptCase = psh.identifyPromptCase(fileContent);
 
-            let promptBuffer = [];
-            let isMultiline = false;
-
-            for (let line of lines) {
-                const trimmedLine = line.trim();
-
-                // Start of a multiline prompt or generated block
-                if ((trimmedLine.includes('//>') || trimmedLine.includes('//-')) && !isMultiline) {
-                    isMultiline = true;
+            for (const casse of promptCase) {
+                switch (casse[0]) {
+                    case 'prompt':
+                        if (verbose) {
+                            console.log(`Prompt content: ${casse[1]}`);
+                        }
+                        this.handlePrompt(casse[2], fileContent, casse[1], filePath);
+                        break;
+                    case 'acceptance':
+                        if (verbose) {
+                            console.log(`Acceptance response: ${casse[1]}`);
+                        }
+                        this.handleAcceptance(casse[2],casse[3], casse[1], fileContent, filePath);
+                        break;
+                    case 'comment':
+                        if (verbose) {
+                            console.log(`Comment content: ${casse[1]}`);
+                        }
+                        break;
+                    case 'context':
+                        if (verbose) {
+                            console.log(`Context content: ${casse[1]}`);
+                        }
+                        break;
+                    case 'complete':
+                        if (verbose) {
+                            console.log(`Complete content: ${casse[1]}`);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-
-                // Accumulate lines if inside a multiline block
-                if (isMultiline) {
-                    promptBuffer.push(trimmedLine);
-
-                    // Check for the closing tag to end the multiline block
-                    if (trimmedLine.includes('<//') || trimmedLine.includes('-//')) {
-                        isMultiline = false;
-
-                        // Join all lines in the buffer into a single string for parsing
-                        const fullBlock = promptBuffer.join(' ');
-                        this.handleParseCase(fullBlock, filePath); // Use the helper function for multiline blocks
-
-                        // Reset the buffer
-                        promptBuffer = [];
-                    }
-                    continue; // Skip further processing in the multiline case
-                }
-
-                // Process single-line prompts, generated blocks, comments, context, and complete markers
-                this.handleParseCase(trimmedLine, filePath);
             }
         } catch (err) {
             console.error(`Error processing file ${filePath}:`, err.message);
