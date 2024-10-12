@@ -8,28 +8,6 @@ const Directory = require('../storage/directory/directory');
 
 class Parser {
 
-    //-This is single line
-    processData(data) {
-        const results = [];
-        const limit = 10;  // Maximum number of users to process
-        if (!data || data.length === 0) {
-            return 'No data to process';
-        }
-
-        for (let i = 0; i < Math.min(data.length, limit); i++) {
-            // Process each user data and push the result
-            const processedUser = {
-                id: data[i].id,
-                name: data[i].name.toUpperCase(),
-                isActive: data[i].active ? 'Active' : 'Inactive'
-            };
-            results.push(processedUser);
-        }
-
-        return results;
-    }
-    
-
     // Handle the acceptance response
     async handleAcceptance(acceptanceLine, codeBlock, response, fileContent, filePath) {
         console.log(response);
