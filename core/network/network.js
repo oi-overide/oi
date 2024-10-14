@@ -1,7 +1,34 @@
 require('dotenv').config();
 const OpenAI = require('openai');
+const DirectoryHelper = require('../../helpers/help.directory');
+const fs = require('fs');
 
 class Network {
+  static api_key;
+  static org_id;
+
+  constructor(){
+    this.init();
+  }
+
+  async init(){
+    try{
+      // Get the details from the global config file.
+      const globalConfig = await fs.readFileSync(DirectoryHelper.getGlobalConfigFilePath(), 'utf-8');
+      const globalConfigJson = JSON.parse(globalConfig);
+
+      console.log(globalConfigJson);
+
+      this.api_key = globalConfigJson.apiKey;
+      this.org_id = globalConfigJson.orgId;
+      console.log(this.api_key);
+      console.log(this.org_id);
+    } catch(e){
+      console.log(e);
+      throw new Error("Network Initialization Failed");
+    }
+  }
+
   /**
    * Generate code using DeepSeek Coder.
    * @param {string} prefix - The code before the target generation block.
@@ -11,8 +38,8 @@ class Network {
   doRequest = async (requestData) => {
     try {
       const openai = new OpenAI.OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-        organization: process.env.OPENAI_ORG_ID,
+        apiKey: this.api_key,
+        organization: this.org_id,
       });
 
       const completions = await openai.chat.completions.create(requestData);

@@ -8,7 +8,7 @@
 - **IDE Agnostic**: Oi-Override is designed to work with any IDE, allowing you to seamlessly integrate code generation into your development workflow.
 - **AI-Powered Code Generation**: Automatically generate code based on embedded prompts in your files, using OpenAI’s API.
 - **Live File Monitoring**: Continuously monitor your project files for updates and code generation prompts.
-- **Simple Prompting Syntax**: Use intuitive patterns like `//> <//` or `//@complete` to guide AI in generating or completing code snippets in specific locations.
+- **Simple Prompting Syntax**: Use intuitive patterns like `//> <//` to guide AI in generating or completing code snippets in specific locations.
 
 ## Usage
 

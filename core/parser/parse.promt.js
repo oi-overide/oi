@@ -64,21 +64,6 @@ class Parser {
                         }
                         this.handleAcceptance(casse[2],casse[3], casse[1], fileContent, filePath);
                         break;
-                    case 'comment':
-                        if (verbose) {
-                            console.log(`Comment content: ${casse[1]}`);
-                        }
-                        break;
-                    case 'context':
-                        if (verbose) {
-                            console.log(`Context content: ${casse[1]}`);
-                        }
-                        break;
-                    case 'complete':
-                        if (verbose) {
-                            console.log(`Complete content: ${casse[1]}`);
-                        }
-                        break;
                     default:
                         break;
                 }
