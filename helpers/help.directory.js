@@ -1,8 +1,34 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 class DirectoryHelper {
     static configFileName = "oi-config.json";
+    static globalConfigFileName = "oi-global-config.json";
+
+    // Get Global Config Path
+    getGlobalConfigDirPath() {
+        const configDir = process.platform === 'win32'
+            ? path.join(process.env.APPDATA, 'oi')   // For Windows
+            : path.join(os.homedir(), '.config', 'oi');  // For Linux/macOS
+        return configDir;
+    }
+
+    // Check if Global Config Exists
+    globalConfigDirExists() {
+        const configDir = this.getGlobalConfigDirPath();
+        return fs.existsSync(configDir);
+    }
+
+    getGlobalConfigFilePath() {
+        const configDir = this.getGlobalConfigDirPath();
+        return path.join(configDir, DirectoryHelper.globalConfigFileName);
+    }
+
+    globalConfigFileExists() {
+        const configFilePath = this.getGlobalConfigFilePath();
+        return fs.existsSync(configFilePath);
+    }
 
     /**
      * Get the content of a file.
@@ -12,7 +38,7 @@ class DirectoryHelper {
     async readFileContent(filePath) {
         return fs.promises.readFile(filePath, 'utf8');
     }
-    
+
     /** 
      * Check if the oi-config.json file exists in the current directory.
      * @returns {boolean}
@@ -37,7 +63,7 @@ class DirectoryHelper {
      * @returns {string} 
      */
     getCurrentDirectory() {
-        return process.cwd(); 
+        return process.cwd();
     }
 
     /**
