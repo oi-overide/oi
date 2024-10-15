@@ -83,9 +83,10 @@ Example configuration:
 
 ## Version 2.0 Plan
 
-- **Project Context Management**: Oi allows to create a tracks the project’s structure and dependencies using a lightweight `.oi-dependency.json` file, keeping project-wide context in sync. 
-- **Customizable AI Backends**: Easily switch between AI services such as OpenAI or self-hosted models (e.g., Code Llama), giving you flexibility over how code is generated.
-- **Unlimited Generations**: Generate code as often as needed, with no hard limits on usage (service dependent).
+- **Project Context Management**: Using local parsers we should be able to generate better prompts that require less tokens.
+- **Code Format**: Switch to using unified diff format to improve code insertion.
+- **Multiple File Edit**: Oi should be able to edit multiple files at once to execute complex tasks.
+- **Script Execution**: Oi should be able to write and execute scripts to automate tasks.
 
 ## Contributing
 
