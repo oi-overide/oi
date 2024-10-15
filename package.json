@@ -1,7 +1,7 @@
 {
   "name": "oi",
-  "version": "1.0.0",
-  "description": "This is a CLI base Code Generation Tool which uses Ollama as Backend.",
+  "version": "0.0.1",
+  "description": "This is a CLI base Code Generation Tool.",
   "main": "index.js",
   "bin": {
     "oi": "index.js"

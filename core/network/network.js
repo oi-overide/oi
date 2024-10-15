@@ -16,13 +16,8 @@ class Network {
       // Get the details from the global config file.
       const globalConfig = await fs.readFileSync(DirectoryHelper.getGlobalConfigFilePath(), 'utf-8');
       const globalConfigJson = JSON.parse(globalConfig);
-
-      console.log(globalConfigJson);
-
       this.api_key = globalConfigJson.apiKey;
       this.org_id = globalConfigJson.orgId;
-      console.log(this.api_key);
-      console.log(this.org_id);
     } catch(e){
       console.log(e);
       throw new Error("Network Initialization Failed");
@@ -44,9 +39,6 @@ class Network {
 
       const completions = await openai.chat.completions.create(requestData);
       return completions;
-
-
-
     } catch (error) {
       console.error(`Error generating code: ${error.message}`);
       throw error;
