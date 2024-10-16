@@ -1,7 +1,7 @@
 {
-  "name": "oi",
+  "name": "overide",
   "version": "0.0.1",
-  "description": "This is a CLI base Code Generation Tool.",
+  "description": "This is a CLI based Code Generation Tool.",
   "main": "index.js",
   "bin": {
     "oi": "index.js"
@@ -14,7 +14,6 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.7.7",
-    "chalk": "^5.3.0",
     "chokidar": "^4.0.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
@@ -26,5 +25,12 @@
     "@eslint/js": "^9.11.1",
     "eslint": "^9.11.1",
     "globals": "^15.10.0"
-  }
+  },
+  "files": [
+    "commands",
+    "core",
+    "helpers",
+    "index.js",
+    "oi-config.json"
+  ]
 }

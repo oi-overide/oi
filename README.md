@@ -10,6 +10,16 @@
 - **Live File Monitoring**: Continuously monitor your project files for updates and code generation prompts.
 - **Simple Prompting Syntax**: Use intuitive patterns like `//> <//` to guide AI in generating or completing code snippets in specific locations.
 
+## Quick Installation
+
+Use npm to install oi.. 
+
+```
+npm i -g overide
+```
+
+Optionally take a look at out [installation guide](https://github.com/oi-overide/oi-overide/blob/main/Installation/Installation.md) for more options.. 
+
 ## Usage
 
 ### Initialize a Project
@@ -70,8 +80,8 @@ Example configuration:
 
 ```json
 {
+  "name": "project name",
   "ignore": ["node_modules", "*.test.js"],
-  "verbose": true
 }
 ```
 
