@@ -1,7 +1,7 @@
 {
   "name": "oi",
-  "version": "1.0.0",
-  "description": "This is a CLI base Code Generation Tool which uses Ollama as Backend.",
+  "version": "0.0.1",
+  "description": "This is a CLI base Code Generation Tool.",
   "main": "index.js",
   "bin": {
     "oi": "index.js"
@@ -18,7 +18,13 @@
     "chokidar": "^4.0.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
-    "openai": "^4.65.0"
+    "inquirer": "^11.1.0",
+    "openai": "^4.67.2"
   },
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "@eslint/js": "^9.11.1",
+    "eslint": "^9.11.1",
+    "globals": "^15.10.0"
+  }
 }
