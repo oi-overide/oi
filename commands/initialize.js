@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const dih = require('../helpers/help.directory');
+const DirectoryHelper = require('../helpers/help.directory');
 
 class Initialize {
   displayAsciiArt = () => {
@@ -21,10 +21,10 @@ class Initialize {
   };
 
   addIgnoreFiles = (files) => {
-    const configPath = dih.getConfigFilePath();
+    const configPath = DirectoryHelper.getConfigFilePath();
 
     // Check if oi-config.json exists
-    if (!dih.configExists()) {
+    if (!DirectoryHelper.configExists()) {
       console.error(`Error: oi-config.json not found at ${configPath}`);
       process.exit(1);
     }
@@ -61,7 +61,7 @@ class Initialize {
     }
   };
 
-  initializeProject = (options) => {
+  initializeProject = async (options) => {
     try {
       const outputPath = options.output || path.join(process.cwd(), 'oi-config.json');
       const ignoreFiles = options.ignore || [];
@@ -102,6 +102,8 @@ class Initialize {
         ignore: combinedIgnoreFiles,
         dependency: "oi-dependency.json",
       };
+
+      await DirectoryHelper.makeRequiredDirectories();
 
       try {
         // Create directories if they do not exist

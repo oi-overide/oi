@@ -1,40 +1,25 @@
 require('dotenv').config();
 const OpenAI = require('openai');
-const DirectoryHelper = require('../../helpers/help.directory');
-const fs = require('fs');
 
 class Network {
-  static api_key;
-  static org_id;
-
-  constructor(){
-    this.init();
-  }
-
-  async init(){
-    try{
-      // Get the details from the global config file.
-      const globalConfig = await fs.readFileSync(DirectoryHelper.getGlobalConfigFilePath(), 'utf-8');
-      const globalConfigJson = JSON.parse(globalConfig);
-      this.api_key = globalConfigJson.apiKey;
-      this.org_id = globalConfigJson.orgId;
-    } catch(e){
-      console.log(e);
-      throw new Error("Network Initialization Failed");
-    }
-  }
-
   /**
    * Generate code using DeepSeek Coder.
-   * @param {string} prefix - The code before the target generation block.
-   * @param {string} suffix - The code after the target generation block.
-   * @returns {string} - The generated code response.
+   * @param {object} requestData - The request data for the OpenAI API.
+   * @param {object} config - The configuration object containing `api_key` and `org_id`.
+   * @returns {Promise<string>} - The generated code response.
    */
-  doRequest = async (requestData) => {
+  async doRequest(requestData, config) {
+    const { api_key, org_id } = config; // Extract keys from the config object
+
     try {
+      // Ensure API key and org ID are available before making a request
+      if (!api_key || !org_id) {
+        throw new Error("API key or Organization ID is not provided.");
+      }
+
       const openai = new OpenAI.OpenAI({
-        apiKey: this.api_key,
-        organization: this.org_id,
+        apiKey: api_key,
+        organization: org_id,
       });
 
       const completions = await openai.chat.completions.create(requestData);
@@ -43,7 +28,7 @@ class Network {
       console.error(`Error generating code: ${error.message}`);
       throw error;
     }
-  };
+  }
 }
 
 module.exports = new Network();
