@@ -6,111 +6,115 @@ class DirectoryHelper {
     static configFileName = "oi-config.json";
     static globalConfigFileName = "oi-global-config.json";
 
-    // Get Global Config Path
-    getGlobalConfigDirPath() {
-        const configDir = process.platform === 'win32'
-            ? path.join(process.env.APPDATA, 'oi')   // For Windows
-            : path.join(os.homedir(), '.config', 'oi');  // For Linux/macOS
-        return configDir;
-    }
-
-    // Check if Global Config Exists
-    globalConfigDirExists() {
-        const configDir = this.getGlobalConfigDirPath();
-        return fs.existsSync(configDir);
-    }
-
-    getGlobalConfigFilePath() {
-        const configDir = this.getGlobalConfigDirPath();
-        return path.join(configDir, DirectoryHelper.globalConfigFileName);
-    }
-
-    globalConfigFileExists() {
-        const configFilePath = this.getGlobalConfigFilePath();
-        return fs.existsSync(configFilePath);
-    }
-
     /**
-     * Get the content of a file.
-     * @param {string} filePath 
-     * @returns {string} content of the file.
+     * Utility function to load configuration from the global config file.
+     * @returns {object} - The configuration object containing `api_key` and `org_id`.
      */
+    static loadGlobalConfig() {
+        try {
+            // Check if the global config file exists
+            if (!DirectoryHelper.globalConfigFileExists()) {
+                console.log("Global config file not found. Please run 'oi config -g' to set up.");
+                return null; // Return null if config does not exist
+            }
+
+            // Load and parse the global config file
+            const globalConfig = fs.readFileSync(DirectoryHelper.getGlobalConfigFilePath(), 'utf-8');
+            return JSON.parse(globalConfig); // Return the parsed configuration
+        } catch (error) {
+            console.error(`Error loading global config: ${error.message}`);
+            throw error;
+        }
+    }
+
+    // Read and parse JSON from a file
+    async readJsonFile(filePath) {
+        return this.readFileContent(filePath)
+            .then(content => JSON.parse(content))
+            .catch(error => {
+                console.error(`Error reading config file: ${error.message}`);
+                process.exit(1);
+            });
+    }
+
+    // Write data to a JSON file
+    async writeJsonFile(filePath, data) {
+        return fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
+            .then(() => {
+                console.log(`Config file updated at: ${filePath}`);
+            })
+            .catch(error => {
+                console.error(`Error writing config file: ${error.message}`);
+                process.exit(1);
+            });
+    }
+
+    // Create directories and files if they do not exist
+    async makeRequiredDirectories() {
+        const configDir = this.getDirectoryPath(true);
+        const configFile = this.getFilePath(true);
+
+        // Create the directory if it doesn't exist
+        if (!this.directoryExists(true)) {
+            fs.mkdirSync(configDir, { recursive: true });
+            console.log(`Created directory: ${configDir}`);
+        }
+
+        // Create the config file if it doesn't exist
+        if (!this.configExists(true)) {
+            await this.writeJsonFile(configFile, {});
+            console.log(`Created config file: ${configFile}`);
+        }
+    }
+
+    getDirectoryPath(global){
+        // If global path then return the global config directory path.
+        if(global){
+            return process.platform === 'win32'
+            ? path.join(process.env.APPDATA, 'oi')  // Windows
+            : path.join(os.homedir(), '.config', 'oi');  // Linux/macOS
+        }
+
+        // Return the current working directory.
+        return process.cwd();
+    }
+
+    getFilePath(global){
+        // If global path then return the global config file path.
+        if(global){
+            return path.join(this.getDirectoryPath(global), DirectoryHelper.globalConfigFileName);
+        }
+        // Return the current working directory.    
+        return path.join(this.getDirectoryPath(), DirectoryHelper.configFileName);
+    }
+
+    // Check if the config file (local/global) exists
+    configExists(global) {
+        const configPath = this.getFilePath(global);
+        return fs.existsSync(configPath);
+    }
+
+    //Check if directory exists.
+    directoryExists(global){
+        const directoryPath = this.getDirectoryPath(global);
+        return fs.existsSync(directoryPath);
+    }
+
+    // Read file content
     async readFileContent(filePath) {
         return fs.promises.readFile(filePath, 'utf8');
     }
 
-    /** 
-     * Check if the oi-config.json file exists in the current directory.
-     * @returns {boolean}
-     */
-    configExists() {
-        const configFilePath = this.getConfigFilePath();
-        console.log(configFilePath);
-        return fs.existsSync(configFilePath);
-    }
-
-    /**
-     * Check if the oi-dependency.json file exists in the current directory.
-     * @returns {boolean}
-     */
-    dependencyExists() {
-        const dependencyFilePath = this.getDependencyFilePath();
-        return fs.existsSync(dependencyFilePath);
-    }
-
-    /**
-     * Get the current working directory.
-     * @returns {string} 
-     */
-    getCurrentDirectory() {
-        return process.cwd();
-    }
-
-    /**
-     * Get the path to the oi-config.json
-     * @returns {string}
-     */
-    getConfigFilePath() {
-        const currentDir = this.getCurrentDirectory();
-        const filePath = path.join(currentDir, DirectoryHelper.configFileName);
-        return filePath;
-    }
-
-    /**
-     * Get the path to the oi-dependency.json
-     * @returns {string}
-     */
-    async getDependencyFilePath() {
-        const currentDir = this.getCurrentDirectory();
-        const dependencyFileName = this.getConfigJsonValue("dependency");
-        const filePath = path.join(currentDir, dependencyFileName);
-        return filePath;
-    }
-
-    /**
-     * Get the list of the ignored files
-     * @returns {[string]}
-     */
+    // Get the list of ignored files from the config
     getIgnoredFiles() {
-        return this.getConfigJsonValue("ignore");
+        return this.getConfigJsonValue('ignore');
     }
 
-    /**
-     * Get the value of a key in the oi-config.json
-     * @param {string} key 
-     * @returns {string}
-     */
-    getConfigJsonValue(key) {
-        const configFilePath = this.getConfigFilePath();
-        const configFile = fs.readFileSync(configFilePath, 'utf-8');
-        const configJson = JSON.parse(configFile);
+    // Get the value of a key in the oi-config.json
+    async getConfigJsonValue(key) {
+        const configJson = await this.readJsonFile(this.getFilePath());
         return configJson[key];
     }
-
-    // TODO : Add sourced files later.
-    // getSourcedFiles() {
-    //     return [];
-    // }
 }
 
 module.exports = new DirectoryHelper();

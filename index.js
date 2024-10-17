@@ -35,6 +35,7 @@ program
   .option('-n, --project-name <name>', 'Update project name')
   .option('-i, --ignore <files...>', 'Specify files or directories to ignore')  // Add the ignore option here
   .option('-g, --global', 'Set global variable like api keys and org ids')  // Add the ignore option here
+  .option('-sa, --set-active', 'Set active')
   .action(async (options) => {
     Config.config(options);
   });
