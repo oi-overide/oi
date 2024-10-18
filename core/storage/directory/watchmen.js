@@ -1,19 +1,20 @@
 const chokidar = require('chokidar');
-const dih = require('../../../helpers/help.directory');
-const ps = require('../../parser/parse.promt');
+
+const DirectoryHelper = require('../../../helpers/help.directory');
+const ParsePrompt = require('../../parser/parse.promt');
 class Watchmen {
     async watchFiles(verbose) {
         // Ensure 'oi-config.json' exists
-        if (!dih.configExists()) {
+        if (!DirectoryHelper.configExists()) {
             console.error('Error: oi-config.json file not found in the current directory.');
             process.exit(1);
         }
 
         // Read ignored files from 'oi-config.json'
-        const ignoredFiles = await (dih.getConfigJsonValue('ignore')) || [];
+        const ignoredFiles = await (DirectoryHelper.getConfigJsonValue('ignore')) || [];
 
         // Get the current directory
-        const currentDir = dih.getCurrentDirectory();
+        const currentDir = process.cwd();
 
         // Watch all files recursively with polling
         this.watcher = chokidar.watch(`${currentDir}`, {
@@ -36,7 +37,7 @@ class Watchmen {
                     console.log(`File ${filePath} has been changed`);
                 }                
                 // Parse and update dependency graph for the added file
-                await ps.parseFile(filePath);
+                await ParsePrompt.parseFile(filePath);
             })
             .on('unlink', filePath => {
                 if(verbose) {

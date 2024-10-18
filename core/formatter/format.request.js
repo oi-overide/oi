@@ -1,7 +1,30 @@
-class FormatRequest {
-    // Format request for OpenAI models
-    createOpenAIRequest(prompt, promptArray, verbose) {
+const DirectoryHelper = require('../../helpers/help.directory');
 
+class FormatRequest {
+    // Create a dynamic request based on the active service
+    async createRequest(prompt, promptArray, verbose = false) {
+        try {
+            // Get active service details (returns details like platform, apiKey, etc.)
+            const activeServiceDetails = await DirectoryHelper.getActiveServiceDetails();
+
+            // Check which platform is active and call the respective request function
+            switch (activeServiceDetails.platform) {
+                case 'openai':
+                    return this.createOpenAIRequest(prompt, promptArray, activeServiceDetails, verbose);
+
+                case 'deepseek':
+                    return this.createDeepSeekRequest(prompt, promptArray, activeServiceDetails);
+
+                default:
+                    throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
+            }
+        } catch (error) {
+            console.error(`Error in creating request: ${error.message}`);
+        }
+    }
+
+    // Format request for OpenAI models
+    async createOpenAIRequest(prompt, promptArray,activeServiceDetails, verbose) {
         const context = `
             <First 10 lines of the file>
             ${promptArray[0]}
@@ -33,45 +56,24 @@ class FormatRequest {
 
         // Construct the request body for OpenAI API
         return {
-            model: "gpt-4o",
-            messages: [
-                { role: 'system', content: 'You are a coding assistant api.' },
-                { role: 'user', content: finalPrompt },
-            ],
-            temperature: 0.7,        // You can adjust temperature based on randomness
-            max_tokens: 1000,        // Limit token length of the response (adjust as needed)
-            n: 1,                    // Number of completions to generate
-            stream: false,           // Whether to stream back partial progress
-            presence_penalty: 0,     // Encourages/discourages new ideas
-            frequency_penalty: 0,    // Reduces repetition
+            activeServiceDetails,
+            "metadata": {
+                model: "gpt-4o",
+                messages: [
+                    { role: 'system', content: 'You are a coding assistant api.' },
+                    { role: 'user', content: finalPrompt },
+                ],
+                temperature: 0.7,        // You can adjust temperature based on randomness
+                max_tokens: 1000,        // Limit token length of the response (adjust as needed)
+                n: 1,                    // Number of completions to generate
+                stream: false,           // Whether to stream back partial progress
+                presence_penalty: 0,     // Encourages/discourages new ideas
+                frequency_penalty: 0,    // Reduces repetition
+            },
         };
     }
 
-    // Format request for Ollama-based models
-    createOllamaRequest(prompt, isDependencyGraph) {
-        if (!model) {
-            throw new Error('Model not specified in oi-config.json');
-        }
-
-        let finalPrompt = prompt;
-
-        // Skip the infilling prompt for dependency graph.
-        if (!isDependencyGraph) {
-            finalPrompt = `<|fim▁begin|>${prompt[0]}\n<|fim▁hole|>${prompt[1]}<|fim▁end|>}\n. Just respond with the code block.`;
-        }
-
-        return {
-            model: model,  // Use the model from oi-config
-            prompt: finalPrompt,  // Pass the infilling prompt with tags
-            stream: false,  // Disable streaming
-            keep_alive: 1000,
-            options: {
-                num_ctx: 8102,
-            }
-        };
-    }
-
-    createDeepSeekRequest(prompt, promptArray) {
+    async createDeepSeekRequest(prompt, promptArray, activeServiceDetails) {
         try {
             const context = `
             <First 10 lines of the file>
@@ -94,17 +96,19 @@ class FormatRequest {
             Incomplete code:
             ${prompt}
 
-            Please generate the missing code to ensure the functionality is correct, 
-            efficient, and follows best practices. If necessary, include comments explaining the code.`;
+            Please generate the complete code or missing code to ensure the functionality is correct, 
+            efficient, and follows best practices. Don't explain the code in any way. Put the code inside markdown quote.`;
 
             const messages = [{ "role": "system", "content": finalPrompt },
-                              { "role": "user", "content": prompt }];
+            { "role": "user", "content": prompt }];
 
             return {
-                messages: messages,
-                model: "deepseek-chat",
+                activeServiceDetails,
+                "metadata": {
+                    messages: messages,
+                    model: "deepseek-chat",
+                }
             };
-
         } catch (e) {
             console.log(e);
         }

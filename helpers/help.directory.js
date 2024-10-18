@@ -8,22 +8,48 @@ class DirectoryHelper {
 
     /**
      * Utility function to load configuration from the global config file.
-     * @returns {object} - The configuration object containing `api_key` and `org_id`.
+     * @returns {object} - The configuration object containing `api_key` and/or `org_id`.
      */
-    static loadGlobalConfig() {
+    async loadGlobalConfig() {
         try {
             // Check if the global config file exists
-            if (!DirectoryHelper.globalConfigFileExists()) {
+            if (!this.configExists(true)) {
                 console.log("Global config file not found. Please run 'oi config -g' to set up.");
                 return null; // Return null if config does not exist
             }
 
             // Load and parse the global config file
-            const globalConfig = fs.readFileSync(DirectoryHelper.getGlobalConfigFilePath(), 'utf-8');
-            return JSON.parse(globalConfig); // Return the parsed configuration
+            const globalConfig = await this.readJsonFile(this.getFilePath(true), 'utf-8');
+            return globalConfig; // Return the parsed configuration
         } catch (error) {
             console.error(`Error loading global config: ${error.message}`);
             throw error;
+        }
+    }
+
+    // Returns the details of the currently active service.
+    async getActiveServiceDetails(){
+        try {
+            const globalConfig = await this.loadGlobalConfig();
+    
+            if (!globalConfig) {
+                console.error("Global config not found.");
+                return null;
+            }
+    
+            // Find the active platform
+            const activePlatform = Object.keys(globalConfig).find(platform => globalConfig[platform].isActive);
+    
+            if (activePlatform) {
+                const activeServiceDetails = globalConfig[activePlatform];
+                return { platform: activePlatform, details: activeServiceDetails };
+            } else {
+                console.log("No active platform found.");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error fetching active service details:", error.message);
+            return null;
         }
     }
 
