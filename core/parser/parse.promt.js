@@ -10,8 +10,7 @@ class Parser {
 
     // Handle the acceptance response
     async handleAcceptance(acceptanceLine, codeBlock, response, fileContent, filePath) {
-        console.log(response);
-        if(response === 'n'){            
+        if(response === 'n'){
             Directory.removeCodeBlock(fileContent, filePath, codeBlock);
             return;
         }
@@ -24,18 +23,19 @@ class Parser {
 
 
     // This is to handle the prompts.
-    async handlePrompt(index, fileContent, prompt, filePath) {
+    async handlePrompt(index, fileContent, prompt, filePath, verbose) {
         try {
             // Creating the request prompt.
             const promptArray = await Context.createPromptContext(index, fileContent, prompt);
+            
             // Getting the request object.
-            const requestObject = FormatRequest.createOpenAIRequest(prompt, promptArray);
+            const requestObject = await FormatRequest.createRequest(prompt, promptArray, verbose);
 
             // Making the request.
             const response = await Network.doRequest(requestObject);
 
             // Parse the response
-            const codeData = FormatResponse.formatOpenAIResponse(response);
+            const codeData = await FormatResponse.formatResponse(response);
 
             // Insert the code into the file.
             Directory.insertCodeBlock(filePath, prompt, codeData);
@@ -56,7 +56,7 @@ class Parser {
                         if (verbose) {
                             console.log(`Prompt content: ${casse[1]}`);
                         }
-                        this.handlePrompt(casse[2], fileContent, casse[1], filePath);
+                        this.handlePrompt(casse[2], fileContent, casse[1], filePath, verbose);
                         break;
                     case 'acceptance':
                         if (verbose) {

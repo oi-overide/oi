@@ -1,4 +1,4 @@
-const dih = require('../../helpers/help.directory');
+const DirectoryHelper = require('../../helpers/help.directory');
 const Directory = require('../storage/directory/directory');
 const Network = require('../network/network');
 const FormatRequest = require('../formatter/format.request');
@@ -12,7 +12,8 @@ class Context {
     async createContext(verbose) {
         try {
             // Get Ignore Files
-            const ignoredFiles = await dih.getConfigJsonValue("ignore");
+            const ignoredFiles = await DirectoryHelper.getIgnoredFiles();
+
             await Directory.gatherFilesRecursively(process.cwd(), this.fileContents, ignoredFiles, verbose);
 
             const prompt = `
