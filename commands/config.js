@@ -3,7 +3,7 @@ const { default: inquirer } = require('inquirer');
 
 class Config {
   constructor() {
-    this.platforms = ["OpenAI", "DeepSeek", "Ollama"];
+    this.platforms = ["OpenAI", "DeepSeek"];
     this.platformQuestions = {
       openai: [
         { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
@@ -22,8 +22,8 @@ class Config {
 
     // Check if the global config exists
     if (!DirectoryHelper.configExists(true)) {
-        console.error("Global config (oi-global-config.json) not found.");
-        process.exit(1);
+      console.error("Global config (oi-global-config.json) not found.");
+      process.exit(1);
     }
 
     // Read the existing global config
@@ -32,33 +32,33 @@ class Config {
     // Get the active platforms
     const activePlatforms = Object.keys(existingConfig);
     if (activePlatforms.length === 0) {
-        console.log("No platforms available in the global config.");
-        return;
+      console.log("No platforms available in the global config.");
+      return;
     }
 
     // Prompt user to select a platform
     const { selectedPlatform } = await inquirer.prompt([
-        {
-            type: 'list',
-            name: 'selectedPlatform',
-            message: 'Select the platform you want to activate:',
-            choices: activePlatforms,
-        },
+      {
+        type: 'list',
+        name: 'selectedPlatform',
+        message: 'Select the platform you want to activate:',
+        choices: activePlatforms,
+      },
     ]);
 
     // Update isActive status
     const updatedConfig = {};
     activePlatforms.forEach(platform => {
-        updatedConfig[platform] = {
-            ...existingConfig[platform],
-            isActive: platform === selectedPlatform, // Set isActive to true for the selected platform
-        };
+      updatedConfig[platform] = {
+        ...existingConfig[platform],
+        isActive: platform === selectedPlatform, // Set isActive to true for the selected platform
+      };
     });
 
     // Write the updated configuration back to the global config file
     await DirectoryHelper.writeJsonFile(configFilePath, updatedConfig);
     console.log(`Successfully updated the active platform to: ${selectedPlatform}`);
-}
+  }
 
   // Prompt user for platform-specific config details
   async promptPlatformConfig(platform) {
@@ -89,7 +89,11 @@ class Config {
 
     const updatedConfig = { ...existingConfig, [platformName]: { ...answers, "isActive": Object.keys(existingConfig).length === 0 ? true : false } };
     await DirectoryHelper.writeJsonFile(configFilePath, updatedConfig);
-    if (verbose) console.log(`${DirectoryHelper.configExists(configFilePath) ? 'Updated' : 'Created'} config at: ${configFilePath}`);
+    if (verbose) { 
+      console.log(`${DirectoryHelper.configExists(configFilePath) ? 'Updated' : 'Created'} config at: ${configFilePath}`) 
+    };
+
+    console.log('Run `oi config -sa` to select active platform')
   }
 
   // Handle local configuration
