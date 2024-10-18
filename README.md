@@ -22,6 +22,8 @@ Optionally take a look at out [installation guide](https://github.com/oi-overide
 
 ## Usage
 
+See the detailed [usage instrustion](https://github.com/oi-overide/oi-overide/blob/main/Usage/Commands.md).
+
 ### Initialize a Project
 
 To initialize Oi-Override in your project, run the following command in your project directory:
