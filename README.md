@@ -87,6 +87,7 @@ Example configuration:
 ## Contributing
 
 We welcome contributions from the community! There's a lot going on and we are slowing building so, we can use some help.
+Please take a look at [version guidelines](https://github.com/oi-overide/oi-overide/tree/main/Contribution) before starting
 
 1. Take a look at open [project items](https://github.com/users/oi-overide/projects/1)
 2. It's a good idea to join the discord to discuss the change.
@@ -95,7 +96,7 @@ After this..
 
 1. **Fork** the repository.
 2. Create a **new branch** for your feature or fix.
-3. Use the target version branch as base.
+3. Use the [target version branch](https://github.com/oi-overide/oi-overide/blob/main/Contribution/Target%20Version%20Branch..md) as base.
 4. Submit a **pull request** and describe your changes.
 
 Feel free to open issues for bugs, feature requests, or general feedback!
