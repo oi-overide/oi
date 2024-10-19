@@ -22,6 +22,8 @@ Optionally take a look at out [installation guide](https://github.com/oi-overide
 
 ## Usage
 
+Please read the [Detailed Usage Guide](https://github.com/oi-overide/oi-overide/blob/main/Usage/Commands.md) for all the commands and options. 
+
 ### Initialize a Project
 
 To initialize Oi-Override in your project, run the following command in your project directory:
@@ -62,16 +64,6 @@ Oi will then generate the required code and insert it directly into the file at 
 
 Based on the user's response, Oi will either keep the changes or discard them.
 
-### Generate Dependency Graph - IN DEV
-
-You can generate or update the project dependency graph by running:
-
-```bash
-oi depend
-```
-
-This will create a \`.oi-dependency.json\` file that tracks the structure of your project and its dependencies.
-
 ## Configuration
 
 Oi-Override uses an \`oi-config.json\` file for customization. You can define the AI service, ignore certain files or directories, and configure other options.
@@ -85,12 +77,6 @@ Example configuration:
 }
 ```
 
-### Key Options
-
-- **service**: The AI backend service to use (e.g., OpenAI Codex, local LLM).
-- **ignore**: Files or directories to exclude from monitoring.
-- **verbose**: Enable verbose logging to track detailed operations.
-
 ## Version 2.0 Plan
 
 - **Project Context Management**: Using local parsers we should be able to generate better prompts that require less tokens.
@@ -100,11 +86,17 @@ Example configuration:
 
 ## Contributing
 
-We welcome contributions from the community! Here’s how you can help:
+We welcome contributions from the community! There's a lot going on and we are slowing building so, we can use some help.
+
+1. Take a look at open [project items](https://github.com/users/oi-overide/projects/1)
+2. It's a good idea to join the discord to discuss the change.
+
+After this.. 
 
 1. **Fork** the repository.
 2. Create a **new branch** for your feature or fix.
-3. Submit a **pull request** and describe your changes.
+3. Use the target version branch as base.
+4. Submit a **pull request** and describe your changes.
 
 Feel free to open issues for bugs, feature requests, or general feedback!
 
@@ -115,9 +107,3 @@ Join our [Discord](https://discord.com/invite/Z7F4vRq3n8) community to discuss a
 ## License
 
 Oi-Override is licensed under the GNU GPL-2.0 License. See the [LICENSE](LICENSE) file for more details.
-
----
-
-## Join the Community!
-
-We’re excited to build Oi-Override into a powerful, flexible tool that enhances developer workflows with the help of AI. Follow the repository, contribute, and help us improve Oi for everyone!
