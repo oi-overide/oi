@@ -1,7 +1,7 @@
 const chokidar = require('chokidar');
 
 const DirectoryHelper = require('../../../helpers/help.directory');
-const ParsePrompt = require('../../parser/parse.promt');
+const ParsePrompt = require('../../parser/parse.prompt');
 class Watchmen {
     async watchFiles(verbose) {
         // Ensure 'oi-config.json' exists
