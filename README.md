@@ -24,6 +24,22 @@ Optionally take a look at out [installation guide](https://github.com/oi-overide
 
 Please read the [Detailed Usage Guide](https://github.com/oi-overide/oi-overide/blob/main/Usage/Commands.md) for all the commands and options. 
 
+### Adding API Key
+
+Befor starting run the following command. It will show a list of currently supported platforms and allows to add required information like API KEY, ORG ID
+BASE URL and other. 
+
+```bash
+oi config --global
+```
+
+If you ended up configuring multiple platforms.. i.e ran the above command multiple times and configures details for multiple platforms. You can run the 
+following commands to select an active platform. Oi will use the active platform. 
+
+```bash
+oi config --select-active
+```
+
 ### Initialize a Project
 
 To initialize Oi-Override in your project, run the following command in your project directory:
