@@ -29,14 +29,8 @@ class Network {
     // Handle requests based on the selected platform
     switch (platform) {
       case "openai":
-        console.log("activeServiceDetails", activeServiceDetails);
-        console.log("metadata", metadata);
       return this.handleOpenAIRequest(activeServiceDetails, metadata);
       case "deepseek":
-        console.log("activeServiceDetails", activeServiceDetails);
-        console.log("metadata", metadata);
-        console.log("activeServiceDetails", activeServiceDetails);
-        console.log("metadata", metadata);
       return this.handleDeepSeekRequest(activeServiceDetails, metadata);
       default:
         throw new Error("No valid model or platform selected.");
