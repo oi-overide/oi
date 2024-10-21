@@ -31,55 +31,13 @@ class Network {
       case "openai":
         console.log("activeServiceDetails", activeServiceDetails);
         console.log("metadata", metadata);
-        return {
-          "id": "chatcmpl-1234567890abcdefg",
-          "object": "chat.completion",
-          "created": 1678901234,
-          "model": "gpt-4",
-          "choices": [
-            {
-              "message": {
-                "role": "assistant",
-                "content": "Here is a simple Python function that calculates the factorial of a number:\n\n```python\n\ndef factorial(n):\n    if n == 0:\n        return 1\n    else:\n        return n * factorial(n - 1)\n\n# Example usage:\nprint(factorial(5))  # Output: 120\n```"
-              },
-              "finish_reason": "stop",
-              "index": 0
-            }
-          ],
-          "usage": {
-            "prompt_tokens": 15,
-            "completion_tokens": 50,
-            "total_tokens": 65
-          }
-        };
-      // return this.handleOpenAIRequest(activeServiceDetails, metadata);
+      return this.handleOpenAIRequest(activeServiceDetails, metadata);
       case "deepseek":
         console.log("activeServiceDetails", activeServiceDetails);
         console.log("metadata", metadata);
         console.log("activeServiceDetails", activeServiceDetails);
         console.log("metadata", metadata);
-        return {
-          "id": "chatcmpl-1234567890abcdefg",
-          "object": "chat.completion",
-          "created": 1678901234,
-          "model": "gpt-4",
-          "choices": [
-            {
-              "message": {
-                "role": "assistant",
-                "content": "Here is a simple Python function that calculates the factorial of a number:\n\n```python\n\ndef factorial(n):\n    if n == 0:\n        return 1\n    else:\n        return n * factorial(n - 1)\n\n# Example usage:\nprint(factorial(5))  # Output: 120\n```"
-              },
-              "finish_reason": "stop",
-              "index": 0
-            }
-          ],
-          "usage": {
-            "prompt_tokens": 15,
-            "completion_tokens": 50,
-            "total_tokens": 65
-          }
-        };
-      // return this.handleDeepSeekRequest(activeServiceDetails, metadata);
+      return this.handleDeepSeekRequest(activeServiceDetails, metadata);
       default:
         throw new Error("No valid model or platform selected.");
     }
