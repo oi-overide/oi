@@ -205,6 +205,17 @@ class DirectoryHelper {
         const directoryPath = this.getDirectoryPath(global);
         return fs.existsSync(directoryPath);
     }
+
+    async writeFileContent(filePath, content) {
+        return fs.promises.writeFile(filePath, content, 'utf-8')
+            .then(() => {
+                console.log(`File updated at: ${filePath}`);
+            })
+            .catch(error => {
+                console.error(`Error writing file: ${error.message}`);
+                process.exit(1);
+            });
+    }
 }
 
 module.exports = new DirectoryHelper();

@@ -18,6 +18,8 @@ class Network {
   async doRequest(requestData) {
     const { activeServiceDetails } = requestData;
 
+    console.log("MAKING NETWORK CALL");
+
     // Validate presence of active service details
     if (!activeServiceDetails) {
       throw new Error("No active service details found.");

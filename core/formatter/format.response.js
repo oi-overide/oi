@@ -1,4 +1,5 @@
 const DirectoryHelper = require('../helpers/help.directory');
+const CodeHelper = require('../helpers/help.code');
 
 /**
  * The `FormatResponse` class is responsible for formatting the response received from
@@ -26,7 +27,7 @@ class FormatResponse {
                     return this.formatOpenAIResponse(response, verbose);
 
                 case 'deepseek':
-                    return this.formatDeepSeekResponse(response);
+                    return this.formatDeepSeekResponse(response, verbose);
 
                 default:
                     throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
@@ -48,18 +49,7 @@ class FormatResponse {
         try {
             // Extract the content from the first choice in the response
             const content = response.choices[0].message.content;
-
-            // Use a regular expression to capture the code block inside triple backticks ```
-            const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-
-            if (codeMatch && codeMatch[1]) {
-                if (verbose) {
-                    console.log(`Code Block: ${codeMatch[1]}`);
-                }
-                return codeMatch[1];  // Return the extracted code
-            } else {
-                throw new Error("No code block found in the OpenAI response");
-            }
+            return CodeHelper.extractCodeBlock(content, verbose);
         } catch (error) {
             console.error("Error formatting OpenAI response:", error.message);
             return null;
@@ -72,19 +62,12 @@ class FormatResponse {
      * @param {Object} response - The response from the DeepSeek API.
      * @returns {string|null} The extracted code block, or null if no code block is found.
      */
-    formatDeepSeekResponse(response) {
+    formatDeepSeekResponse(response, verbose) {
         try {
+            console.log("RESPONSEDEEPSEEK : \n",response.choices[0].message.content);
             // Extract the content from the first choice in the response
             const content = response.choices[0].message.content;
-
-            // Use a regular expression to capture the code block inside triple backticks ```
-            const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-
-            if (codeMatch && codeMatch[1]) {
-                return codeMatch[1];  // Return the extracted code
-            } else {
-                throw new Error("No code block found in the DeepSeek response");
-            }
+            return CodeHelper.extractCodeBlock(content, verbose);
         } catch (error) {
             console.error("Error formatting DeepSeek response:", error.message);
             return null;

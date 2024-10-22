@@ -1,4 +1,7 @@
 const fs = require('fs');
+const CodeHelper = require('../helpers/help.code');
+const DirectoryHelper = require('../helpers/help.directory');
+const LocalCache = require('../cache/cache.oldcode');
 
 /**
  * The `CodeInterface` class provides methods for manipulating code blocks and 
@@ -36,13 +39,18 @@ class CodeInterface {
      */
     removeCodeBlock = (fileContent, filePath, codeBlock) => {
         try {
-            // Check if the code block exists in the file content
+            const oldCodeBlock = LocalCache.findOldCode(codeBlock); // Find the corresponding old code block in the cache
             if (fileContent.includes(codeBlock)) {
-                const updatedContent = fileContent.replace(`${codeBlock}`, '');
-                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
-                console.log('Code block removed successfully');
-            } else {
-                console.log('Code block not found in file path');
+                if (oldCodeBlock) {
+                    const updatedContent = fileContent.replace(`${codeBlock}`, oldCodeBlock); // Replace old code with the cached code
+                    fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
+                    console.log('Code block replaced with cached old code successfully');
+                } else {
+                    // Check if the code block exists in the file content
+                    const updatedContent = fileContent.replace(`${codeBlock}`, '');
+                    fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
+                    console.log('Code block removed successfully');
+                }
             }
         } catch (e) {
             console.log('Error removing code block from file path:', e);
@@ -76,6 +84,22 @@ class CodeInterface {
             }
         } catch (e) {
             console.log('Error inserting code block in file path:', e);
+        }
+    }
+
+    /**
+     * Applies fuzzy code replacement to the specified file.
+     * 
+     * @param {string} filePath - The path to the file.
+     * @param {Array} replacementBlocks - The blocks containing find and replace info.
+     */
+    async applyFuzzyReplacement(filePath, replacementBlocks) {
+        try {
+            const fileContent = await DirectoryHelper.readFileContent(filePath);
+            const updatedContent = CodeHelper.applyMultipleCodeDiffs(fileContent, replacementBlocks);
+            await DirectoryHelper.writeFileContent(filePath, updatedContent);
+        } catch (error) {
+            console.error('Error applying fuzzy replacement:', error);
         }
     }
 }
