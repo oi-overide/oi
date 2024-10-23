@@ -20,7 +20,24 @@ const Network = require('../network/network');
  * - Handle user acceptance or rejection of code suggestions.
  */
 class FindPrompt {
-    
+    /**
+    * Determines the completion type for the found prompt.
+    * If no code exists in the file and only a prompt is found, it returns 'complete'.
+    * If code exists and the user wants to update it, it returns 'update'.
+    *
+    * @param {string} fileContent - The content of the file being processed.
+    * @param {string} prompt - The prompt text found in the file.
+    * @returns {string} The completion type: 'complete' or 'update'.
+    */
+    findCompletionType(fileContent, prompt) {
+        // Basic logic to check if the file contains code besides the prompt
+        const hasCode = fileContent.split('\n').some(line => line.trim() && line !== prompt.trim());
+
+        // Return 'complete' if no code exists, else 'update'
+        return hasCode ? 'update' : 'complete';
+    }
+
+
     /**
      * Handles the acceptance case found in a file.
      * Removes either the entire code block if rejected, or the acceptance message if accepted.
@@ -57,20 +74,30 @@ class FindPrompt {
      */
     async handleFoundPrompt(index, fileContent, prompt, filePath, verbose) {
         try {
+            // Determine completion type: 'complete' or 'update'
+            const completionType = this.findCompletionType(fileContent, prompt);
+
             // Create a prompt context by extracting surrounding content
             const promptArray = await FindContext.findPromptContext(index, fileContent, prompt);
 
             // Create a request object with the gathered context
-            const requestObject = await FormatRequest.createRequest(prompt, promptArray, verbose);
+            const requestObject = await FormatRequest.createRequest(prompt, promptArray, completionType, verbose);
+
 
             // Send the request and retrieve a response from the network
             const response = await Network.doRequest(requestObject);
 
             // Parse the network response to get the code
-            const codeData = await FormatResponse.formatResponse(response);
+            const codeData = await FormatResponse.formatResponse(response, completionType);
 
-            // Insert the generated code block into the file at the appropriate location
-            CodeInterface.insertCodeBlock(filePath, prompt, codeData);
+            // // Insert the generated code block into the file at the appropriate location
+            if (completionType === "complete") {
+                CodeInterface.insertCodeBlock(filePath, prompt, codeData);
+                return;
+            }
+
+            // console.log(codeData);
+            CodeInterface.applyFuzzyReplacement(filePath, codeData);
         } catch (e) {
             console.log(e);
             throw e;
@@ -87,7 +114,7 @@ class FindPrompt {
         try {
             // Read the file content
             const fileContent = fs.readFileSync(filePath, 'utf-8');
-            
+
             // Identify any prompts or acceptance cases in the file
             const promptCase = PromptHelper.identifyPromptCase(fileContent);
 
