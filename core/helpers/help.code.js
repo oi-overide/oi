@@ -1,4 +1,4 @@
-const fuzzy = require('fuzzy');
+const fuzzball = require('fuzzball');
 const LocalCache = require('../cache/cache.oldcode');
 
 /**
@@ -12,11 +12,14 @@ class CodeHelper {
      * @param {boolean} verbose - If true, logs the extracted block.
      * @returns {string} The extracted code block.
      */
-    extractCodeBlock(content, verbose = false) {
+    extractCodeBlock(content, completionType, verbose = false) {
         const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
         if (codeMatch && codeMatch[1]) {
             if (verbose) console.log(`Code Block: ${codeMatch[1]}`);
-            return JSON.parse(codeMatch[1]);  // Return the extracted code
+            if (completionType === "update") {
+                return JSON.parse(codeMatch[1]);  // Return the extracted code
+            }
+            return codeMatch[1];
         } else {
             throw new Error("No code block found in the response");
         }
@@ -33,7 +36,9 @@ class CodeHelper {
         for (let { find: oldBlock, replace: newBlock } of codeBlocks) {
             // Step 1: FuzzyFind the entire oldBlock.
             const oldBlockIndex = this.findFuzzyMatchIndex(fileContent, oldBlock);
-            console.log("OldBlock", oldBlock);
+            console.log("OLD CODE: ", oldBlock, "\n");
+            console.log("NEW CODE: ", newBlock, "\n");
+            console.log("OLD BLOCK INDEX: ", oldBlockIndex, "\n");
 
             if (oldBlockIndex !== -1) {
                 // Add the old block to the local cache
@@ -43,7 +48,7 @@ class CodeHelper {
                 const newContentWithMessages = `//-\n${newBlock}\n//> Accept the changes (y/n): -//`;
 
                 // Step 3: Remove the old block and insert the new content with messages.
-                fileContent = this.replaceBlock(fileContent, oldBlock, newContentWithMessages);
+                fileContent = this.replaceOldCodeWithNew(fileContent, oldBlock, newContentWithMessages, oldBlockIndex);
             }
         }
 
@@ -60,22 +65,42 @@ class CodeHelper {
     }
 
     /**
-     * Finds the fuzzy match index of the given old block in the file content.
-     * 
-     * @param {string} fileContent - The content of the file as a single string.
-     * @param {string} oldBlock - The block of old code as a string.
-     * @returns {number} - The index of the matched block, or -1 if no match is found.
-     */
+    * Finds the fuzzy match index of the given old block in the file content.
+    * 
+    * @param {string} fileContent - The content of the file as a single string.
+    * @param {string} oldBlock - The block of old code as a string.
+    * @returns {number} - The index of the matched block, or -1 if no match is found.
+    */
     findFuzzyMatchIndex(fileContent, oldBlock) {
-        const matches = fuzzy.filter(oldBlock, [fileContent], { pre: '<', post: '>' });
+        // Step 1: Clean the old code block by removing extra whitespace, line breaks, etc.
+        const cleanedOldBlock = oldBlock.replace(/\s+/g, ' ').trim();
 
-        if (matches.length > 0) {
-            // Return the index of the best match
-            return matches[0].score > 0.5 ? matches[0].index : -1; // Only match if the score is significant
-        }
+        // Step 2: Split the file content into smaller chunks (e.g., lines or paragraphs)
+        const fileContentLines = fileContent.split('\n\n'); // Splitting into paragraphs
 
-        return -1; // No match found
+        // Step 3: Iterate over the file content chunks and perform fuzzy matching on each
+        let bestMatch = -1;
+        let bestScore = 0;
+
+        fileContentLines.forEach((chunk, index) => {
+            const cleanedChunk = chunk.replace(/\s+/g, ' ').trim();
+
+            // Perform fuzzy matching for the old code against this chunk
+            const score = fuzzball.ratio(cleanedOldBlock, cleanedChunk);
+
+            // If we get a higher score, update the best match and store the index
+            if (score > bestScore) {
+                bestScore = score;
+                bestMatch = index;
+            }
+        });
+
+        console.log('Best match score:', bestScore);
+
+        // Step 4: Return the index of the match or -1 if no significant match is found
+        return bestScore > 50 ? bestMatch : -1; // You can adjust the score threshold here
     }
+
 
     /**
      * Replaces the old block with the new block in the file content.
@@ -83,11 +108,23 @@ class CodeHelper {
      * @param {string} fileContent - The content of the file as a single string.
      * @param {string} oldBlock - The block of old code to replace.
      * @param {string} newBlock - The block of new code to insert.
+     * @param {number} matchIndex - The index of the old block in the file content.
      * @returns {string} - The updated file content.
      */
-    replaceBlock(fileContent, oldBlock, newBlock) {
-        // Use regular string replacement to swap out the old block with the new block.
-        return fileContent.replace(oldBlock, newBlock);
+    replaceOldCodeWithNew(fileContent, oldBlock, newBlock, matchIndex) {
+        if (matchIndex !== -1) {
+            const updatedContent = fileContent.split('\n\n').map((chunk, index) => {
+                return index === matchIndex ? newBlock : chunk;
+            }).join('\n\n');
+
+            console.log("Old Block Replaced: ", oldBlock);
+            console.log("New Block Inserted: ", newBlock);
+
+            return updatedContent; // Return the updated file content
+        } else {
+            console.log("No significant match found for replacement.");
+            return fileContent; // No changes made
+        }
     }
 }
 

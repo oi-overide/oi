@@ -7,7 +7,8 @@
                 "Do not include comments explaining the changes.",
                 "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
                 "From the request, don't include anything which is specified in <>",
-                "Use the following JSON format to respond:"
+                "Include proper indentation in code.",
+                "Use the following format to respond:"
             ]
         },
         "update": {
@@ -17,6 +18,7 @@
                 "Do not include comments explaining the changes.",
                 "Please provide the entire code block that should be replaced, and the entire new code block as the replacement.",
                 "From the request, don't include anything which is specified in <>",
+                "Include proper indentation in code.",
                 "Use the following JSON format to respond:"
             ]
         }
@@ -28,9 +30,9 @@
             "instructions": [
                 "Do not include comments explaining the changes.",
                 "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
-                "Return the completed code inside a markdown block quote using triple backticks (```).",
                 "From the request, don't include anything which is specified in <>",
-                "Use the following JSON format to respond:"
+                "Include proper indentation in code.",
+                "Return the completed code inside a markdown block quote using triple backticks (```)."
             ]
         },
         "update": {
@@ -41,6 +43,7 @@
                 "Please provide the entire code block that should be replaced, and the entire new code block as the replacement.",
                 "Return the completed code inside a markdown block quote using triple backticks (```).",
                 "From the request, don't include anything which is specified in <>",
+                "Include proper indentation in code.",
                 "Use the following JSON format to respond:"
             ]
         }

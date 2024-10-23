@@ -88,7 +88,7 @@ class FindPrompt {
             const response = await Network.doRequest(requestObject);
 
             // Parse the network response to get the code
-            const codeData = await FormatResponse.formatResponse(response);
+            const codeData = await FormatResponse.formatResponse(response, completionType);
 
             // // Insert the generated code block into the file at the appropriate location
             if (completionType === "complete") {
