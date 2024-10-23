@@ -36,9 +36,6 @@ class CodeHelper {
         for (let { find: oldBlock, replace: newBlock } of codeBlocks) {
             // Step 1: FuzzyFind the entire oldBlock.
             const oldBlockIndex = this.findFuzzyMatchIndex(fileContent, oldBlock);
-            console.log("OLD CODE: ", oldBlock, "\n");
-            console.log("NEW CODE: ", newBlock, "\n");
-            console.log("OLD BLOCK INDEX: ", oldBlockIndex, "\n");
 
             if (oldBlockIndex !== -1) {
                 // Add the old block to the local cache
@@ -72,13 +69,13 @@ class CodeHelper {
     * @returns {number} - The index of the matched block, or -1 if no match is found.
     */
     findFuzzyMatchIndex(fileContent, oldBlock) {
-        // Step 1: Clean the old code block by removing extra whitespace, line breaks, etc.
+        // Clean the old code block by removing extra whitespace, line breaks, etc.
         const cleanedOldBlock = oldBlock.replace(/\s+/g, ' ').trim();
 
-        // Step 2: Split the file content into smaller chunks (e.g., lines or paragraphs)
+        // Split the file content into smaller chunks (e.g., lines or paragraphs)
         const fileContentLines = fileContent.split('\n\n'); // Splitting into paragraphs
 
-        // Step 3: Iterate over the file content chunks and perform fuzzy matching on each
+        // Iterate over the file content chunks and perform fuzzy matching on each
         let bestMatch = -1;
         let bestScore = 0;
 
@@ -95,10 +92,8 @@ class CodeHelper {
             }
         });
 
-        console.log('Best match score:', bestScore);
-
-        // Step 4: Return the index of the match or -1 if no significant match is found
-        return bestScore > 50 ? bestMatch : -1; // You can adjust the score threshold here
+        // Return the index of the match or -1 if no significant match is found
+        return bestScore > 50 ? bestMatch : -1; // Adjust the score threshold here
     }
 
 
@@ -116,10 +111,6 @@ class CodeHelper {
             const updatedContent = fileContent.split('\n\n').map((chunk, index) => {
                 return index === matchIndex ? newBlock : chunk;
             }).join('\n\n');
-
-            console.log("Old Block Replaced: ", oldBlock);
-            console.log("New Block Inserted: ", newBlock);
-
             return updatedContent; // Return the updated file content
         } else {
             console.log("No significant match found for replacement.");
