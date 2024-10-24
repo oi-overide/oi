@@ -99,7 +99,7 @@ class CodeInterface {
                 const oldBlock = block.find; // Access the find property
                 const newBlock = ["//-", ...block.replace, "//> Accept the changes (y/n): -//"]; // Access the replace property
 
-                LocalCache.addOldCode(oldBlock); // Add old block to cache
+                LocalCache.addOldCode(block); // Add old block to cache
 
                 // Find the index of the matching old block using CodeHelper
                 const matchIndex = CodeHelper.findMatchingIndex(fileContentLines, oldBlock);
