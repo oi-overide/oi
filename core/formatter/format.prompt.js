@@ -89,7 +89,7 @@ class FormatPrompt {
     }
 
     getCodeContext(contextArray, prompt) {
-        return `<First few lines of file> ${contextArray[0]}\n<Few lines before insertion> ${contextArray[1]}\n<user prompt> ${prompt}\n<few lines after insertion> ${contextArray[3]}`;
+        return `File Content :\n${contextArray[0]}\n user prompt :${prompt}\n`;
     }
 
     getInstructions(completionType, platform){

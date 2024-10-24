@@ -1,59 +1,54 @@
 const fs = require('fs');
-const CodeHelper = require('../helpers/help.code');
 const DirectoryHelper = require('../helpers/help.directory');
 const LocalCache = require('../cache/cache.oldcode');
+const CodeHelper = require('../helpers/help.code'); // Only for utility use, no functional dependency.
 
 /**
  * The `CodeInterface` class provides methods for manipulating code blocks and 
- * acceptance messages within specified files.
+ * managing code changes within specified files.
  */
 class CodeInterface {
     /**
      * Removes an acceptance message from the file content if it exists.
      * 
-     * @param {string} fileContent - The current content of the file.
-     * @param {string} filePath - The path to the file to be modified.
+     * @param {string} fileContent - The content of the file.
      * @param {string} acceptanceLine - The acceptance line to be removed.
      */
-    removeAcceptanceMessage = (fileContent, filePath, acceptanceLine) => {
+    removeAcceptanceMessage(filePath, fileContent, acceptanceLine) {
         try {
-            // Check if the acceptance line exists in the file content
             if (fileContent.includes(acceptanceLine)) {
-                const updatedContent = fileContent.replace(`${acceptanceLine}`, '');
-                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
+                let updatedContent = fileContent.replace(acceptanceLine, '');
+                updatedContent = updatedContent.split('\n').filter(line => !line.includes('//-')).join('\n'); 
+                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
                 console.log('Acceptance message removed successfully');
             } else {
-                console.log('Acceptance message not found in file path');
+                console.log('Acceptance message not found');
             }
-        } catch (e) {
-            console.log('Error removing acceptance message from file path:', e);
+        } catch (error) {
+            console.log('Error removing acceptance message:', error);
         }
     }
 
     /**
-     * Removes a specific code block from the file content if it exists.
+     * Removes a specific code block from the file content, either replacing it with cached code or removing it entirely.
      * 
-     * @param {string} fileContent - The current content of the file.
      * @param {string} filePath - The path to the file to be modified.
-     * @param {string} codeBlock - The code block to be removed.
+     * @param {string} replacedCode - The code block to be removed.
      */
-    removeCodeBlock = (fileContent, filePath, codeBlock) => {
+    removeCodeBlock(filePath, fileContent, replacedCode) {
         try {
-            const oldCodeBlock = LocalCache.findOldCode(codeBlock); // Find the corresponding old code block in the cache
-            if (fileContent.includes(codeBlock)) {
-                if (oldCodeBlock) {
-                    const updatedContent = fileContent.replace(`${codeBlock}`, oldCodeBlock); // Replace old code with the cached code
-                    fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
-                    console.log('Code block replaced with cached old code successfully');
-                } else {
-                    // Check if the code block exists in the file content
-                    const updatedContent = fileContent.replace(`${codeBlock}`, '');
-                    fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
-                    console.log('Code block removed successfully');
-                }
+            const oldcode = LocalCache.findOldCode(replacedCode);
+            let updatedContent = fileContent;
+            if (oldcode) {
+                updatedContent = fileContent.replace(replacedCode, oldcode);
+                console.log('Code block processed successfully');
+            } else {
+                updatedContent = fileContent.replace(replacedCode, '');
+                console.log('Code block not found');
             }
-        } catch (e) {
-            console.log('Error removing code block from file path:', e);
+            fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
+        } catch (error) {
+            console.log('Error removing code block:', error);
         }
     }
 
@@ -64,42 +59,64 @@ class CodeInterface {
      * @param {string} prompt - The prompt that identifies where to insert the new code.
      * @param {string} newCode - The new code to be inserted.
      */
-    insertCodeBlock = (filePath, prompt, newCode) => {
+    insertCodeBlock(filePath, prompt, newCode) {
         try {
             const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
-            // Check if the prompt exists in the file content
             if (fileContent.includes(prompt)) {
-                // Prepare the new code block format
-                const promptContent = prompt.replace('//>', '').replace('<//', '').trim();
                 const codeBlock = `
-                    //-${promptContent}
+                    //-${prompt.trim()}
                     ${newCode}
                     //> Accept the changes (y/n): -//
                 `;
-                const updatedContent = fileContent.replace(prompt, codeBlock); // Replace prompt with the new code block
-                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content back to the file
+                const updatedContent = fileContent.replace(prompt, codeBlock); // Replace prompt with new code block
+                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
                 console.log('Code block inserted successfully');
             } else {
-                console.log('Prompt not found in file path');
+                console.log('Prompt not found');
             }
-        } catch (e) {
-            console.log('Error inserting code block in file path:', e);
+        } catch (error) {
+            console.log('Error inserting code block:', error);
         }
     }
 
     /**
-     * Applies fuzzy code replacement to the specified file.
+     * Applies code replacements to the specified file using the `CodeHelper` utility for fuzzy matching.
      * 
      * @param {string} filePath - The path to the file.
      * @param {Array} replacementBlocks - The blocks containing find and replace info.
      */
-    async applyFuzzyReplacement(filePath, replacementBlocks) {
+    async applyCodeReplacement(filePath, replacementBlocks) {
         try {
-            const fileContent = await DirectoryHelper.readFileContent(filePath);
-            const updatedContent = CodeHelper.applyMultipleCodeDiffs(fileContent, replacementBlocks);
+            const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
+            let fileContentLines = fileContent.split('\n'); // Split content into lines
+
+            const prasedBlocks = JSON.parse(replacementBlocks);
+
+            // Remove all lines with //> prompt markers
+            fileContentLines = fileContentLines.filter(line => !line.includes('//>') || !line.includes('<//'));
+
+            for (let block of prasedBlocks) {
+                const oldBlock = block.find; // Access the find property
+                const newBlock = ["//-", ...block.replace, "//> Accept the changes (y/n): -//"]; // Access the replace property
+
+                LocalCache.addOldCode(oldBlock); // Add old block to cache
+
+                // Find the index of the matching old block using CodeHelper
+                const matchIndex = CodeHelper.findMatchingIndex(fileContentLines, oldBlock);
+
+                if (matchIndex !== -1) {
+                    // Replace the old block with the new block
+                    fileContentLines = CodeHelper.replaceOldCodeWithNew(fileContentLines, oldBlock, newBlock, matchIndex);
+                } else {
+                    console.warn(`No match found for block: ${oldBlock}`);
+                }
+            }
+
+            // Write updated content back to the file
+            const updatedContent = fileContentLines.join('\n');
             await DirectoryHelper.writeFileContent(filePath, updatedContent);
         } catch (error) {
-            console.error('Error applying fuzzy replacement:', error);
+            console.error('Error applying code replacement:', error);
         }
     }
 }
