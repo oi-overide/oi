@@ -2,9 +2,8 @@
 const { Command } = require('commander');
 
 const Initialize = require('./commands/initialize');
-const Watchmen = require('./core/storage/directory/watchmen');
+const Start = require('./commands/start');
 const Config = require('./commands/config');  // Import addIgnoreFiles here
-
 
 // Init commander
 const program = new Command();
@@ -25,8 +24,8 @@ program
   .description('Start watching files and upload them to Ollama')
   .option('-v, --verbose', 'Enable verbose output')
   .action((options) => {
-    console.log('Starting file watcher...');
-    Watchmen.watchFiles(options.verbose||false);
+    console.log('Oi is looking for prompts...');
+    Start.startWatch(options);
   });
 
 program

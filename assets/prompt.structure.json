@@ -1,0 +1,47 @@
+{
+    "openai": {
+        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON.",
+        "complete": {
+            "format": "```complete code here```",
+            "instructions": [
+                "Do not include comments explaining the changes.",
+                "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
+                "Include proper indentation in code.",
+                "Use the following format to respond:"
+            ]
+        },
+        "update": {
+            "context": "Below is the current code context:",
+            "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
+            "instructions": [
+                "Do not include comments explaining the changes.",
+                "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
+                "Include proper indentation in code.",
+                "Use the following JSON format to respond:"
+            ]
+        }
+    },
+    "deepseek": {
+        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON.",
+        "complete": {
+            "format": "```complete code here```",
+            "instructions": [
+                "Do not include comments explaining the changes.",
+                "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
+                "Include proper indentation in code.",
+                "Return the completed code inside a markdown block quote using triple backticks (```)."
+            ]
+        },
+        "update": {
+            "context": "Below is the current code context:",
+            "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
+            "instructions": [
+                "Do not include comments explaining the changes.",
+                "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
+                "Return the JSON inside a markdown block quote using triple backticks (```).",
+                "Include proper indentation in code.",
+                "Use the following JSON format to respond:"
+            ]
+        }
+    }
+}
