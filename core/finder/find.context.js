@@ -8,6 +8,8 @@
  * - Handle verbose mode for logging detailed information during context extraction.
  * - Return a structured context including imports, pre-prompt lines, the prompt itself, and post-prompt lines.
  */
+
+// TODO : update this to add context from multiple files.
 class FindContext {
     /**
      * Finds the context surrounding a prompt in the file content.
@@ -24,35 +26,12 @@ class FindContext {
                 console.log('Creating Prompt Context');
             }
 
-            const lines = fileContent.split('\n'); // Split file content into lines
-            const importsBuffer = []; // Buffer for storing import statements
-            const preContextBuffer = []; // Buffer for storing lines before the prompt
-            const postContextBuffer = []; // Buffer for storing lines after the prompt
-
-            // Iterate through the lines of the file
-            for (let [curIndex, line] of lines.entries()) {
-
-                // Collect the first 10 lines as import statements
-                if (index < 10) {
-                    importsBuffer.push(line.trim());
-                }
-
-                // Collect the 10 lines preceding the prompt
-                if (curIndex >= (index - 10) && curIndex < index) {
-                    preContextBuffer.push(line.trim());
-                }
-
-                // Collect the 10 lines following the prompt
-                if (curIndex > index && curIndex <= (index + 10)) {
-                    postContextBuffer.push(line.trim());
-                }
-            }
-
             // Clean and trim the prompt text by removing delimiters and excess whitespace
             const trimmedPrompt = prompt.replace('//>', '').replace('<//', '').replace('\n', '').replace('//', '').trim();
 
             // Return the extracted context: imports, pre-context, trimmed prompt, post-context
-            return [importsBuffer.join('\n'), preContextBuffer.join('\n'), trimmedPrompt, postContextBuffer.join('\n')];
+            // return [importsBuffer.join('\n'), preContextBuffer.join('\n'), trimmedPrompt, postContextBuffer.join('\n')];
+            return [fileContent, trimmedPrompt]
         } catch (e) {
             // Log and throw any errors encountered during context extraction
             console.error("Error creating prompt context:", e);

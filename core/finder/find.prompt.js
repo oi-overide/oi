@@ -51,13 +51,13 @@ class FindPrompt {
     async handleFoundAcceptance(acceptanceLine, codeBlock, response, fileContent, filePath) {
         // Remove the code block if the user rejects it
         if (response === 'n') {
-            CodeInterface.removeCodeBlock(fileContent, filePath, codeBlock);
+            CodeInterface.removeCodeBlock(filePath, fileContent, codeBlock);
             return;
         }
 
         // Remove the acceptance message if the user accepts the suggestion
         if (response === 'y') {
-            CodeInterface.removeAcceptanceMessage(fileContent, filePath, acceptanceLine);
+            CodeInterface.removeAcceptanceMessage(filePath, fileContent, acceptanceLine);
             return;
         }
     }
@@ -97,7 +97,7 @@ class FindPrompt {
             }
 
             // console.log(codeData);
-            CodeInterface.applyFuzzyReplacement(filePath, codeData);
+            CodeInterface.applyCodeReplacement(filePath, codeData);
         } catch (e) {
             console.log(e);
             throw e;

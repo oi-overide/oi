@@ -1,4 +1,4 @@
-const fuzz = require('fuzzball');
+const fuzzball = require('fuzzball');
 
 /**
  * LocalCache is a singleton class that stores old code blocks 
@@ -9,7 +9,7 @@ class LocalCache {
     constructor() {
         // Ensure that only one instance of LocalCache is created.
         if (!LocalCache.instance) {
-            this.oldCodeArray = []; // Initialize the array to store old code blocks.
+            this.cache = []; // Initialize the array to store old code blocks.
             LocalCache.instance = this; // Store the instance for singleton behavior.
         }
         return LocalCache.instance; // Return the single instance.
@@ -20,41 +20,33 @@ class LocalCache {
      * 
      * @param {string} code - The old code block to be added.
      */
-    addOldCode(code) {
-        this.oldCodeArray.push(code); // Add the old code block to the array.
+    addOldCode(replacement) {
+        this.cache.push(replacement); // Add the old code block to the array.
     }
 
     /**
-     * Finds an old code block using fuzzy matching.
+     * Finds the old code based on the new code provided.
      * 
-     * @param {string} fuzzyMatchString - The string to match against the old code blocks.
-     * @returns {string|null} - Returns the best match if found; otherwise, returns null.
+     * @param {string[]} replacedCode - The new code lines that were inserted.
+     * @returns {string[]|null} - Returns the corresponding find array or null if not found.
      */
-    findOldCode(fuzzyMatchString) {
-        let bestMatch = null;
-        let highestScore = 0;
+    findOldCode(replacedCode) {
+        const newCodeString = replacedCode;
 
-        // Iterate over each old code block in the array
-        for (let oldCode of this.oldCodeArray) {
-            console.log("CACHE CODE: ", oldCode);
+        for (const entry of this.cache) {
+            const replaceString = entry.replace.join('\n');
 
-            const cleanMatchString = fuzzyMatchString.split('\n').filter(line => !line.includes('//-') && !line.includes('//>')).join(' ');
+            // Check for similarity using Fuzzball's fuzzyScore
+            const score = fuzzball.ratio(newCodeString, replaceString);
 
-            console.log("MATCH CODE: ", fuzzyMatchString);
+            // Threshold for similarity
+            const threshold = 75; // Example threshold
 
-            // Perform fuzzy matching using fuzzball with a similarity score
-            const score = fuzz.ratio(cleanMatchString, oldCode);
-            console.log("Fuzzball score:", score);
-
-            if (score > highestScore) {
-                highestScore = score;
-                bestMatch = oldCode;
+            if (score >= threshold) {
+                return entry.find.join('\n'); // Return the corresponding find array
             }
         }
-
-        console.log("Best match found with score:", highestScore);
-
-        return bestMatch;
+        return null; // Return null if no match found
     }
 }
 
