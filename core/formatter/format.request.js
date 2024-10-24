@@ -17,7 +17,7 @@ class FormatRequest {
      * @param {boolean} verbose - Whether to log the request creation process.
      * @returns {Object} The formatted request object for the active service.
      */
-    async createRequest(prompt, promptArray, verbose = false) {
+    async createRequest(prompt, promptArray, completionType, verbose = false) {
         try {
             // Fetch details about the active AI service (platform, API key, etc.)
             const activeServiceDetails = await DirectoryHelper.getActiveServiceDetails();
@@ -25,10 +25,10 @@ class FormatRequest {
             // Determine which platform is active and create the appropriate request
             switch (activeServiceDetails.platform) {
                 case 'openai':
-                    return this.createOpenAIRequest(prompt, promptArray, activeServiceDetails, verbose);
+                    return this.createOpenAIRequest(prompt, promptArray, activeServiceDetails, completionType, verbose);
 
                 case 'deepseek':
-                    return this.createDeepSeekRequest(prompt, promptArray, activeServiceDetails);
+                    return this.createDeepSeekRequest(prompt, promptArray, activeServiceDetails, completionType);
 
                 default:
                     throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
@@ -47,8 +47,8 @@ class FormatRequest {
      * @param {boolean} verbose - Whether to log the request details.
      * @returns {Object} The request object for the OpenAI API.
      */
-    async createOpenAIRequest(prompt, promptArray, activeServiceDetails, verbose) {   
-        const finalPrompt = await FormatPrompt.getOpenAiPrompt(promptArray, prompt);
+    async createOpenAIRequest(prompt, promptArray, activeServiceDetails, completionType, verbose) {
+        const finalPrompt = await FormatPrompt.getOpenAiPrompt(promptArray, prompt, completionType);
 
         if (verbose) {
             console.log(`Prompt Text : ${finalPrompt}`);
@@ -81,11 +81,11 @@ class FormatRequest {
      * @param {Object} activeServiceDetails - Details about the active service (platform, apiKey, etc.).
      * @returns {Object} The request object for the DeepSeek API.
      */
-    async createDeepSeekRequest(prompt, promptArray, activeServiceDetails) {
+    async createDeepSeekRequest(prompt, promptArray, activeServiceDetails, completionType) {
         try {
-            const finalPrompt = await FormatPrompt.getDeepSeekPrompt(promptArray, prompt);
+            const finalPrompt = await FormatPrompt.getDeepSeekPrompt(promptArray, prompt, completionType);
             const messages = [{ "role": "system", "content": finalPrompt }, { "role": "user", "content": prompt }];
-            
+
             // Construct the request body for DeepSeek API
             return {
                 activeServiceDetails,

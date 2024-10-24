@@ -1,8 +1,0 @@
-{
-    "openai": {
-        "basePrompt": "You are a coding assistant specialized in generating accurate and efficient code completions. Below is the current code context and an incomplete code block that needs to be completed.\nContext:${context}\nIncomplete code:${prompt}\nPlease generate only the missing or modified lines required to ensure the functionality is correct, efficient, and follows best practices. Return the output in a unified diff format showing only the differences. Do not include comments explaining the changes."
-    },
-    "deepseek": {
-        "basePrompt": "You are a coding assistant specialized in generating accurate and efficient code completions. Below is the current code context and an incomplete code block that needs to be completed.\nContext:${context}\nIncomplete code:${prompt}\nPlease generate the complete or missing code to ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations. Return the completed code inside a markdown block quote using triple backticks (```)."
-    }
-}

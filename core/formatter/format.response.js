@@ -1,4 +1,5 @@
 const DirectoryHelper = require('../helpers/help.directory');
+const CodeHelper = require('../helpers/help.code');
 
 /**
  * The `FormatResponse` class is responsible for formatting the response received from
@@ -15,7 +16,7 @@ class FormatResponse {
      * @param {boolean} verbose - Whether to log the formatting process.
      * @returns {string|null} The formatted code block extracted from the response.
      */
-    async formatResponse(response, verbose = false) {
+    async formatResponse(response, completionType, verbose = false) {
         try {
             // Fetch details about the active AI service (platform, API key, etc.)
             const activeServiceDetails = await DirectoryHelper.getActiveServiceDetails();
@@ -23,10 +24,10 @@ class FormatResponse {
             // Determine which platform is active and format the response accordingly
             switch (activeServiceDetails.platform) {
                 case 'openai':
-                    return this.formatOpenAIResponse(response, verbose);
+                    return this.formatOpenAIResponse(response, completionType, verbose);
 
                 case 'deepseek':
-                    return this.formatDeepSeekResponse(response);
+                    return this.formatDeepSeekResponse(response, completionType, verbose);
 
                 default:
                     throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
@@ -44,22 +45,11 @@ class FormatResponse {
      * @param {boolean} verbose - Whether to log details of the extracted code.
      * @returns {string|null} The extracted code block, or null if no code block is found.
      */
-    formatOpenAIResponse(response, verbose) {
+    formatOpenAIResponse(response, completionType, verbose) {
         try {
             // Extract the content from the first choice in the response
             const content = response.choices[0].message.content;
-
-            // Use a regular expression to capture the code block inside triple backticks ```
-            const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-
-            if (codeMatch && codeMatch[1]) {
-                if (verbose) {
-                    console.log(`Code Block: ${codeMatch[1]}`);
-                }
-                return codeMatch[1];  // Return the extracted code
-            } else {
-                throw new Error("No code block found in the OpenAI response");
-            }
+            return CodeHelper.extractCodeBlock(content, completionType, verbose);
         } catch (error) {
             console.error("Error formatting OpenAI response:", error.message);
             return null;
@@ -72,19 +62,11 @@ class FormatResponse {
      * @param {Object} response - The response from the DeepSeek API.
      * @returns {string|null} The extracted code block, or null if no code block is found.
      */
-    formatDeepSeekResponse(response) {
+    formatDeepSeekResponse(response, completionType, verbose) {
         try {
             // Extract the content from the first choice in the response
             const content = response.choices[0].message.content;
-
-            // Use a regular expression to capture the code block inside triple backticks ```
-            const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-
-            if (codeMatch && codeMatch[1]) {
-                return codeMatch[1];  // Return the extracted code
-            } else {
-                throw new Error("No code block found in the DeepSeek response");
-            }
+            return CodeHelper.extractCodeBlock(content, completionType, verbose);
         } catch (error) {
             console.error("Error formatting DeepSeek response:", error.message);
             return null;

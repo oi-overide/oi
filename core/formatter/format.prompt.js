@@ -1,4 +1,4 @@
-const base_prompts = require('../../assets/base_prompts.json');
+const promptStructure = require('../../assets/prompt.structure.json');
 
 /**
  * The `FormatPrompt` class is responsible for constructing and formatting prompts
@@ -17,22 +17,33 @@ class FormatPrompt {
      *
      * @param {Array} contextArray - The array of context around the prompt.
      * @param {string} prompt - The raw prompt text.
+     * @param {string} completionType - The type of completion (e.g., 'complete' or 'update').
      * @returns {Promise<string>} The formatted OpenAI prompt.
      */
-    async getOpenAiPrompt(contextArray, prompt) {
+    async getOpenAiPrompt(contextArray, prompt, completionType) {
         try {
-            // Load the base prompt template asynchronously
-            const promptTemplate = await this.loadBasePromptTemplate('openai'); // Specify the platform if needed
+            const platform = 'openai';
 
-            // Create the context string using surrounding content
-            const context = this.getBaseContext(contextArray);
+            // In all the cases load the system prompt
+            const systemPrompt = promptStructure[platform].systemMessage;
+            const codeContext = this.getCodeContext(contextArray, prompt);
+            const instructions = this.getInstructions(completionType, platform);
 
-            // Replace placeholders with actual content
-            const promptText = promptTemplate
-                .replace('${context}', context)
-                .replace('${prompt}', prompt);
+            let format = '';
+            let contextPrompt = '';
 
-            return promptText;
+            // If the completion type is 'update', load the context and update prompt
+            if (completionType === 'update') {
+                contextPrompt = promptStructure[platform].update.context;
+                format = promptStructure[platform].update.format;
+                const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`; 
+                return finalPrompt;
+            }
+
+            contextPrompt = promptStructure[platform].complete.context;
+            format = promptStructure[platform].complete.format;
+            const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
+            return finalPrompt;
         } catch (error) {
             console.error(`Error generating OpenAI prompt: ${error.message}`);
             throw error; // Re-throw the error for further handling
@@ -44,58 +55,53 @@ class FormatPrompt {
      *
      * @param {Array} contextArray - The array of context around the prompt.
      * @param {string} prompt - The raw prompt text.
-     * @returns {string} The formatted DeepSeek prompt.
+     * @param {string} completionType - The type of completion (e.g., 'complete' or 'update').
+     * @returns {Promise<string>} The formatted DeepSeek prompt.
      */
-    async getDeepSeekPrompt(contextArray, prompt) {
+    async getDeepSeekPrompt(contextArray, prompt, completionType) {
         try {
-            // Load the base prompt template asynchronously
-            const promptTemplate = await this.loadBasePromptTemplate('deepseek'); // Specify the platform if needed
+            const platform = 'deepseek';
 
-            // Create the context string using surrounding content
-            const context = this.getBaseContext(contextArray);
+            // In all the cases load the system prompt
+            const systemPrompt = promptStructure[platform].systemMessage;
+            const codeContext = this.getCodeContext(contextArray, prompt);
+            const instructions = this.getInstructions(completionType, platform);
 
-            // Replace placeholders with actual content
-            const promptText = promptTemplate
-                .replace('${context}', context)
-                .replace('${prompt}', prompt);
+            let format = '';
+            let contextPrompt = '';
 
-            return promptText;
+            // If the completion type is 'update', load the context and update prompt
+            if (completionType === 'update') {
+                contextPrompt = promptStructure[platform].update.context;
+                format = promptStructure[platform].update.format;
+                const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
+                return finalPrompt;
+            }
+
+            contextPrompt = promptStructure[platform].complete.context;
+            format = promptStructure[platform].complete.format;
+            const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
+            return finalPrompt;
         } catch (error) {
             console.error(`Error generating DeepSeek prompt: ${error.message}`);
             throw error; // Re-throw the error for further handling
         }
     }
 
-    /**
-     * Constructs the context string based on the lines around the insertion point.
-     *
-     * @param {Array} contextArray - The array containing the imports, pre-context, and post-context.
-     * @returns {string} The constructed context string.
-     */
-    getBaseContext(contextArray) {
-        const context = `<First 10 lines of the file>${contextArray[0]}<10 lines before the insertion>${contextArray[1]}<10 lines after the insertion>${contextArray[3]}`;
-        return context;
+    getCodeContext(contextArray, prompt) {
+        return `File Content :\n${contextArray[0]}\n user prompt :${prompt}\n`;
     }
 
-    /**
-    * Loads the base prompt template from the `base_prompts.json` file.
-    *
-    * @param {string} platform - The platform for which to load the base prompt (e.g., 'openai', 'deepseek').
-    * @returns {Promise<string>} The base prompt template text for the specified platform.
-    */
-    async loadBasePromptTemplate(platform) {
-        try {
-            // Check if the specified platform has a prompt
-            if (!base_prompts[platform]) {
-                throw new Error(`Base prompt not found for platform: ${platform}`);
-            }
-
-            // Return the base prompt for the specified platform
-            return base_prompts[platform].basePrompt;
-        } catch (error) {
-            console.error(`Error loading base prompt: ${error.message}`);
-            throw error; // Re-throw the error for further handling
+    getInstructions(completionType, platform){
+        let completion = ``;
+        if(completionType === "update"){
+            const instructionList = promptStructure[platform].update.instructions;
+            completion = instructionList.join('');
+            return completion;
         }
+        const instructionList = promptStructure[platform].complete.instructions;
+        completion = instructionList.join('');
+        return completion;
     }
 }
 
