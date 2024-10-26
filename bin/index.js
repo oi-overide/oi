@@ -21,7 +21,7 @@ program
 
 program
   .command('start')
-  .description('Start watching files and upload them to Ollama')
+  .description('Start watching files')
   .option('-v, --verbose', 'Enable verbose output')
   .action((options) => {
     console.log('Oi is looking for prompts...');
