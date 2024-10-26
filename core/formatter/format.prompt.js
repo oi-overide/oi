@@ -88,6 +88,33 @@ class FormatPrompt {
         }
     }
 
+    async getGroqPrompt(contextArray, prompt, completionType) {
+        try {
+            const platform = 'groq';
+
+            const systemPrompt = promptStructure[platform].systemMessage;
+            const codeContext = this.getCodeContext(contextArray, prompt);
+            const instructions = this.getInstructions(completionType, platform);
+
+            let format = '';
+            let contextPrompt = '';
+
+            if (completionType === 'update') {
+                contextPrompt = promptStructure[platform].update.context;
+                format = promptStructure[platform].update.format;
+            } else {
+                contextPrompt = promptStructure[platform].complete.context;
+                format = promptStructure[platform].complete.format;
+            }
+
+            const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
+            return finalPrompt;
+        } catch (error) {
+            console.error(`Error generating Groq prompt: ${error.message}`);
+            throw error;
+        }
+    }
+
     getCodeContext(contextArray, prompt) {
         return `File Content :\n${contextArray[0]}\n user prompt :${prompt}\n`;
     }
