@@ -16,7 +16,7 @@ const DirectoryHelper = require('../../core/helpers/help.directory');
 class Config {
   constructor() {
     // Define supported platforms and their respective configuration prompts
-    this.platforms = ["OpenAI", "DeepSeek"];
+    this.platforms = ["OpenAI", "DeepSeek", "Groq"];
     
     // Configuration questions for each platform (OpenAI and DeepSeek)
     this.platformQuestions = {
@@ -27,6 +27,9 @@ class Config {
       deepseek: [
         { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
         { type: 'input', name: 'baseUrl', message: 'Enter the BaseUrl to use:' },
+      ],
+      groq: [
+        { type: 'input', name: 'apiKey', message: 'Enter your Groq API key:' },
       ],
     };
   }
