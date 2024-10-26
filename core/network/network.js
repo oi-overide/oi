@@ -1,15 +1,15 @@
 require('dotenv').config();
 const OpenAI = require('openai');
-// const axios = require('axios');
+const Groq = require('groq-sdk');
 
 /**
  * The `Network` class is responsible for making API requests to different 
- * services (OpenAI, DeepSeek, and Ollama) to generate code based on the 
+ * services (OpenAI, DeepSeek, and Groq) to generate code based on the 
  * provided request data.
  */
 class Network {
   /**
-   * Generates code based on the active service (OpenAI, DeepSeek, or Ollama).
+   * Generates code based on the active service (OpenAI, DeepSeek, or Groq).
    * 
    * @param {object} requestData - The request data containing service details and metadata.
    * @returns {Promise<string>} - The generated code response.
@@ -29,9 +29,11 @@ class Network {
     // Handle requests based on the selected platform
     switch (platform) {
       case "openai":
-      return this.handleOpenAIRequest(activeServiceDetails, metadata);
+        return this.handleOpenAIRequest(activeServiceDetails, metadata);
       case "deepseek":
-      return this.handleDeepSeekRequest(activeServiceDetails, metadata);
+        return this.handleDeepSeekRequest(activeServiceDetails, metadata);
+      case "groq":
+        return this.handleGroqRequest(activeServiceDetails, metadata);
       default:
         throw new Error("No valid model or platform selected.");
     }
@@ -84,6 +86,31 @@ class Network {
     } catch (error) {
       console.error(`Error generating code with DeepSeek: ${error.message}`);
       throw error; // Rethrow error for handling at a higher level
+    }
+  }
+
+  /**
+   * Handles requests to the Groq service.
+   * 
+   * @param {object} activeServiceDetails - The details of the active Groq service.
+   * @param {object} metadata - The metadata for the API request.
+   * @returns {Promise<string>} - The generated code response from Groq.
+   * @throws Will throw an error if the API key is missing.
+   */
+  async handleGroqRequest(activeServiceDetails, metadata) {
+    const { apiKey } = activeServiceDetails.details;
+
+    if (!apiKey) {
+      throw new Error("API key missing for Groq.");
+    }
+
+    try {
+      const groq = new Groq({ apiKey });
+      const completions = await groq.chat.completions.create(metadata);
+      return completions;
+    } catch (error) {
+      console.error(`Error generating code with Groq: ${error.message}`);
+      throw error;
     }
   }
 }
