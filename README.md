@@ -12,10 +12,16 @@
 
 ## Quick Installation
 
-Use npm to install oi.. 
+Install pnpm if you don't have it already.
 
+```bash
+npm install -g pnpm
 ```
-npm i -g overide
+
+Use pnpm to install oi globally.
+
+```bash
+pnpm i -g overide
 ```
 
 Optionally take a look at out [installation guide](https://github.com/oi-overide/oi-overide/blob/main/Installation/Installation.md) for more options.. 
