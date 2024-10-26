@@ -30,6 +30,9 @@ class FormatRequest {
                 case 'deepseek':
                     return this.createDeepSeekRequest(prompt, promptArray, activeServiceDetails, completionType);
 
+                case 'groq':
+                    return this.createGroqRequest(prompt, promptArray, activeServiceDetails, completionType, verbose);
+
                 default:
                     throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
             }
@@ -97,6 +100,30 @@ class FormatRequest {
         } catch (e) {
             console.log(e);
         }
+    }
+
+    async createGroqRequest(prompt, promptArray, activeServiceDetails, completionType, verbose) {
+        const finalPrompt = await FormatPrompt.getGroqPrompt(promptArray, prompt, completionType);
+
+        if (verbose) {
+            console.log(`Prompt Text : ${finalPrompt}`);
+        }
+
+        return {
+            activeServiceDetails,
+            "metadata": {
+                model: "llama-3.1-70b-versatile",
+                messages: [
+                    { role: 'system', content: 'You are a coding assistant api.' },
+                    { role: 'user', content: finalPrompt },
+                ],
+                temperature: 0.94,
+                max_tokens: 2048,
+                top_p: 1,
+                stream: false,
+                stop: null
+            },
+        };
     }
 }
 
