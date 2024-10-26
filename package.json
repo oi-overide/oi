@@ -7,7 +7,7 @@
     "oi": "bin/index.js"
   },
   "scripts": {
-    "install": "pnpm install",
+    "pnpm": "pnpm",
     "start": "node bin/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -27,7 +27,8 @@
   "devDependencies": {
     "@eslint/js": "^9.11.1",
     "eslint": "^9.11.1",
-    "globals": "^15.10.0"
+    "globals": "^15.10.0",
+    "pnpm": "^9.12.2"
   },
   "files": [
     "assets",
