@@ -7,6 +7,7 @@
     "oi": "bin/index.js"
   },
   "scripts": {
+    "install": "pnpm install",
     "start": "node bin/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
