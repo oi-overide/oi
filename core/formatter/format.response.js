@@ -29,6 +29,9 @@ class FormatResponse {
                 case 'deepseek':
                     return this.formatDeepSeekResponse(response, completionType, verbose);
 
+                case 'groq':
+                    return this.formatGroqResponse(response, completionType, verbose);
+
                 default:
                     throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
             }
@@ -69,6 +72,16 @@ class FormatResponse {
             return CodeHelper.extractCodeBlock(content, completionType, verbose);
         } catch (error) {
             console.error("Error formatting DeepSeek response:", error.message);
+            return null;
+        }
+    }
+
+    formatGroqResponse(response, completionType, verbose) {
+        try {
+            const content = response.choices[0].message.content;
+            return CodeHelper.extractCodeBlock(content, completionType, verbose);
+        } catch (error) {
+            console.error("Error formatting Groq response:", error.message);
             return null;
         }
     }
