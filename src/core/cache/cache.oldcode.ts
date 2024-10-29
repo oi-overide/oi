@@ -1,0 +1,66 @@
+import fuzzball from 'fuzzball';
+import { ReplacementBlock } from '../../interfaces/interfaces';
+
+/**
+ * LocalCache is a singleton class that stores old code blocks 
+ * for later retrieval and uses fuzzy matching to find matches 
+ * within those stored blocks.
+ */
+class LocalCache {
+    private static instance: LocalCache; // Singleton instance
+    private cache: ReplacementBlock[]; // Array to store old code blocks
+
+    private constructor() {
+        this.cache = []; // Initialize the array to store old code blocks
+    }
+
+    /**
+     * Returns the singleton instance of LocalCache.
+     */
+    public static getInstance(): LocalCache {
+        if (!LocalCache.instance) {
+            LocalCache.instance = new LocalCache();
+        }
+        return LocalCache.instance;
+    }
+
+    /**
+     * Adds a new old code block to the cache.
+     * 
+     * @param {CodeBlock} replacement - The old code block to be added.
+     */
+    public addOldCode(replacement: ReplacementBlock): void {
+        this.cache.push(replacement); // Add the old code block to the array
+    }
+
+    /**
+     * Finds the old code based on the new code provided.
+     * 
+     * @param {string[]} replacedCode - The new code lines that were inserted.
+     * @returns {string[] | null} - Returns the corresponding find array or null if not found.
+     */
+    public findOldCode(replacedCode: string[]): string[] | null {
+        const newCodeString = replacedCode.join('\n');
+
+        for (const entry of this.cache) {
+            const replaceString = entry.replace.join('\n');
+
+            // Check for similarity using Fuzzball's fuzzyScore
+            const score = fuzzball.ratio(newCodeString, replaceString);
+
+            // Threshold for similarity
+            const threshold = 75; // Example threshold
+
+            if (score >= threshold) {
+                return entry.find; // Return the corresponding find array
+            }
+        }
+        return null; // Return null if no match found
+    }
+}
+
+// Ensure singleton behavior
+const instance = LocalCache.getInstance();
+Object.freeze(instance); // Freeze the instance to prevent modification
+
+export default instance; // Export the singleton instance

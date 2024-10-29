@@ -22,7 +22,7 @@ export interface GlobalConfig {
 
 export interface LocalConfig {
     projectName: string;
-    ignore: string[]; 
+    ignore: string[];
 }
 
 export interface PlatformConfig {
@@ -34,4 +34,13 @@ export interface PlatformConfig {
 
 export interface FileContents {
     [filePath: string]: string;
+}
+
+
+/**
+ * Type representing a block of code replacement.
+ */
+export interface ReplacementBlock {
+    find: string[];              // The code to find in the file.
+    replace: string[];         // The replacement code.
 }
