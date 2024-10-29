@@ -39,16 +39,16 @@ class CodeInterface {
      * @param {string} fileContent - The content of the file.
      * @param {string} replacedCode - The code block to be removed.
      */
-    removeCodeBlock(filePath: string, fileContent: string, replacedCode: string[]): void {
+    removeCodeBlock(filePath: string, fileContent: string, replacedCode: string): void {
         try {
             const oldCode = LocalCache.findOldCode(replacedCode);
             let updatedContent = fileContent;
 
             if (oldCode) {
-                updatedContent = fileContent.replace(replacedCode.join('\n'), oldCode.join('\n'));
+                updatedContent = fileContent.replace(replacedCode, oldCode);
                 console.log('Code block processed successfully');
             } else {
-                updatedContent = fileContent.replace(replacedCode.join('\n'), '');
+                updatedContent = fileContent.replace(replacedCode, '');
                 console.log('Code block not found');
             }
 

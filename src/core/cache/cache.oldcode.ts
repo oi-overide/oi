@@ -34,13 +34,13 @@ class LocalCache {
     }
 
     /**
-     * Finds the old code based on the new code provided.
-     * 
-     * @param {string[]} replacedCode - The new code lines that were inserted.
-     * @returns {string[] | null} - Returns the corresponding find array or null if not found.
-     */
-    public findOldCode(replacedCode: string[]): string[] | null {
-        const newCodeString = replacedCode.join('\n');
+      * Finds the old code based on the new code provided.
+      * 
+      * @param {string} replacedCode - The new code lines that were inserted.
+      * @returns {string[]|null} - Returns the corresponding find array or null if not found.
+      */
+    findOldCode(replacedCode: string) {
+        const newCodeString = replacedCode;
 
         for (const entry of this.cache) {
             const replaceString = entry.replace.join('\n');
@@ -49,10 +49,10 @@ class LocalCache {
             const score = fuzzball.ratio(newCodeString, replaceString);
 
             // Threshold for similarity
-            const threshold = 75; // Example threshold
+            const threshold = 75; 
 
             if (score >= threshold) {
-                return entry.find; // Return the corresponding find array
+                return entry.find.join('\n'); // Return the corresponding code.
             }
         }
         return null; // Return null if no match found

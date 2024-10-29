@@ -60,7 +60,7 @@ class PromptHelper {
         const userPrompt = this.matchRegex(PromptHelper.regPrompt, text);
         if (userPrompt) {
             const lineIndex = this.getLineIndexOfMatch(userPrompt[0], text);
-            promptBuffer.push({ type: 'prompt', content: userPrompt[1], lineIndex }); // Add prompt type and content
+            promptBuffer.push({ type: 'prompt', content: userPrompt[1], lineIndex, codeBlock: ""}); // Add prompt type and content
         }
 
         // Check for acceptance prompts
@@ -75,27 +75,6 @@ class PromptHelper {
                 const codeBlock = codeBlockMatch[0];
                 promptBuffer.push({ type: 'acceptance', content: response, lineIndex, codeBlock }); // Add acceptance type and content
             }
-        }
-
-        // Check for comment prompts
-        const comment = this.matchRegex(PromptHelper.regComment, text);
-        if (comment) {
-            const lineIndex = this.getLineIndexOfMatch(comment[0], text);
-            promptBuffer.push({ type: 'comment', content: comment[0], lineIndex }); // Add comment type and content
-        }
-
-        // Check for context prompts
-        const context = this.matchRegex(PromptHelper.regContext, text);
-        if (context) {
-            const lineIndex = this.getLineIndexOfMatch(context[0], text);
-            promptBuffer.push({ type: 'context', content: context[0], lineIndex }); // Add context type and content
-        }
-
-        // Check for completion prompts
-        const complete = this.matchRegex(PromptHelper.regComplete, text);
-        if (complete) {
-            const lineIndex = this.getLineIndexOfMatch(complete[0], text);
-            promptBuffer.push({ type: 'complete', content: complete[0], lineIndex }); // Add completion type and content
         }
 
         return promptBuffer; // Return all identified prompts
