@@ -1,14 +1,14 @@
 {
   "name": "overide",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "This is a CLI based Code Generation Tool.",
-  "main": "bin/index.js",
+  "main": "dist/index.js",
   "bin": {
-    "oi": "bin/index.js"
+    "oi": "dist/index.js"
   },
   "scripts": {
     "pnpm": "pnpm",
-    "start": "node bin/index.js",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Abhijeet Dash",
@@ -32,7 +32,6 @@
   },
   "files": [
     "assets",
-    "bin",
-    "core"
+    "dist"
   ]
 }

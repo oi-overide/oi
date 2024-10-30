@@ -5,7 +5,8 @@ import FindContext from './find.context';
 import FormatRequest from '../formatter/format.request';
 import FormatResponse from '../formatter/format.response';
 import Network from '../network/network';
-import { UserPromptInfo } from '../../types/type.promptInfo';
+
+import { CompletionType, UserPromptInfo } from '../../types/type.promptInfo';
 
 /**
  * The `FindPrompt` class is responsible for identifying prompts or acceptance cases
@@ -28,7 +29,7 @@ class FindPrompt {
      * @param {string} prompt - The prompt text found in the file.
      * @returns {string} The completion type: 'complete' or 'update'.
      */
-    findCompletionType(fileContent: string, prompt: string): string {
+    findCompletionType(fileContent: string, prompt: string): CompletionType {
         // Basic logic to check if the file contains code besides the prompt
         const hasCode = fileContent.split('\n').some(line => line.trim() && line !== prompt.trim());
 
@@ -85,7 +86,7 @@ class FindPrompt {
             const response = await Network.doRequest(requestObject);
 
             // Parse the network response to get the code
-            const codeData = await FormatResponse.formatResponse(response, completionType);
+            const codeData = (await FormatResponse.formatResponse(response)) as string;
 
             // Insert the generated code block into the file at the appropriate location
             if (completionType === "complete") {
@@ -106,7 +107,7 @@ class FindPrompt {
      * @param {string} filePath - The path to the file to be searched.
      * @param {boolean} verbose - A flag indicating whether to log detailed information during the search.
      */
-    async findPromptInFile(filePath: string, verbose: boolean): Promise<void> {
+    async findPromptInFile(filePath: string, verbose: boolean = false): Promise<void> {
         try {
             // Read the file content
             const fileContent: string = fs.readFileSync(filePath, 'utf-8');
@@ -129,7 +130,7 @@ class FindPrompt {
                             console.log(`Acceptance response: ${caseItem.content}`);
                         }
                         // Handle the acceptance response
-                        await this.handleFoundAcceptance(caseItem.content, caseItem.codeBlock, caseItem.content, fileContent, filePath);
+                        await this.handleFoundAcceptance(caseItem.acceptanceLine || "", caseItem.codeBlock, caseItem.content, fileContent, filePath);
                         break;
                     default:
                         break;

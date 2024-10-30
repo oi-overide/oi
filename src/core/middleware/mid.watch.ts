@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import CommandHelper from '../helpers/help.commands';
+import FindPrompt from '../finder/find.prompt';
 
 import chokidar, { FSWatcher } from 'chokidar';
 import { FileContents, LocalConfig, StartOption } from '../../interfaces/interfaces';
@@ -91,7 +92,7 @@ class WatchInterface {
                 if (verbose) {
                     console.log(`File ${filePath} has been changed`);
                 }
-                // await ParsePrompt.findPromptInFile(filePath);
+                await FindPrompt.findPromptInFile(filePath, verbose);
             })
             .on('unlink', (filePath: string) => {
                 if (verbose) {

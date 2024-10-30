@@ -1,3 +1,5 @@
+import { CompletionType } from "../../types/type.promptInfo";
+
 /**
  * The `CodeHelper` class handles code block manipulations like extraction, fuzzy matching, and replacement.
  */

@@ -18,7 +18,6 @@ import { StartOption } from '../interfaces/interfaces';
 class Start extends OiCommand {
     constructor(program: Command) {
         super(program);
-        this.configureCommand();
     }
 
     /**
@@ -26,12 +25,10 @@ class Start extends OiCommand {
      * required options and actions.
      */
     configureCommand(): void {
-        const startCommand = this.program
-            .command('start')
-            .description('Start watching files for prompt changes')
-            .action((options: StartOption) => this.startWatch(options));
-
+        const startCommand = this.program.command('start').description('Start watching files for prompt changes')
         this.addCommonOptions(startCommand); // Add common options such as --verbose
+
+        startCommand.action((options: StartOption) => this.startWatch(options));
     }
 
     /**

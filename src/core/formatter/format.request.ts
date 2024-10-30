@@ -1,6 +1,7 @@
 import FormatPrompt from './format.prompt';
 import CommandHelper from '../helpers/help.commands';
-import { GlobalConfig, ActivePlatformDetails, PlatformConfig } from '../../interfaces/interfaces';
+import { ActivePlatformDetails, PlatformConfig } from '../../interfaces/interfaces';
+import { CompletionType } from '../../types/type.promptInfo';
 
 /**
  * The `FormatRequest` class is responsible for creating a dynamic request 
@@ -18,10 +19,10 @@ class FormatRequest {
      * @param verbose - Whether to log the request creation process.
      * @returns The formatted request object for the active service.
      */
-    async createRequest(prompt: string, promptArray: string[], completionType: string, verbose = false): Promise<object | void> {
+    async createRequest(prompt: string, promptArray: string[], completionType: CompletionType, verbose = false): Promise<object | void> {
         try {
             // Fetch details about the active AI service (platform, API key, etc.)
-            const activeServiceDetails = await this.getActiveServiceDetails();
+            const activeServiceDetails = await CommandHelper.getActiveServiceDetails();
 
             if(activeServiceDetails === null) {
                 throw new Error("No active service found.");
@@ -30,13 +31,13 @@ class FormatRequest {
             // Determine which platform is active and create the appropriate request
             switch (activeServiceDetails.platform) {
                 case 'openai':
-                    return this.createOpenAIRequest(prompt, promptArray, activeServiceDetails.platformConfig, completionType, verbose);
+                    return this.createOpenAIRequest(prompt, promptArray, activeServiceDetails, completionType, verbose);
 
                 case 'deepseek':
-                    return this.createDeepSeekRequest(prompt, promptArray, activeServiceDetails.platformConfig, completionType);
+                    return this.createDeepSeekRequest(prompt, promptArray, activeServiceDetails, completionType);
 
                 case 'groq':
-                    return this.createGroqRequest(prompt, promptArray, activeServiceDetails.platformConfig, completionType, verbose);
+                    return this.createGroqRequest(prompt, promptArray, activeServiceDetails, completionType, verbose);
 
                 default:
                     throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
@@ -59,8 +60,8 @@ class FormatRequest {
     async createOpenAIRequest(
         prompt: string,
         promptArray: string[],
-        activeServiceDetails: PlatformConfig,
-        completionType: string,
+        activeServiceDetails: ActivePlatformDetails,
+        completionType: CompletionType,
         verbose: boolean
     ): Promise<object> {
         const finalPrompt = await FormatPrompt.getOpenAiPrompt(promptArray, prompt, completionType);
@@ -100,8 +101,8 @@ class FormatRequest {
     async createDeepSeekRequest(
         prompt: string,
         promptArray: string[],
-        activeServiceDetails: PlatformConfig,
-        completionType: string
+        activeServiceDetails: ActivePlatformDetails,
+        completionType: CompletionType
     ): Promise<object | void> {
         try {
             const finalPrompt = await FormatPrompt.getDeepSeekPrompt(promptArray, prompt, completionType);
@@ -133,8 +134,8 @@ class FormatRequest {
     async createGroqRequest(
         prompt: string,
         promptArray: string[],
-        activeServiceDetails: PlatformConfig,
-        completionType: string,
+        activeServiceDetails: ActivePlatformDetails,
+        completionType: CompletionType,
         verbose: boolean
     ): Promise<object> {
         const finalPrompt = await FormatPrompt.getGroqPrompt(promptArray, prompt, completionType);
@@ -158,29 +159,6 @@ class FormatRequest {
                 stop: null
             },
         };
-    }
-    
-    /**
-     * Retrieves the details of the currently active AI service platform.
-     * It reads the global configuration file to determine which platform is marked as active.
-     * If an active platform is found, it returns an object containing the platform's name and configuration details.
-     * 
-     * @returns {ActivePlatformDetails | null} An object containing the active platform's name and configuration details, 
-     * or `null` if no platform is marked as active.
-     */
-    getActiveServiceDetails(): ActivePlatformDetails | null {
-        const globalConfig = CommandHelper.readConfigFileData(true) as GlobalConfig;
-        for (const platform in globalConfig) {
-            const platformConfig = globalConfig[platform];
-            if (platformConfig.isActive) {
-                const activePlatformDetails: ActivePlatformDetails = {
-                    platform: platform,
-                    platformConfig: platformConfig
-                };
-                return activePlatformDetails;
-            }
-        }
-        return null;
     }
 }
 

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { GlobalConfig, LocalConfig } from '../../interfaces/interfaces';
+import { ActivePlatformDetails, GlobalConfig, LocalConfig } from '../../interfaces/interfaces';
 
 /**
  * The `DirectoryHelper` class is responsible for managing configuration files and directories
@@ -113,6 +113,29 @@ class CommandHelper {
         } catch (error: any) {
             console.error(`Error writing configuration file: ${error.message}`);
         }
+    }
+
+    /**
+     * Retrieves the details of the currently active AI service platform.
+     * It reads the global configuration file to determine which platform is marked as active.
+     * If an active platform is found, it returns an object containing the platform's name and configuration details.
+     * 
+     * @returns {ActivePlatformDetails | null} An object containing the active platform's name and configuration details, 
+     * or `null` if no platform is marked as active.
+     */
+    getActiveServiceDetails(): ActivePlatformDetails | null {
+        const globalConfig = this.readConfigFileData(true) as GlobalConfig;
+        for (const platform in globalConfig) {
+            const platformConfig = globalConfig[platform];
+            if (platformConfig.isActive) {
+                const activePlatformDetails: ActivePlatformDetails = {
+                    platform: platform,
+                    platformConfig: platformConfig
+                };
+                return activePlatformDetails;
+            }
+        }
+        return null;
     }
 }
 

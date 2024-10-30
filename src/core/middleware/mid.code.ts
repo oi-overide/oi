@@ -19,11 +19,27 @@ class CodeInterface {
      */
     removeAcceptanceMessage(filePath: string, fileContent: string, acceptanceLine: string): void {
         try {
-            if (fileContent.includes(acceptanceLine)) {
-                let updatedContent = fileContent.replace(acceptanceLine, '');
-                updatedContent = updatedContent.split('\n').filter(line => !line.includes('//-')).join('\n'); 
-                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
-                console.log('Acceptance message removed successfully');
+            // Check if the acceptance message is in the file
+            const acceptanceIndex = fileContent.indexOf(acceptanceLine);
+            if (acceptanceIndex !== -1) {
+                // Find the position of the last occurrence of "//-" before the acceptance message
+                const contentBeforeAcceptance = fileContent.slice(0, acceptanceIndex);
+                const lastDashIndex = contentBeforeAcceptance.lastIndexOf('//-');
+    
+                if (lastDashIndex !== -1) {
+                    // Create a new string with the first "//-" removed
+                    const updatedContent = fileContent.slice(0, lastDashIndex) + 
+                                           fileContent.slice(lastDashIndex + 3); // Skip the "//-"
+    
+                    // Remove the acceptance message
+                    const finalContent = updatedContent.replace(acceptanceLine, '');
+    
+                    // Write the updated content back to the file
+                    fs.writeFileSync(filePath, finalContent, 'utf-8');
+                    console.log('Acceptance message and preceding //- removed successfully');
+                } else {
+                    console.log('No preceding //- found to remove');
+                }
             } else {
                 console.log('Acceptance message not found');
             }

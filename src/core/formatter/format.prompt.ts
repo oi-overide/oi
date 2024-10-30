@@ -1,7 +1,7 @@
 import { PromptInfo } from "../../interfaces/interfaces";
 
 // Loading JSON structure into a variable
-const promptStructure: PromptInfo = require('../../assets/prompt.structure.json');
+import promptStructure from '../../../assets/prompt.structure.json'; 
 
 
 /**
@@ -16,6 +16,12 @@ const promptStructure: PromptInfo = require('../../assets/prompt.structure.json'
  * - Dynamically construct context around the insertion point for prompt creation.
  */
 class FormatPrompt {
+    private basePrompt: PromptInfo;
+
+    constructor() {
+        this.basePrompt = promptStructure;
+    }
+
     /**
      * Creates and formats a prompt for OpenAI models.
      *
@@ -29,7 +35,7 @@ class FormatPrompt {
             const platform = 'openai';
 
             // In all the cases load the system prompt
-            const systemPrompt = promptStructure[platform].systemMessage;
+            const systemPrompt = this.basePrompt[platform].systemMessage;
             const codeContext = this.getCodeContext(contextArray, prompt);
             const instructions = this.getInstructions(completionType, platform);
 
@@ -37,10 +43,10 @@ class FormatPrompt {
             let contextPrompt = '';
 
             if (completionType === 'update') {
-                contextPrompt = promptStructure[platform].update.context;
-                format = promptStructure[platform].update.format;
+                contextPrompt = this.basePrompt[platform].update.context;
+                format = this.basePrompt[platform].update.format;
             } else {
-                format = promptStructure[platform].complete.format;
+                format = this.basePrompt[platform].complete.format;
             }
 
             const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
@@ -64,7 +70,7 @@ class FormatPrompt {
             const platform = 'deepseek';
 
             // In all the cases load the system prompt
-            const systemPrompt = promptStructure[platform].systemMessage;
+            const systemPrompt = this.basePrompt[platform].systemMessage;
             const codeContext = this.getCodeContext(contextArray, prompt);
             const instructions = this.getInstructions(completionType, platform);
 
@@ -73,10 +79,10 @@ class FormatPrompt {
 
             // If the completion type is 'update', load the context and update prompt
             if (completionType === 'update') {
-                contextPrompt = promptStructure[platform].update.context;
-                format = promptStructure[platform].update.format;
+                contextPrompt = this.basePrompt[platform].update.context;
+                format = this.basePrompt[platform].update.format;
             } else {
-                format = promptStructure[platform].complete.format;
+                format = this.basePrompt[platform].complete.format;
             }
 
             const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
@@ -99,7 +105,7 @@ class FormatPrompt {
         try {
             const platform = 'groq';
 
-            const systemPrompt = promptStructure[platform].systemMessage;
+            const systemPrompt = this.basePrompt[platform].systemMessage;
             const codeContext = this.getCodeContext(contextArray, prompt);
             const instructions = this.getInstructions(completionType, platform);
 
@@ -107,10 +113,10 @@ class FormatPrompt {
             let contextPrompt = '';
 
             if (completionType === 'update') {
-                contextPrompt = promptStructure[platform].update.context;
-                format = promptStructure[platform].update.format;
+                contextPrompt = this.basePrompt[platform].update.context;
+                format = this.basePrompt[platform].update.format;
             } else {
-                format = promptStructure[platform].complete.format;
+                format = this.basePrompt[platform].complete.format;
             }
 
             const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
@@ -144,9 +150,9 @@ class FormatPrompt {
     private getInstructions(completionType: string, platform: string): string {
         let instructionList = [];
         if (completionType === "update") {
-            instructionList = promptStructure[platform].update.instructions;
+            instructionList = this.basePrompt[platform].update.instructions;
         } else {
-            instructionList = promptStructure[platform].complete.instructions;
+            instructionList = this.basePrompt[platform].complete.instructions;
         }
         return instructionList.join('');
     }

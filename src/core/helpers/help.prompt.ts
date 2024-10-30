@@ -1,4 +1,4 @@
-import { PromptInfo } from "../../types/type.promptInfo";
+import { UserPromptInfo } from "../../types/type.promptInfo";
 
 /**
  * The `PromptHelper` class provides utility methods for identifying and processing
@@ -53,8 +53,8 @@ class PromptHelper {
      * @param text - The text to analyze for prompts.
      * @returns An array of `PromptInfo` objects with prompt types and their corresponding content.
      */
-    identifyPromptCase(text: string): PromptInfo[] {
-        const promptBuffer: PromptInfo[] = [];
+    identifyPromptCase(text: string): UserPromptInfo[] {
+        const promptBuffer: UserPromptInfo[] = [];
 
         // Check for user prompts
         const userPrompt = this.matchRegex(PromptHelper.regPrompt, text);
@@ -73,7 +73,7 @@ class PromptHelper {
 
             if (codeBlockMatch) {
                 const codeBlock = codeBlockMatch[0];
-                promptBuffer.push({ type: 'acceptance', content: response, lineIndex, codeBlock }); // Add acceptance type and content
+                promptBuffer.push({ type: 'acceptance', content: response, lineIndex, codeBlock, acceptanceLine }); // Add acceptance type and content
             }
         }
 
