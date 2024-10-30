@@ -4,36 +4,36 @@
  * The `CodeHelper` class handles code block manipulations like extraction, fuzzy matching, and replacement.
  */
 class CodeHelper {
-  /**
-   * Extracts a code block from the content based on a specific format.
-   *
-   * @param content - The content to extract the code block from.
-   * @param verbose - If true, logs the extracted block.
-   * @returns The extracted code block.
-   * @throws Error if no code block is found.
-   */
-  extractCodeBlock(content: string, verbose: boolean = false): string {
-    const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-    if (codeMatch && codeMatch[1]) {
-      if (verbose) console.log(`Extracted Code Block: ${codeMatch[1]}`);
-      return codeMatch[1];
-    } else {
-      throw new Error('No code block found in the response');
+    /**
+     * Extracts a code block from the content based on a specific format.
+     * 
+     * @param content - The content to extract the code block from.
+     * @param verbose - If true, logs the extracted block.
+     * @returns The extracted code block.
+     * @throws Error if no code block is found.
+     */
+    extractCodeBlock(content: string, verbose: boolean = false): string {
+        const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
+        if (codeMatch && codeMatch[1]) {
+            if (verbose) console.log(`Extracted Code Block: ${codeMatch[1]}`);
+            return codeMatch[1];
+        } else {
+            throw new Error("No code block found in the response");
+        }
     }
-  }
 
-  /**
-   * Finds the index of the old block in the file content using exact matching.
-   *
-   * @param fileContentLines - The file content split into lines.
-   * @param oldBlock - The block of old code to find.
-   * @returns The starting index of the old block in the file content or -1 if not found.
-   */
-  findMatchingIndex(fileContentLines: string[], oldBlock: string[]): number {
-    if (!oldBlock || !Array.isArray(oldBlock) || oldBlock.length === 0) {
-      console.log('Invalid oldBlock provided.');
-      return -1; // Return -1 if oldBlock is not valid
-    }
+    /**
+     * Finds the index of the old block in the file content using exact matching.
+     * 
+     * @param fileContentLines - The file content split into lines.
+     * @param oldBlock - The block of old code to find.
+     * @returns The starting index of the old block in the file content or -1 if not found.
+     */
+    findMatchingIndex(fileContentLines: string[], oldBlock: string[]): number {
+        if (!oldBlock || !Array.isArray(oldBlock) || oldBlock.length === 0) {
+            console.log("Invalid oldBlock provided.");
+            return -1; // Return -1 if oldBlock is not valid
+        }
 
     const length = fileContentLines.length;
 
