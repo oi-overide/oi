@@ -32,6 +32,11 @@ export interface PlatformConfig {
     isActive: boolean;
 }
 
+export interface ActivePlatformDetails {
+    platform: string;
+    platformConfig: PlatformConfig;
+}
+
 export interface FileContents {
     [filePath: string]: string;
 }
@@ -43,4 +48,21 @@ export interface FileContents {
 export interface ReplacementBlock {
     find: string[];              // The code to find in the file.
     replace: string[];         // The replacement code.
+}
+
+export interface PromptInfo {
+    [platform: string]: PlatformPromptInfo    
+}
+
+export interface PlatformPromptInfo {
+    systemMessage: string;
+    complete: {
+        format: string;
+        instructions: string[];
+    };
+    update: {
+        context: string;
+        format: string;
+        instructions: string[];
+    };
 }

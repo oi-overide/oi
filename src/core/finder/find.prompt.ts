@@ -5,7 +5,7 @@ import FindContext from './find.context';
 import FormatRequest from '../formatter/format.request';
 import FormatResponse from '../formatter/format.response';
 import Network from '../network/network';
-import { PromptInfo } from '../../types/type.promptInfo';
+import { UserPromptInfo } from '../../types/type.promptInfo';
 
 /**
  * The `FindPrompt` class is responsible for identifying prompts or acceptance cases
@@ -112,7 +112,7 @@ class FindPrompt {
             const fileContent: string = fs.readFileSync(filePath, 'utf-8');
 
             // Identify any prompts or acceptance cases in the file
-            const promptCases: PromptInfo[] = PromptHelper.identifyPromptCase(fileContent);
+            const promptCases: UserPromptInfo[] = PromptHelper.identifyPromptCase(fileContent);
 
             // Process each identified case
             for (const caseItem of promptCases) {
