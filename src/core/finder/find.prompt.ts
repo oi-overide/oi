@@ -20,27 +20,27 @@ import { CompletionType, UserPromptInfo } from '../../types/type.promptInfo';
  * - Handle user acceptance or rejection of code suggestions.
  */
 class FindPrompt {
-    /**
-     * Determines the completion type for the found prompt.
-     * If no code exists in the file and only a prompt is found, it returns 'complete'.
-     * If code exists and the user wants to update it, it returns 'update'.
-     *
-     * @param {string} fileContent - The content of the file being processed.
-     * @param {string} prompt - The prompt text found in the file.
-     * @returns {string} The completion type: 'complete' or 'update'.
-     */
-    findCompletionType(fileContent: string, prompt: string): CompletionType {
-        let hasCode: boolean = false;
+  /**
+   * Determines the completion type for the found prompt.
+   * If no code exists in the file and only a prompt is found, it returns 'complete'.
+   * If code exists and the user wants to update it, it returns 'update'.
+   *
+   * @param {string} fileContent - The content of the file being processed.
+   * @param {string} prompt - The prompt text found in the file.
+   * @returns {string} The completion type: 'complete' or 'update'.
+   */
+  findCompletionType(fileContent: string, prompt: string): CompletionType {
+    let hasCode: boolean = false;
 
-        // Basic logic to check if the file contains code besides the prompt
-        const fileLines = fileContent.trim().split('\n');
+    // Basic logic to check if the file contains code besides the prompt
+    const fileLines = fileContent.trim().split('\n');
 
-        fileLines.forEach((line) => {
-            if (!line.trim().includes(prompt)) {
-                console.log(line);
-                hasCode = true;
-            }
-        })
+    fileLines.forEach(line => {
+      if (!line.trim().includes(prompt)) {
+        console.log(line);
+        hasCode = true;
+      }
+    });
 
     // Return 'complete' if no code exists, else 'update'
     return hasCode ? 'update' : 'complete';

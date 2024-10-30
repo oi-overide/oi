@@ -73,34 +73,34 @@ class CodeInterface {
     }
   }
 
-    /**
-     * Inserts a new code block into the file at the position of the specified prompt.
-     * 
-     * @param {string} filePath - The path to the file to be modified.
-     * @param {string} prompt - The prompt that identifies where to insert the new code.
-     * @param {string} newCode - The new code to be inserted.
-     */
-    insertCodeBlock(filePath: string, prompt: string, newCode: string): void {
-        try {
-            const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
-            // Just remove the prompt line.
-            const nopromptContent = fileContent.replace('//>', '').replace('<//', '').trim();
-            if (fileContent.includes(prompt)) {            
-                const codeBlock = `
+  /**
+   * Inserts a new code block into the file at the position of the specified prompt.
+   *
+   * @param {string} filePath - The path to the file to be modified.
+   * @param {string} prompt - The prompt that identifies where to insert the new code.
+   * @param {string} newCode - The new code to be inserted.
+   */
+  insertCodeBlock(filePath: string, prompt: string, newCode: string): void {
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
+      // Just remove the prompt line.
+      const nopromptContent = fileContent.replace('//>', '').replace('<//', '').trim();
+      if (fileContent.includes(prompt)) {
+        const codeBlock = `
                     //-
                     ${newCode}
                     //> Accept the changes (y/n): -//
                 `;
-                const updatedContent = nopromptContent.replace(prompt, codeBlock); // Replace prompt with new code block
-                fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
-                console.log('Code block inserted successfully');
-            } else {
-                console.log('Prompt not found');
-            }
-        } catch (error) {
-            console.log('Error inserting code block:', error);
-        }
+        const updatedContent = nopromptContent.replace(prompt, codeBlock); // Replace prompt with new code block
+        fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
+        console.log('Code block inserted successfully');
+      } else {
+        console.log('Prompt not found');
+      }
+    } catch (error) {
+      console.log('Error inserting code block:', error);
     }
+  }
 
   /**
    * Applies code replacements to the specified file using the `CodeHelper` utility for fuzzy matching.
