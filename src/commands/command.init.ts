@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import CommandHelper from '../core/helpers/help.commands';
@@ -18,11 +17,10 @@ import OiCommand from './abstract.command';
  * - Perform a dry run of the initialization process without making changes.
  */
 class Initialize extends OiCommand {
-  
   configureCommand() {
     const initCommand = this.program.command('init').description('Initialize a new project');
     this.addCommonOptions(initCommand);
-   
+
     initCommand
       .option('-i, --ignore <files...>', 'Specify files or directories to ignore')
       .option('-n, --project-name <name>', 'Specify a project name')
@@ -45,15 +43,15 @@ class Initialize extends OiCommand {
    \\____/  |_|
                    
     `);
-    console.log("Oi Project initialized!");
-    console.log("\nNext steps:");
+    console.log('Oi Project initialized!');
+    console.log('\nNext steps:');
     console.log("1. Use 'oi config -g' to define the API KEYs, BASE URLs and Platforms");
     console.log("2. Run 'oi start' to start getting code suggestions.");
   };
 
   /**
    * Adds specified files to the ignore list in the configuration file (`oi-config.json`).
-   * 
+   *
    * @param {string|string[]} files - A file or an array of files to add to the ignore list.
    */
   addIgnoreFiles = (files: string[]) => {
@@ -99,9 +97,9 @@ class Initialize extends OiCommand {
 
   /**
    * Initializes the project by creating the configuration file (`oi-config.json`)
-   * and setting up ignore files, project name, and other options. If the project 
+   * and setting up ignore files, project name, and other options. If the project
    * is already initialized, it will stop the process.
-   * 
+   *
    * @param {object} options - Configuration options such as project name, ignore list, verbose mode, and dry run.
    */
   initializeProject = async (options: InitializeOption) => {
@@ -135,7 +133,7 @@ class Initialize extends OiCommand {
         'oi-dependency.json',
         '/(^|[/\\])../',
         'node_modules',
-        '*.swp',
+        '*.swp'
       ];
 
       // Combine user-specified ignore files with default ignore files (removing duplicates)
@@ -144,7 +142,7 @@ class Initialize extends OiCommand {
       // Create the configuration object for the project
       const config: LocalConfig = {
         projectName: projectName,
-        ignore: combinedIgnoreFiles,
+        ignore: combinedIgnoreFiles
       };
 
       // Ensure required global directories exist

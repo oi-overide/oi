@@ -1,6 +1,6 @@
 /**
  * The `FindContext` class is responsible for extracting contextual information
- * around a specified prompt within a file. It retrieves import statements, 
+ * around a specified prompt within a file. It retrieves import statements,
  * pre-context, post-context, and the trimmed version of the prompt from the file content.
  *
  * Responsibilities:
@@ -11,32 +11,42 @@
 
 // TODO : update this to add context from multiple files.
 class FindContext {
-    /**
-     * Finds the context surrounding a prompt in the file content.
-     * 
-     * @param {number} index - The index (line number) where the prompt appears in the file.
-     * @param {string} fileContent - The entire content of the file as a string.
-     * @param {string} prompt - The specific prompt text to find in the file.
-     * @param {boolean} verbose - A flag indicating whether to log detailed messages.
-     * @returns {Promise<[string, string]>} - A promise that resolves to an array containing the file content and trimmed prompt.
-     */
-    async findPromptContext(index: number, fileContent: string, prompt: string, verbose: boolean): Promise<[string, string]> {
-        try {
-            if (verbose) {
-                console.log('Creating Prompt Context');
-            }
+  /**
+   * Finds the context surrounding a prompt in the file content.
+   *
+   * @param {number} index - The index (line number) where the prompt appears in the file.
+   * @param {string} fileContent - The entire content of the file as a string.
+   * @param {string} prompt - The specific prompt text to find in the file.
+   * @param {boolean} verbose - A flag indicating whether to log detailed messages.
+   * @returns {Promise<[string, string]>} - A promise that resolves to an array containing the file content and trimmed prompt.
+   */
+  async findPromptContext(
+    index: number,
+    fileContent: string,
+    prompt: string,
+    verbose: boolean
+  ): Promise<[string, string]> {
+    try {
+      if (index && verbose) {
+        console.log('Creating Prompt Context');
+      }
 
-            // Clean and trim the prompt text by removing delimiters and excess whitespace
-            const trimmedPrompt = prompt.replace('//>', '').replace('<//', '').replace('\n', '').replace('//', '').trim();
+      // Clean and trim the prompt text by removing delimiters and excess whitespace
+      const trimmedPrompt = prompt
+        .replace('//>', '')
+        .replace('<//', '')
+        .replace('\n', '')
+        .replace('//', '')
+        .trim();
 
-            // Return the extracted context: file content and trimmed prompt
-            return [fileContent, trimmedPrompt];
-        } catch (e) {
-            // Log and throw any errors encountered during context extraction
-            console.error("Error creating prompt context:", e);
-            throw e;
-        }
+      // Return the extracted context: file content and trimmed prompt
+      return [fileContent, trimmedPrompt];
+    } catch (e) {
+      // Log and throw any errors encountered during context extraction
+      console.error('Error creating prompt context:', e);
+      throw e;
     }
+  }
 }
 
 // Export an instance of the FindContext class
