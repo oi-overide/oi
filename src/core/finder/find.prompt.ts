@@ -30,8 +30,17 @@ class FindPrompt {
      * @returns {string} The completion type: 'complete' or 'update'.
      */
     findCompletionType(fileContent: string, prompt: string): CompletionType {
+        let hasCode: boolean = false;
+
         // Basic logic to check if the file contains code besides the prompt
-        const hasCode = fileContent.split('\n').some(line => line.trim() && line !== prompt.trim());
+        const fileLines = fileContent.trim().split('\n');
+
+        fileLines.forEach((line) => {
+            if (!line.trim().includes(prompt)) {
+                console.log(line);
+                hasCode = true;
+            }
+        })
 
         // Return 'complete' if no code exists, else 'update'
         return hasCode ? 'update' : 'complete';

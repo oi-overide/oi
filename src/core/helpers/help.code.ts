@@ -16,6 +16,7 @@ class CodeHelper {
         const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
         if (codeMatch && codeMatch[1]) {
             if (verbose) console.log(`Extracted Code Block: ${codeMatch[1]}`);
+            console.log("EXTRACTED : ",codeMatch[1]);
             return codeMatch[1];
         } else {
             throw new Error("No code block found in the response");

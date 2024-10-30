@@ -84,13 +84,15 @@ class CodeInterface {
     insertCodeBlock(filePath: string, prompt: string, newCode: string): void {
         try {
             const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
-            if (fileContent.includes(prompt)) {
+            // Just remove the prompt line.
+            const nopromptContent = fileContent.replace('//>', '').replace('<//', '').trim();
+            if (fileContent.includes(prompt)) {            
                 const codeBlock = `
-                    //-${prompt.trim()}
+                    //-
                     ${newCode}
                     //> Accept the changes (y/n): -//
                 `;
-                const updatedContent = fileContent.replace(prompt, codeBlock); // Replace prompt with new code block
+                const updatedContent = nopromptContent.replace(prompt, codeBlock); // Replace prompt with new code block
                 fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
                 console.log('Code block inserted successfully');
             } else {
