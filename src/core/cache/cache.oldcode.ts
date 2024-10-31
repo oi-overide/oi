@@ -39,7 +39,7 @@ class LocalCache {
    * @param {string} replacedCode - The new code lines that were inserted.
    * @returns {string[]|null} - Returns the corresponding find array or null if not found.
    */
-  findOldCode(replacedCode: string) {
+  findOldCode(replacedCode: string): string | null {
     const newCodeString = replacedCode;
 
     for (const entry of this.cache) {

@@ -17,7 +17,7 @@ import OiCommand from './abstract.command';
  * - Perform a dry run of the initialization process without making changes.
  */
 class Initialize extends OiCommand {
-  configureCommand() {
+  configureCommand(): void {
     const initCommand = this.program.command('init').description('Initialize a new project');
     this.addCommonOptions(initCommand);
 
@@ -33,7 +33,7 @@ class Initialize extends OiCommand {
    * Displays ASCII art in the console to indicate successful project initialization
    * and provides the next steps the user needs to take after initialization.
    */
-  displayAsciiArt = () => {
+  displayAsciiArt(): void {
     console.log(`
     ____    _      
    / __ \\  |_|       
@@ -47,14 +47,14 @@ class Initialize extends OiCommand {
     console.log('\nNext steps:');
     console.log("1. Use 'oi config -g' to define the API KEYs, BASE URLs and Platforms");
     console.log("2. Run 'oi start' to start getting code suggestions.");
-  };
+  }
 
   /**
    * Adds specified files to the ignore list in the configuration file (`oi-config.json`).
    *
    * @param {string|string[]} files - A file or an array of files to add to the ignore list.
    */
-  addIgnoreFiles = (files: string[]) => {
+  addIgnoreFiles(files: string[]): void {
     const configPath = CommandHelper.getConfigFilePath(false);
 
     // Check if oi-config.json exists
@@ -90,10 +90,12 @@ class Initialize extends OiCommand {
       // Write the updated configuration back to oi-config.json
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       console.log('Updated oi-config.json with new ignore files.');
-    } catch (error: any) {
-      console.error(`Error updating oi-config.json: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error updating oi-config.json: ${error.message}`);
+      }
     }
-  };
+  }
 
   /**
    * Initializes the project by creating the configuration file (`oi-config.json`)
@@ -102,7 +104,7 @@ class Initialize extends OiCommand {
    *
    * @param {object} options - Configuration options such as project name, ignore list, verbose mode, and dry run.
    */
-  initializeProject = async (options: InitializeOption) => {
+  async initializeProject(options: InitializeOption): Promise<void> {
     try {
       // Determine the output path for the configuration file
       const outputPath = path.join(process.cwd(), 'oi-config.json');
@@ -158,8 +160,10 @@ class Initialize extends OiCommand {
 
         // Display ASCII art and instructions after initialization
         this.displayAsciiArt();
-      } catch (error: any) {
-        console.error(`Error creating config file: ${error.message}`);
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(`Error creating config file: ${error.message}`);
+        }
         process.exit(1);
       }
 
@@ -167,10 +171,12 @@ class Initialize extends OiCommand {
       if (verbose) {
         console.log('Initialization complete.');
       }
-    } catch (error: any) {
-      console.error(`Error initializing project: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error initializing project: ${error.message}`);
+      }
     }
-  };
+  }
 }
 
 export default Initialize;

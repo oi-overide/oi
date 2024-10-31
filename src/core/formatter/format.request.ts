@@ -65,8 +65,10 @@ class FormatRequest {
         default:
           throw new Error(`Unsupported platform: ${activeServiceDetails.platform}`);
       }
-    } catch (error: any) {
-      console.error(`Error in creating request: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error in creating request: ${error.message}`);
+      }
     }
   }
 

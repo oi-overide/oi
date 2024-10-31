@@ -18,7 +18,16 @@ class FormatResponse {
    * @param verbose - Whether to log the formatting process.
    * @returns The formatted code block extracted from the response, or null if not found.
    */
-  async formatResponse(response: any, verbose: boolean = false): Promise<string | null> {
+  async formatResponse(
+    response: {
+      choices: Array<{
+        message: {
+          content: string;
+        };
+      }>;
+    },
+    verbose: boolean = false
+  ): Promise<string | null> {
     try {
       // Fetch details about the active AI service (platform, API key, etc.)
       const activeServiceDetails = await CommandHelper.getActiveServiceDetails();
@@ -55,7 +64,16 @@ class FormatResponse {
    * @param verbose - Whether to log details of the extracted code.
    * @returns The extracted code block, or null if no code block is found.
    */
-  private formatOpenAIResponse(response: any, verbose: boolean): string | null {
+  private formatOpenAIResponse(
+    response: {
+      choices: Array<{
+        message: {
+          content: string;
+        };
+      }>;
+    },
+    verbose: boolean
+  ): string | null {
     try {
       const content = response.choices[0].message.content;
       return CodeHelper.extractCodeBlock(content, verbose);
@@ -73,7 +91,16 @@ class FormatResponse {
    * @param verbose - Whether to log details of the extracted code.
    * @returns The extracted code block, or null if no code block is found.
    */
-  private formatDeepSeekResponse(response: any, verbose: boolean): string | null {
+  private formatDeepSeekResponse(
+    response: {
+      choices: Array<{
+        message: {
+          content: string;
+        };
+      }>;
+    },
+    verbose: boolean
+  ): string | null {
     try {
       const content = response.choices[0].message.content;
       return CodeHelper.extractCodeBlock(content, verbose);
@@ -91,7 +118,16 @@ class FormatResponse {
    * @param verbose - Whether to log details of the extracted code.
    * @returns The extracted code block, or null if no code block is found.
    */
-  private formatGroqResponse(response: any, verbose: boolean): string | null {
+  private formatGroqResponse(
+    response: {
+      choices: Array<{
+        message: {
+          content: string;
+        };
+      }>;
+    },
+    verbose: boolean
+  ): string | null {
     try {
       const content = response.choices[0].message.content;
       return CodeHelper.extractCodeBlock(content, verbose);

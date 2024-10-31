@@ -1,4 +1,6 @@
 import { ActivePlatformDetails } from '../../interfaces/interfaces';
+import { ChatCompletionMessageParam as OpenAIChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 
 import * as dotenv from 'dotenv';
 
@@ -20,7 +22,19 @@ class Network {
    * @returns {Promise<string>} - The generated code response.
    * @throws Will throw an error if no active service details are found or if there are missing credentials.
    */
-  async doRequest(requestData: any): Promise<string> {
+  async doRequest(requestData: {
+    activeServiceDetails: ActivePlatformDetails;
+    metadata: {
+      model: string;
+      messages: OpenAIChatCompletionMessageParam[] | GroqChatCompletionMessageParam[];
+      temperature?: number;
+      max_tokens?: number;
+      n?: number;
+      stream?: boolean;
+      presence_penalty?: number;
+      frequency_penalty?: number;
+    };
+  }): Promise<string> {
     const activeServiceDetails: ActivePlatformDetails = requestData.activeServiceDetails;
     const metadata = requestData.metadata;
 
@@ -34,11 +48,20 @@ class Network {
     // Handle requests based on the selected platform
     switch (platform) {
       case 'openai':
-        return this.handleOpenAIRequest(activeServiceDetails, metadata);
+        return this.handleOpenAIRequest(activeServiceDetails, {
+          ...metadata,
+          messages: metadata.messages as OpenAIChatCompletionMessageParam[]
+        });
       case 'deepseek':
-        return this.handleDeepSeekRequest(activeServiceDetails, metadata);
+        return this.handleDeepSeekRequest(activeServiceDetails, {
+          ...metadata,
+          messages: metadata.messages as OpenAIChatCompletionMessageParam[]
+        });
       case 'groq':
-        return this.handleGroqRequest(activeServiceDetails, metadata);
+        return this.handleGroqRequest(activeServiceDetails, {
+          ...metadata,
+          messages: metadata.messages as GroqChatCompletionMessageParam[]
+        });
       default:
         throw new Error('No valid model or platform selected.');
     }
@@ -54,7 +77,16 @@ class Network {
    */
   async handleOpenAIRequest(
     activeServiceDetails: ActivePlatformDetails,
-    metadata: any
+    metadata: {
+      model: string;
+      messages: OpenAIChatCompletionMessageParam[];
+      temperature?: number;
+      max_tokens?: number;
+      n?: number;
+      stream?: boolean;
+      presence_penalty?: number;
+      frequency_penalty?: number;
+    }
   ): Promise<string> {
     const { apiKey, orgId } = activeServiceDetails.platformConfig;
 
@@ -64,11 +96,17 @@ class Network {
 
     try {
       const openai = new OpenAI.OpenAI({ apiKey, organization: orgId });
-      const completions = await openai.chat.completions.create(metadata);
+      const completions = await openai.chat.completions.create({
+        ...metadata,
+        stream: false
+      });
       return completions.choices[0].message.content || ''; // Return the content string from OpenAI completion
-    } catch (error: any) {
-      console.error(`Error generating code with OpenAI: ${error.message}`);
-      throw error; // Rethrow error for handling at a higher level
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error generating code with OpenAI: ${error.message}`);
+        throw error; // Rethrow error for handling at a higher level
+      }
+      throw error;
     }
   }
 
@@ -82,7 +120,16 @@ class Network {
    */
   async handleDeepSeekRequest(
     activeServiceDetails: ActivePlatformDetails,
-    metadata: any
+    metadata: {
+      model: string;
+      messages: OpenAIChatCompletionMessageParam[];
+      temperature?: number;
+      max_tokens?: number;
+      n?: number;
+      stream?: boolean;
+      presence_penalty?: number;
+      frequency_penalty?: number;
+    }
   ): Promise<string> {
     const { apiKey, baseUrl } = activeServiceDetails.platformConfig;
 
@@ -92,11 +139,17 @@ class Network {
 
     try {
       const openai = new OpenAI.OpenAI({ apiKey, baseURL: baseUrl });
-      const completions = await openai.chat.completions.create(metadata);
+      const completions = await openai.chat.completions.create({
+        ...metadata,
+        stream: false
+      });
       return completions.choices[0].message.content || ''; // Return the content string from DeepSeek completion
-    } catch (error: any) {
-      console.error(`Error generating code with DeepSeek: ${error.message}`);
-      throw error; // Rethrow error for handling at a higher level
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error generating code with DeepSeek: ${error.message}`);
+        throw error; // Rethrow error for handling at a higher level
+      }
+      throw error;
     }
   }
 
@@ -110,7 +163,16 @@ class Network {
    */
   async handleGroqRequest(
     activeServiceDetails: ActivePlatformDetails,
-    metadata: any
+    metadata: {
+      model: string;
+      messages: GroqChatCompletionMessageParam[];
+      temperature?: number;
+      max_tokens?: number;
+      n?: number;
+      stream?: boolean;
+      presence_penalty?: number;
+      frequency_penalty?: number;
+    }
   ): Promise<string> {
     const { apiKey } = activeServiceDetails.platformConfig;
 
@@ -120,10 +182,16 @@ class Network {
 
     try {
       const groq = new Groq({ apiKey });
-      const completions = await groq.chat.completions.create(metadata);
+      const completions = await groq.chat.completions.create({
+        ...metadata,
+        stream: false
+      });
       return completions.choices[0].message.content || ''; // Return the content string from Groq completion
-    } catch (error: any) {
-      console.error(`Error generating code with Groq: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error generating code with Groq: ${error.message}`);
+        throw error;
+      }
       throw error;
     }
   }

@@ -61,7 +61,7 @@ class CommandHelper {
   /**
    * Creates necessary directories if they do not exist.
    */
-  public makeRequiredDirectories = async () => {
+  public async makeRequiredDirectories(): Promise<void> {
     const configDir = this.getGlobalConfigDirectory();
 
     // Create the directory if it doesn't exist
@@ -69,7 +69,7 @@ class CommandHelper {
       fs.mkdirSync(configDir, { recursive: true });
       console.log(`Created directory: ${configDir}`);
     }
-  };
+  }
 
   /**
    * Reads the configuration file data and constructs the appropriate config object.
@@ -89,8 +89,10 @@ class CommandHelper {
     try {
       const config = JSON.parse(data);
       return config; // Assumes the config object matches either LocalConfig or GlobalConfig
-    } catch (error: any) {
-      console.error(`Error parsing configuration file: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error parsing configuration file: ${error.message}`);
+      }
       return null;
     }
   }
@@ -110,8 +112,10 @@ class CommandHelper {
     try {
       fs.writeFileSync(configPath, JSON.stringify(data, null, 2)); // Pretty print JSON
       console.log(`Configuration saved to ${configPath}`);
-    } catch (error: any) {
-      console.error(`Error writing configuration file: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error writing configuration file: ${error.message}`);
+      }
     }
   }
 

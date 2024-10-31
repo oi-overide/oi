@@ -105,11 +105,12 @@ class Config extends OiCommand {
   }
 
   // Prompt user for platform-specific configuration details
-  async promptPlatformConfig(platform: string): Promise<void | { [x: string]: any }> {
+  async promptPlatformConfig(platform: string): Promise<Record<string, string> | void> {
     // const prompt = inquirer.createPromptModule();
-    const questions = this.platformQuestions[platform];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const questions: any = this.platformQuestions[platform];
     if (questions) {
-      const answers = await inquirer.prompt(questions as any);
+      const answers = await inquirer.prompt(questions);
       return answers;
     } else {
       console.log(`No questions configured for platform: ${platform}`);
@@ -117,7 +118,7 @@ class Config extends OiCommand {
   }
 
   // Handle the global configuration process
-  async handleGlobalConfig(verbose = false) {
+  async handleGlobalConfig(verbose = false): Promise<void> {
     // Prompt the user to choose which platform they want to configure
     const { platform } = await inquirer.prompt([
       {
@@ -147,7 +148,7 @@ class Config extends OiCommand {
       ...existingConfig,
       [platformName]: {
         ...answers,
-        isActive: Object.keys(existingConfig as any).length === 0 ? true : false // Set isActive for first platform
+        isActive: Object.keys(existingConfig as GlobalConfig).length === 0 ? true : false // Set isActive for first platform
       }
     };
 
@@ -165,7 +166,7 @@ class Config extends OiCommand {
   }
 
   // Handle the local configuration for the project
-  async handleLocalConfig(options: ConfigOption) {
+  async handleLocalConfig(options: ConfigOption): Promise<void> {
     // Get the path to the local configuration file
     // const configFilePath = CommandHelper.getConfigFilePath();
 
@@ -202,7 +203,7 @@ class Config extends OiCommand {
   }
 
   // Main config handler that determines whether global or local config should be updated
-  async config(options: ConfigOption) {
+  async config(options: ConfigOption): Promise<void> {
     // Ensure that required directories exist
     // await Directo.makeRequiredDirectories();
     await CommandHelper.makeRequiredDirectories();

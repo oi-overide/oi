@@ -7,7 +7,9 @@ import FormatResponse from '../formatter/format.response';
 import Network from '../network/network';
 
 import { CompletionType, UserPromptInfo } from '../../types/type.promptInfo';
-
+import { ActivePlatformDetails } from '../../interfaces/interfaces';
+import { ChatCompletionMessageParam as OpenAIChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 /**
  * The `FindPrompt` class is responsible for identifying prompts or acceptance cases
  * in a file, generating the necessary code or performing the required actions based
@@ -108,22 +110,46 @@ class FindPrompt {
         verbose
       );
 
+      if (!requestObject) {
+        throw new Error('Failed to create request object');
+      }
+
       // Send the request and retrieve a response from the network
-      const response = await Network.doRequest(requestObject);
+      const response = await Network.doRequest(
+        requestObject as {
+          activeServiceDetails: ActivePlatformDetails;
+          metadata: {
+            model: string;
+            messages: OpenAIChatCompletionMessageParam[] | GroqChatCompletionMessageParam[];
+            temperature?: number;
+            top_p?: number;
+            n?: number;
+            stream?: boolean;
+            stop?: string | string[];
+            max_tokens?: number;
+            presence_penalty?: number;
+            frequency_penalty?: number;
+          };
+        }
+      );
 
       // Parse the network response to get the code
-      const codeData = (await FormatResponse.formatResponse(response)) as string;
+      const codeData = await FormatResponse.formatResponse({
+        choices: [{ message: { content: response } }]
+      });
 
       // Insert the generated code block into the file at the appropriate location
       if (completionType === 'complete') {
-        await CodeInterface.insertCodeBlock(filePath, prompt, codeData);
+        await CodeInterface.insertCodeBlock(filePath, prompt, codeData ?? '');
         return;
       }
 
-      await CodeInterface.applyCodeReplacement(filePath, codeData);
-    } catch (e) {
-      console.log(e);
-      throw e;
+      await CodeInterface.applyCodeReplacement(filePath, codeData ?? '');
+    } catch (err) {
+      if (err instanceof Error) {
+        console.log(err.message);
+        throw err;
+      }
     }
   }
 
@@ -174,8 +200,11 @@ class FindPrompt {
             break;
         }
       }
-    } catch (err: any) {
-      console.error(`Error processing file ${filePath}:`, err.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(`Error processing file ${filePath}:`, err.message);
+        throw err;
+      }
     }
   }
 }

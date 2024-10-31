@@ -54,8 +54,10 @@ class FormatPrompt {
 
       const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
       return finalPrompt;
-    } catch (error: any) {
-      console.error(`Error generating OpenAI prompt: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error generating OpenAI prompt: ${error.message}`);
+      }
       throw error; // Re-throw the error for further handling
     }
   }
@@ -94,8 +96,10 @@ class FormatPrompt {
 
       const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
       return finalPrompt;
-    } catch (error: any) {
-      console.error(`Error generating DeepSeek prompt: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error generating DeepSeek prompt: ${error.message}`);
+      }
       throw error; // Re-throw the error for further handling
     }
   }
@@ -132,8 +136,10 @@ class FormatPrompt {
 
       const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
       return finalPrompt;
-    } catch (error: any) {
-      console.error(`Error generating Groq prompt: ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error generating Groq prompt: ${error.message}`);
+      }
       throw error;
     }
   }
