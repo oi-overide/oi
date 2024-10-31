@@ -16,7 +16,6 @@ class CodeHelper {
     const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
     if (codeMatch && codeMatch[1]) {
       if (verbose) console.log(`Extracted Code Block: ${codeMatch[1]}`);
-      console.log('EXTRACTED : ', codeMatch[1]);
       return codeMatch[1];
     } else {
       throw new Error('No code block found in the response');
@@ -24,28 +23,40 @@ class CodeHelper {
   }
 
   /**
-   * Finds the index of the old block in the file content using exact matching.
+   * Finds the index of the old block in the file content using a flexible matching approach.
    *
    * @param fileContentLines - The file content split into lines.
    * @param oldBlock - The block of old code to find.
    * @returns The starting index of the old block in the file content or -1 if not found.
    */
   findMatchingIndex(fileContentLines: string[], oldBlock: string[]): number {
+    // Validate input for oldBlock
     if (!oldBlock || !Array.isArray(oldBlock) || oldBlock.length === 0) {
       console.log('Invalid oldBlock provided.');
-      return -1; // Return -1 if oldBlock is not valid
+      return -1;
     }
 
-    const length = fileContentLines.length;
+    const oldBlockLength = oldBlock.length;
 
-    // Iterate over each line in fileContentLines
-    for (let i = 0; i <= length - oldBlock.length; i++) {
-      if (
-        fileContentLines
-          .slice(i, i + oldBlock.length)
-          .every((line, index) => line.trim() === oldBlock[index].trim())
-      ) {
-        return i;
+    const normalisedFileContent = fileContentLines.filter(
+      line => !line.includes('//>') || !(line === '')
+    );
+
+    // Normalize oldBlock by trimming whitespace and converting to lowercase
+    const normalizedOldBlock = oldBlock
+      .map((line): string => line.trim().toLowerCase())
+      .filter((line): boolean => line.includes('//>'));
+
+    // Iterate over each line in fileContentLines up to where the oldBlock could fully fit
+    for (let i = 0; i <= normalisedFileContent.length - oldBlockLength; i++) {
+      // Check if the slice of fileContentLines from i to i + oldBlockLength matches oldBlock
+      const normalizedSlice = normalisedFileContent
+        .slice(i, i + oldBlockLength)
+        .map((line): string => line.trim().toLowerCase());
+
+      // Compare normalized slices
+      if (normalizedSlice.every((line, index) => line === normalizedOldBlock[index])) {
+        return i; // Return the starting index of the match
       }
     }
 
