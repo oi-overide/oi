@@ -45,7 +45,7 @@
         }
     },
     "groq": {
-        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON.",
+        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON while following the instructions STRICTLY.",
         "complete": {
             "format": "```complete code here```",
             "instructions": [
@@ -60,8 +60,10 @@
             "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
             "instructions": [
                 "Do not include comments explaining the changes.",
+                "Do not include lines with //>, <// and comments in find array",
                 "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
-                "Return the JSON inside a markdown block quote using triple backticks (```).",
+                "Return the VALID JSON inside a markdown block quote using triple backticks (```).",
+                "Return multiple find/replace structures for lines separated by empty lines",
                 "Include proper indentation in code.",
                 "Use the following JSON format to respond:"
             ]
