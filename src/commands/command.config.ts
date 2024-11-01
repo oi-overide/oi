@@ -1,9 +1,12 @@
-const { default: inquirer } = require('inquirer');
-const DirectoryHelper = require('../../core/helpers/help.directory');
+import CommandHelper from '../core/helpers/help.commands';
+import OiCommand from './abstract.command';
+import { Command } from 'commander';
+import inquirer, { Question } from 'inquirer';
+import { ConfigOption, GlobalConfig, LocalConfig } from '../interfaces/interfaces';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
- * for the `oi` CLI application. It manages configuration settings for different platforms 
+ * for the `oi` CLI application. It manages configuration settings for different platforms
  * (like OpenAI and DeepSeek) and allows users to select an active platform, update config
  * details, and manage ignored files and project-specific settings.
  *
@@ -13,45 +16,66 @@ const DirectoryHelper = require('../../core/helpers/help.directory');
  * - Handle local configuration updates, including project name and ignored files.
  * - Ensure that required directories and configuration files exist.
  */
-class Config {
-  constructor() {
+class Config extends OiCommand {
+  public platforms: string[];
+  public platformQuestions: { [platform: string]: Question[] };
+
+  constructor(program: Command) {
+    super(program); // Pass the program instance to the parent constructor
+
     // Define supported platforms and their respective configuration prompts
-    this.platforms = ["OpenAI", "DeepSeek", "Groq"];
-    
-    // Configuration questions for each platform (OpenAI and DeepSeek)
+    this.platforms = ['OpenAI', 'DeepSeek', 'Groq'];
+
+    // Configuration questions for each platform (OpenAI, DeepSeek, Groq)
     this.platformQuestions = {
       openai: [
         { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
-        { type: 'input', name: 'orgId', message: 'Enter your Organization ID:' },
+        { type: 'input', name: 'orgId', message: 'Enter your Organization ID:' }
       ],
       deepseek: [
         { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
-        { type: 'input', name: 'baseUrl', message: 'Enter the BaseUrl to use:' },
+        { type: 'input', name: 'baseUrl', message: 'Enter the BaseUrl to use:' }
       ],
-      groq: [
-        { type: 'input', name: 'apiKey', message: 'Enter your Groq API key:' },
-      ],
+      groq: [{ type: 'input', name: 'apiKey', message: 'Enter your Groq API key:' }]
     };
   }
 
+  configureCommand(): void {
+    const configCommand = this.program
+      .command('config')
+      .description('Update Local or Global settings')
+      .option('-n, --project-name <name>', 'Update project name')
+      .option('-i, --ignore <files...>', 'Specify files or directories to ignore')
+      .option('-g, --global', 'Set global variable like API keys and org IDs')
+      .option('-sa, --set-active', 'Set active');
+
+    // Add common options like verbose mode
+    this.addCommonOptions(configCommand);
+
+    // Define further specific command configurations, if any
+    configCommand.action((options: ConfigOption) => {
+      this.config(options);
+    });
+  }
+
   // Method to handle switching the active platform
-  async handleChangeActivePlatform() {
+  async handleChangeActivePlatform(): Promise<void> {
     // Get the global config file path
-    const configFilePath = DirectoryHelper.getFilePath(true);
+    // const configFilePath = CommandHelper.getConfigFilePath(true);
 
     // Check if the global configuration file exists
-    if (!DirectoryHelper.configExists(true)) {
-      console.error("Global config (oi-global-config.json) not found.");
+    if (!CommandHelper.configExists(true)) {
+      console.error('Global config (oi-global-config.json) not found.');
       process.exit(1); // Exit the process if the config file does not exist
     }
 
     // Read the existing global configuration file
-    const existingConfig = await DirectoryHelper.readJsonFile(configFilePath);
+    const existingConfig = (await CommandHelper.readConfigFileData(true)) as GlobalConfig;
 
     // Get a list of available platforms from the existing configuration
     const activePlatforms = Object.keys(existingConfig);
     if (activePlatforms.length === 0) {
-      console.log("No platforms available in the global config.");
+      console.log('No platforms available in the global config.');
       return;
     }
 
@@ -61,40 +85,48 @@ class Config {
         type: 'list',
         name: 'selectedPlatform',
         message: 'Select the platform you want to activate:',
-        choices: activePlatforms,
-      },
+        choices: activePlatforms
+      }
     ]);
 
     // Update the active platform by setting `isActive` to true for the selected platform
-    const updatedConfig = {};
-    activePlatforms.forEach(platform => {
+    let updatedConfig: GlobalConfig = {};
+
+    activePlatforms.forEach((platform: string) => {
       updatedConfig[platform] = {
         ...existingConfig[platform],
-        isActive: platform === selectedPlatform, // Set `isActive` only for the selected platform
+        isActive: platform === selectedPlatform // Set `isActive` only for the selected platform
       };
     });
 
     // Save the updated configuration back to the global config file
-    await DirectoryHelper.writeJsonFile(configFilePath, updatedConfig);
+    await CommandHelper.writeConfigFileData(true, updatedConfig);
     console.log(`Successfully updated the active platform to: ${selectedPlatform}`);
   }
 
   // Prompt user for platform-specific configuration details
-  async promptPlatformConfig(platform) {
-    // Prompt the user based on the platform-specific questions
-    return inquirer.prompt(this.platformQuestions[platform]);
+  async promptPlatformConfig(platform: string): Promise<Record<string, string> | void> {
+    // const prompt = inquirer.createPromptModule();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const questions: any = this.platformQuestions[platform];
+    if (questions) {
+      const answers = await inquirer.prompt(questions);
+      return answers;
+    } else {
+      console.log(`No questions configured for platform: ${platform}`);
+    }
   }
 
   // Handle the global configuration process
-  async handleGlobalConfig(verbose = false) {
+  async handleGlobalConfig(verbose = false): Promise<void> {
     // Prompt the user to choose which platform they want to configure
     const { platform } = await inquirer.prompt([
       {
         type: 'list',
         name: 'platform',
         message: 'Which platform do you want to use?',
-        choices: this.platforms, // Present available platforms
-      },
+        choices: this.platforms // Present available platforms
+      }
     ]);
 
     // Normalize the selected platform name
@@ -104,46 +136,48 @@ class Config {
     const answers = await this.promptPlatformConfig(platformName);
 
     // Get the path to the global configuration file
-    const configFilePath = DirectoryHelper.getFilePath(true);
+    const configFilePath = CommandHelper.getConfigFilePath(true);
 
     // Check if a global config file already exists, if not initialize an empty config
-    const existingConfig = DirectoryHelper.configExists(global)
-      ? await DirectoryHelper.readJsonFile(configFilePath)
+    const existingConfig = CommandHelper.configExists(true)
+      ? await CommandHelper.readConfigFileData(true)
       : {};
 
     // Merge the new platform configuration with the existing config
-    const updatedConfig = { 
-      ...existingConfig, 
-      [platformName]: { 
-        ...answers, 
-        "isActive": Object.keys(existingConfig).length === 0 ? true : false // Set isActive for first platform
-      } 
+    const updatedConfig = {
+      ...existingConfig,
+      [platformName]: {
+        ...answers,
+        isActive: Object.keys(existingConfig as GlobalConfig).length === 0 ? true : false // Set isActive for first platform
+      }
     };
 
     // Save the updated global configuration
-    await DirectoryHelper.writeJsonFile(configFilePath, updatedConfig);
+    await CommandHelper.writeConfigFileData(true, updatedConfig);
 
     // Verbose logging to indicate whether the config was created or updated
-    if (verbose) { 
-      console.log(`${DirectoryHelper.configExists(configFilePath) ? 'Updated' : 'Created'} config at: ${configFilePath}`) 
-    };
+    if (verbose) {
+      console.log(
+        `${CommandHelper.configExists(true) ? 'Updated' : 'Created'} config at: ${configFilePath}`
+      );
+    }
 
     console.log('Run `oi config -sa` to select active platform');
   }
 
   // Handle the local configuration for the project
-  async handleLocalConfig(options) {
+  async handleLocalConfig(options: ConfigOption): Promise<void> {
     // Get the path to the local configuration file
-    const configFilePath = DirectoryHelper.getFilePath();
+    // const configFilePath = CommandHelper.getConfigFilePath();
 
     // Check if the local configuration file exists
-    if (!DirectoryHelper.configExists()) {
-      console.error("Local config (oi-config.json) not found.");
+    if (!CommandHelper.configExists()) {
+      console.error('Local config (oi-config.json) not found.');
       process.exit(1); // Exit if the local config is not found
     }
 
     // Read the local configuration
-    const config = await DirectoryHelper.readJsonFile(configFilePath);
+    const config: LocalConfig = (await CommandHelper.readConfigFileData()) as LocalConfig;
 
     // Update the list of ignored files if provided in options
     if (options.ignore) {
@@ -151,7 +185,9 @@ class Config {
         const trimmedFile = file.trim(); // Trim whitespace from the file name
         if (!config.ignore.includes(trimmedFile)) {
           config.ignore.push(trimmedFile); // Add the file to the ignore list if not already present
-          console.log(`Added "${trimmedFile}" to ignored files.`);
+          if (options.verbose) {
+            console.log(`Added "${trimmedFile}" to ignored files.`);
+          }
         }
       });
     }
@@ -162,14 +198,15 @@ class Config {
     }
 
     // Save the updated local configuration
-    await DirectoryHelper.writeJsonFile(configFilePath, config);
-    console.log("Local config updated successfully.");
+    await CommandHelper.writeConfigFileData(false, config);
+    console.log('Local config updated successfully.');
   }
 
   // Main config handler that determines whether global or local config should be updated
-  async config(options) {
+  async config(options: ConfigOption): Promise<void> {
     // Ensure that required directories exist
-    await DirectoryHelper.makeRequiredDirectories();
+    // await Directo.makeRequiredDirectories();
+    await CommandHelper.makeRequiredDirectories();
 
     // Handle switching the active platform if the `setActive` option is provided
     if (options.setActive) {
@@ -186,4 +223,4 @@ class Config {
   }
 }
 
-module.exports = new Config(); // Export an instance of the Config class
+export default Config;
