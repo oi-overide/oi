@@ -1,9 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import CommandHelper from '../core/helpers/help.commands';
+import CommandHelper from '../utilis/util.command.config';
 
-import { InitializeOption, LocalConfig } from '../interfaces/interfaces';
 import OiCommand from './abstract.command';
+import { InitOption } from '../models/model.options';
+import { LocalConfig } from '../models/model.config';
 
 /**
  * The `Initialize` class is responsible for setting up the initial configuration for the `oi` CLI application.
@@ -24,7 +25,7 @@ class Initialize extends OiCommand {
     initCommand
       .option('-i, --ignore <files...>', 'Specify files or directories to ignore')
       .option('-n, --project-name <name>', 'Specify a project name')
-      .action((options: InitializeOption) => {
+      .action((options: InitOption) => {
         this.initializeProject(options);
       });
   }
@@ -104,7 +105,7 @@ class Initialize extends OiCommand {
    *
    * @param {object} options - Configuration options such as project name, ignore list, verbose mode, and dry run.
    */
-  async initializeProject(options: InitializeOption): Promise<void> {
+  async initializeProject(options: InitOption): Promise<void> {
     try {
       // Determine the output path for the configuration file
       const outputPath = path.join(process.cwd(), 'oi-config.json');

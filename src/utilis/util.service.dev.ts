@@ -3,7 +3,7 @@
 /**
  * The `CodeHelper` class handles code block manipulations like extraction, fuzzy matching, and replacement.
  */
-class CodeHelper {
+class DevServiceUtil {
   /**
    * Extracts a code block from the content based on a specific format.
    *
@@ -30,6 +30,8 @@ class CodeHelper {
    * @returns The starting index of the old block in the file content or -1 if not found.
    */
   findMatchingIndex(fileContentLines: string[], oldBlock: string[]): number {
+    console.log('OLD CODE', oldBlock);
+
     // Validate input for oldBlock
     if (!oldBlock || !Array.isArray(oldBlock) || oldBlock.length === 0) {
       console.log('Invalid oldBlock provided.');
@@ -92,4 +94,4 @@ class CodeHelper {
   }
 }
 
-export default new CodeHelper();
+export default new DevServiceUtil();

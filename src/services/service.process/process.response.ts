@@ -1,14 +1,12 @@
-import CommandHelper from '../helpers/help.commands';
-import CodeHelper from '../helpers/help.code';
-// import { Completion } from 'openai/resources';
-// import { CompletionType } from '../../types/type.promptInfo';
+import utilCommandConfig from '../../utilis/util.command.config';
+import utilDevService from '../../utilis/util.service.dev';
 
 /**
  * The `FormatResponse` class is responsible for formatting the response received from
  * AI service platforms like OpenAI, DeepSeek, and Groq. It extracts code blocks from
  * the response content and returns them for further processing.
  */
-class FormatResponse {
+class ProcessResponse {
   /**
    * Formats the response based on the active service platform.
    * Calls the appropriate formatting function for OpenAI, DeepSeek, or Groq.
@@ -30,7 +28,7 @@ class FormatResponse {
   ): Promise<string | null> {
     try {
       // Fetch details about the active AI service (platform, API key, etc.)
-      const activeServiceDetails = await CommandHelper.getActiveServiceDetails();
+      const activeServiceDetails = await utilCommandConfig.getActiveServiceDetails();
 
       if (activeServiceDetails === null) {
         throw new Error('No active service found.');
@@ -76,7 +74,7 @@ class FormatResponse {
   ): string | null {
     try {
       const content = response.choices[0].message.content;
-      return CodeHelper.extractCodeBlock(content, verbose);
+      return utilDevService.extractCodeBlock(content, verbose);
     } catch (error) {
       console.error('Error formatting OpenAI response:', (error as Error).message);
       return null;
@@ -103,7 +101,7 @@ class FormatResponse {
   ): string | null {
     try {
       const content = response.choices[0].message.content;
-      return CodeHelper.extractCodeBlock(content, verbose);
+      return utilDevService.extractCodeBlock(content, verbose);
     } catch (error) {
       console.error('Error formatting DeepSeek response:', (error as Error).message);
       return null;
@@ -130,7 +128,7 @@ class FormatResponse {
   ): string | null {
     try {
       const content = response.choices[0].message.content;
-      return CodeHelper.extractCodeBlock(content, verbose);
+      return utilDevService.extractCodeBlock(content, verbose);
     } catch (error) {
       console.error('Error formatting Groq response:', (error as Error).message);
       return null;
@@ -138,4 +136,4 @@ class FormatResponse {
   }
 }
 
-export default new FormatResponse();
+export default new ProcessResponse();

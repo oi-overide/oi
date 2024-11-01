@@ -1,14 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { ActivePlatformDetails, GlobalConfig, LocalConfig } from '../../interfaces/interfaces';
+import { ActivePlatformDetails, GlobalConfig, LocalConfig } from '../models/model.config';
 
 /**
  * The `DirectoryHelper` class is responsible for managing configuration files and directories
  * for the Oi application. It handles the creation, reading, writing, and validation of
  * configuration files (local and global) and provides utility functions to access service details.
  */
-class CommandHelper {
+class ConfigCommandUtil {
   // File names for configuration
   private static configFileName = 'oi-config.json';
   private static globalConfigFileName = 'oi-global-config.json';
@@ -32,9 +32,9 @@ class CommandHelper {
    */
   public getConfigFilePath(global: boolean = false): string {
     if (global) {
-      return path.join(this.getGlobalConfigDirectory(), CommandHelper.globalConfigFileName);
+      return path.join(this.getGlobalConfigDirectory(), ConfigCommandUtil.globalConfigFileName);
     }
-    return path.join(process.cwd(), CommandHelper.configFileName);
+    return path.join(process.cwd(), ConfigCommandUtil.configFileName);
   }
 
   /**
@@ -143,4 +143,4 @@ class CommandHelper {
   }
 }
 
-export default new CommandHelper();
+export default new ConfigCommandUtil();

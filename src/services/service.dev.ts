@@ -1,14 +1,21 @@
 import fs from 'fs';
 // import CommandHelper from '../helpers/help.commands';
-import LocalCache from '../cache/cache.oldcode'; // Only for utility use, no functional dependency.
-import CodeHelper from '../helpers/help.code'; // Only for utility use, no functional dependency.
-import { ReplacementBlock } from '../../interfaces/interfaces';
+import LocalCache from './service.cache'; // Only for utility use, no functional dependency.
+import CodeHelper from '../utilis/util.service.dev'; // Only for utility use, no functional dependency.
+import { InsertionResponseInfo } from '../models/model.prompts';
+import { ReplacementBlock } from '../models/model.response';
 
-/**
- * The `CodeInterface` class provides methods for manipulating code blocks and
- * managing code changes within specified files.
- */
-class CodeInterface {
+abstract class DevService {
+  abstract removeAcceptanceMessage(
+    filePath: string,
+    fileContent: string,
+    acceptanceLine: string
+  ): void;
+
+  abstract removeCodeBlock(insertionResponse: InsertionResponseInfo): void;
+}
+
+class DevServiceImpl extends DevService {
   /**
    * Removes an acceptance message from the file content if it exists.
    *
@@ -54,20 +61,23 @@ class CodeInterface {
    * @param {string} fileContent - The content of the file.
    * @param {string} replacedCode - The code block to be removed.
    */
-  removeCodeBlock(filePath: string, fileContent: string, replacedCode: string): void {
+  removeCodeBlock(insertionResponse: InsertionResponseInfo): void {
     try {
-      const oldCode = LocalCache.findOldCode(replacedCode);
-      let updatedContent = fileContent;
+      let updatedContent = insertionResponse.fileContent;
 
-      if (oldCode) {
-        updatedContent = fileContent.replace(replacedCode, oldCode);
+      if (insertionResponse.oldCode) {
+        updatedContent = insertionResponse.fileContent.replace(
+          insertionResponse.newCode,
+          insertionResponse.oldCode
+        );
+
         console.log('Code block processed successfully');
       } else {
-        updatedContent = fileContent.replace(replacedCode, '');
+        updatedContent = insertionResponse.fileContent.replace(insertionResponse.newCode, '');
         console.log('Code block not found');
       }
 
-      fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
+      fs.writeFileSync(insertionResponse.filePath, updatedContent, 'utf-8'); // Write updated content
     } catch (error) {
       console.log('Error removing code block:', error);
     }
@@ -151,4 +161,4 @@ class CodeInterface {
   }
 }
 
-export default new CodeInterface();
+export default new DevServiceImpl();

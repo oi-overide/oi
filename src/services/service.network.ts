@@ -1,4 +1,4 @@
-import { ActivePlatformDetails } from '../../interfaces/interfaces';
+import { ActivePlatformDetails } from '../models/model.config';
 import { ChatCompletionMessageParam as OpenAIChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 

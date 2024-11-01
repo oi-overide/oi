@@ -1,8 +1,10 @@
+import chokidar, { FSWatcher } from 'chokidar';
 import OiCommand from './abstract.command';
-import WatchInterface from '../core/middleware/mid.watch';
+import configCommandUtil from '../utilis/util.command.config';
+import startCommandHandlerImpl from '../handlers/handler.start';
 
-import { Command } from 'commander';
-import { StartOption } from '../interfaces/interfaces';
+import { StartOption } from '../models/model.options';
+import { LocalConfig } from '../models/model.config';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -16,9 +18,7 @@ import { StartOption } from '../interfaces/interfaces';
  * - Catch and handle any errors during the watch process.
  */
 class Start extends OiCommand {
-  constructor(program: Command) {
-    super(program);
-  }
+  private watcher: FSWatcher | null = null;
 
   /**
    * Configures the `start` command, adding it to the program with any
@@ -43,10 +43,66 @@ class Start extends OiCommand {
     console.log('Watching files for prompts...');
 
     try {
-      // Start watching files with the verbose option
-      await WatchInterface.watchFiles(options);
+      const { verbose } = options;
+
+      if (!configCommandUtil.configExists()) {
+        console.error('Error: oi-config.json file not found in the current directory.');
+        process.exit(1);
+      }
+
+      // get current config.
+      const config = (await configCommandUtil.readConfigFileData()) as LocalConfig;
+      const ignoredFiles = config.ignore || [];
+      const currentDir = process.cwd();
+
+      this.watcher = chokidar.watch(currentDir, {
+        persistent: true,
+        usePolling: true,
+        interval: 100,
+        ignored: ignoredFiles,
+        ignoreInitial: true
+      });
+
+      // start watching the files.
+      this.watcher
+        .on('add', (filePath: string) => this.onAdd(filePath, verbose))
+        .on('change', (filePath: string) => this.onFileChanged(filePath, verbose))
+        .on('unlink', (filePath: string) => this.onUnlink(filePath, verbose))
+        .on('error', err => this.onError(err, verbose))
+        .on('ready', () => this.onReady(verbose));
     } catch (error) {
       console.error('Error starting watch:', error);
+    }
+  }
+
+  onAdd(filePath: string, verbose: boolean | undefined): void {
+    if (verbose) {
+      console.log(`File ${filePath} has been added`);
+    }
+  }
+
+  async onFileChanged(filePath: string, verbose: boolean | undefined): Promise<void> {
+    if (verbose) {
+      console.log(`File ${filePath} has been changed`);
+    }
+    await startCommandHandlerImpl.findPromptInFile(filePath, verbose);
+  }
+
+  onUnlink(filePath: string, verbose: boolean | undefined): void {
+    if (verbose) {
+      console.log(`File ${filePath} has been removed`);
+    }
+  }
+
+  onError(error: Error, verbose: boolean | undefined): void {
+    if (verbose) {
+      console.error('Watcher error:', error);
+    }
+  }
+
+  onReady(verbose: boolean | undefined): void {
+    if (verbose) {
+      console.log('Watcher is ready and scanning for changes');
     }
   }
 }
