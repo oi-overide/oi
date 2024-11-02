@@ -30,39 +30,13 @@ class DevServiceUtil {
    * @returns The starting index of the old block in the file content or -1 if not found.
    */
   findMatchingIndex(fileContentLines: string[], oldBlock: string[]): number {
-    console.log('OLD CODE', oldBlock);
-
-    // Validate input for oldBlock
-    if (!oldBlock || !Array.isArray(oldBlock) || oldBlock.length === 0) {
-      console.log('Invalid oldBlock provided.');
-      return -1;
-    }
-
-    const oldBlockLength = oldBlock.length;
-
-    const normalisedFileContent = fileContentLines.filter(
-      line => !line.includes('//>') || !(line === '')
-    );
-
-    // Normalize oldBlock by trimming whitespace and converting to lowercase
-    const normalizedOldBlock = oldBlock
-      .map((line): string => line.trim().toLowerCase())
-      .filter((line): boolean => line.includes('//>'));
-
-    // Iterate over each line in fileContentLines up to where the oldBlock could fully fit
-    for (let i = 0; i <= normalisedFileContent.length - oldBlockLength; i++) {
-      // Check if the slice of fileContentLines from i to i + oldBlockLength matches oldBlock
-      const normalizedSlice = normalisedFileContent
-        .slice(i, i + oldBlockLength)
-        .map((line): string => line.trim().toLowerCase());
-
-      // Compare normalized slices
-      if (normalizedSlice.every((line, index) => line === normalizedOldBlock[index])) {
-        return i; // Return the starting index of the match
+    const lineToFind = oldBlock[0];
+    for (const line of fileContentLines) {
+      if (line.includes(lineToFind)) {
+        return fileContentLines.indexOf(line);
       }
     }
-
-    return -1; // Return -1 if no match is found
+    return -1;
   }
 
   /**

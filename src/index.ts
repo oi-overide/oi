@@ -8,6 +8,8 @@ import Start from './commands/command.start';
 
 const program = new Command();
 
+program.version('0.0.5');
+
 const initCommand = new Initialize(program);
 const configCommand = new Config(program);
 const startCommand = new Start(program);

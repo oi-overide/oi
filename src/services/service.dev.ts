@@ -67,13 +67,16 @@ class DevServiceImpl extends DevService {
 
       if (insertionResponse.oldCode) {
         updatedContent = insertionResponse.fileContent.replace(
-          insertionResponse.newCode,
+          '//-\n' + insertionResponse.newCode + '\n-//',
           insertionResponse.oldCode
         );
 
         console.log('Code block processed successfully');
       } else {
-        updatedContent = insertionResponse.fileContent.replace(insertionResponse.newCode, '');
+        updatedContent = insertionResponse.fileContent.replace(
+          '//-\n' + insertionResponse.newCode + '\n-//',
+          ''
+        );
         console.log('Code block not found');
       }
 

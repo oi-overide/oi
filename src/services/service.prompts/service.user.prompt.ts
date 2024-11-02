@@ -121,23 +121,25 @@ class UserPromptServiceImpl extends UserPromptService {
       }
 
       // Get all prompt matches using matchRegex
-      const insertionMatches = this.matchRegex(UserPromptService.regAcceptance, fileContent);
+      const insertionMatches = this.matchRegex(UserPromptService.regGenerated, fileContent);
 
       // Loop through each match and process it
       for (const match of insertionMatches) {
-        if (match[1]) {
-          // Get the old and new code from cache.
-          const oldCode = cacheService.findOldCode(match[1]);
-
-          // Add the insertion request to the list
-          insertionResponses.push({
-            filePath: filePath,
-            fileContent: fileContent,
-            newCode: match[1],
-            oldCode: oldCode ? oldCode : '',
-            insertionResponse: match[0] === 'y' ? 'accepted' : 'rejected',
-            acceptanceLine: match[0]
-          });
+        const acceptanceMatches = this.matchRegex(UserPromptService.regAcceptance, match[0]);
+        for (const acceptanceMatch of acceptanceMatches) {
+          if (acceptanceMatch[1] === 'y' || acceptanceMatch[1] === 'n') {
+            // Get the old and new code from cache.
+            const oldCode = cacheService.findOldCode(match[1]);
+            // Add the insertion request to the list
+            insertionResponses.push({
+              filePath: filePath,
+              fileContent: fileContent,
+              newCode: match[1],
+              oldCode: oldCode ? oldCode : '',
+              insertionResponse: acceptanceMatch[1] === 'y' ? 'accepted' : 'rejected',
+              acceptanceLine: acceptanceMatch[0]
+            });
+          }
         }
       }
 
