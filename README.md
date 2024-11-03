@@ -1,6 +1,6 @@
-# Oi-overide
+# Overide
 
-**Oi-overide** is a lightweight yet powerful CLI tool designed to simplify AI-powered code generation directly within your development workflow. With Oi, you can quickly generate, update, and integrate code using predefined prompts, allowing you to focus on the creative aspects of coding while letting AI handle the heavy lifting.
+**Overide** is a lightweight yet powerful CLI tool designed to simplify AI-powered code generation directly within your development workflow. With Oi, you can quickly generate, update, and integrate code using predefined prompts, allowing you to focus on the creative aspects of coding while letting AI handle the heavy lifting.
 
 ## Table of Contents
 - [Key Features](#key-features)
@@ -35,7 +35,7 @@ npm install -g overide
 pnpm install -g overide
 ```
 
-For more installation options, see our [installation guide](https://github.com/oi-overide/oi-overide/blob/main/Installation/Installation.md).
+For more installation options, see our [installation guide](https://github.com/Overide/Overide/blob/main/Installation/Installation.md).
 
 ## Usage
 
@@ -44,21 +44,21 @@ For more installation options, see our [installation guide](https://github.com/o
 Configure your AI platform credentials:
 
 ```bash
-oi config --global
+overide config --global
 ```
 
 Select an active platform if you've configured multiple:
 
 ```bash
-oi config --select-active
+overide config --select-active
 ```
 
 ### Initialize a Project
 
-Initialize Oi in your project directory:
+Initialize Overide in your project directory:
 
 ```bash
-oi init
+overide init
 ```
 
 ### Start Monitoring
@@ -66,7 +66,7 @@ oi init
 Begin monitoring files for code generation:
 
 ```bash
-oi start
+overide start
 ```
 
 ### Code Generation
@@ -77,7 +77,7 @@ Insert prompts in your code:
 //> Generate a function that logs 'Hello, World!' <//
 ```
 
-Oi will generate and insert code:
+Overide will generate and insert code:
 
 ```javascript
 //- 'Hello, World!' Function
@@ -89,7 +89,7 @@ function helloWorld() {
 
 ## Configuration
 
-Customize Oi using `oi-config.json`:
+Configure Overide using `oi-config.json`:
 
 ```json
 {
@@ -131,9 +131,9 @@ pnpm dev
 2. In a separate terminal, run the CLI commands as you normally would, with `npm run` or `pnpm` prefixed:
 
 ```bash
-npm run oi init
+npm run overide init
 # or
-pnpm oi init
+pnpm overide init
 ```
 
 The development watcher (`npm run dev`) will automatically rebuild the project when you make changes to the source code, allowing you to test changes in real-time.
@@ -152,9 +152,9 @@ npm link -g overide
 
 3. Test the production version of the CLI:
 ```bash
-oi --version
-oi init
-oi start
+overide --version
+overide init
+overide start
 ```
 
 4. Cleanup:
@@ -162,7 +162,7 @@ oi start
 # In test project
 npm unlink -g overide
 
-# In oi-overide project
+# In Overide project
 npm unlink
 ```
 
@@ -187,8 +187,8 @@ npm unlink
 
 ## Community
 
-Join our [Discord](https://discord.com/invite/Z7F4vRq3n8) to collaborate, share ideas, and stay updated with Oi-overide developments.
+Join our [Discord](https://discord.com/invite/Z7F4vRq3n8) to collaborate, share ideas, and stay updated with Overide developments.
 
 ## License
 
-Oi-overide is licensed under the GNU GPL-2.0 License. See the [LICENSE](LICENSE) file for details.
+Overide is licensed under the GNU GPL-2.0 License. See the [LICENSE](LICENSE) file for details.

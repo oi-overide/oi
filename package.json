@@ -5,7 +5,7 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "bin": {
-    "oi": "dist/index.js"
+    "overide": "dist/index.js"
   },
   "files": [
     "assets",
@@ -16,7 +16,7 @@
     "dev": "tsup ./src/index.ts --watch",
     "lint:check": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "oi": "node dist/index.js",
+    "overide": "node dist/index.js",
     "version": "npm run build && git add -A dist",
     "postversion": "git push && git push --tags"
   },
