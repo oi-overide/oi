@@ -173,8 +173,17 @@ class Config extends OiCommand {
 
     // Check if the local configuration file exists
     if (!CommandHelper.configExists()) {
-      console.error('Local config (oi-config.json) not found.');
+      console.error(
+        'Local config (oi-config.json) not found. Run `oi init` to initialize the project.'
+      );
       process.exit(1); // Exit if the local config is not found
+    }
+
+    if (!CommandHelper.dependencyFileExists()) {
+      console.error(
+        'Dependency file (oi-dependency.json) not found. Run `oi init` to initialize the project.'
+      );
+      process.exit(1); // Exit if the dependency file is not found
     }
 
     // Read the local configuration

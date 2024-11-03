@@ -5,6 +5,8 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
+import { DependencyGraph } from '../models/model.depgraph';
+import serviceParser from '../services/service.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -18,6 +20,7 @@ import { LocalConfig } from '../models/model.config';
  * - Catch and handle any errors during the watch process.
  */
 class Start extends OiCommand {
+  private dependencyGraph: Map<string, DependencyGraph> = new Map();
   private watcher: FSWatcher | null = null;
 
   /**
@@ -29,6 +32,9 @@ class Start extends OiCommand {
       .command('start')
       .description('Start watching files for prompt changes');
     this.addCommonOptions(startCommand); // Add common options such as --verbose
+
+    // Load the dependency graph from the oi-dependency.json file
+    configCommandUtil.loadDependencyGraph();
 
     startCommand.action((options: StartOption) => this.startWatch(options));
   }
@@ -85,6 +91,16 @@ class Start extends OiCommand {
     if (verbose) {
       console.log(`File ${filePath} has been changed`);
     }
+
+    // Check if the dependency graph is empty
+    if (this.dependencyGraph.size === 0) {
+      console.log('Dependency graph is empty, creating dependency graph...');
+      // Create the dependency graph.
+      serviceParser.createDependencyGraph();
+      console.log('Dependency graph created successfully.');
+      return;
+    }
+
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);
   }
 

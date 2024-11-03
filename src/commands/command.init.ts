@@ -109,6 +109,7 @@ class Initialize extends OiCommand {
     try {
       // Determine the output path for the configuration file
       const outputPath = path.join(process.cwd(), 'oi-config.json');
+      const dependencyFilePath = path.join(process.cwd(), 'oi-dependency.json');
       const ignoreFiles = options.ignore || [];
       const verbose = options.verbose || false;
       const projectName = options.projectName || 'default-project';
@@ -125,7 +126,7 @@ class Initialize extends OiCommand {
       }
 
       // Check if the project has already been initialized (config file exists)
-      if (fs.existsSync(outputPath)) {
+      if (fs.existsSync(outputPath) && fs.existsSync(dependencyFilePath)) {
         console.log(`Already initialized oi in project..`);
         process.exit(1);
       }
@@ -156,8 +157,15 @@ class Initialize extends OiCommand {
         fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
         // Write the configuration file to disk
-        fs.writeFileSync(outputPath, JSON.stringify(config, null, 2));
-        console.log(`Project initialized with config at ${outputPath}`);
+        if (!fs.existsSync(outputPath)) {
+          fs.writeFileSync(outputPath, JSON.stringify(config, null, 2));
+          console.log(`Project initialized with config at ${outputPath}`);
+        }
+
+        if (!fs.existsSync(dependencyFilePath)) {
+          fs.writeFileSync(dependencyFilePath, JSON.stringify([], null, 2));
+          console.log(`Project initialized with dependency file at ${dependencyFilePath}`);
+        }
 
         // Display ASCII art and instructions after initialization
         this.displayAsciiArt();
