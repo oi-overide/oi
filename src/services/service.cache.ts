@@ -1,5 +1,5 @@
 import { ratio } from 'fuzzball';
-import { ReplacementBlock } from '../../interfaces/interfaces';
+import { ReplacementBlock } from '../models/model.response';
 
 /**
  * LocalCache is a singleton class that stores old code blocks

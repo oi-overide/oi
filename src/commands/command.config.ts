@@ -1,8 +1,9 @@
-import CommandHelper from '../core/helpers/help.commands';
+import { ConfigOption } from '../models/model.options';
+import { GlobalConfig, LocalConfig } from '../models/model.config';
+import CommandHelper from '../utilis/util.command.config';
 import OiCommand from './abstract.command';
 import { Command } from 'commander';
 import inquirer, { Question } from 'inquirer';
-import { ConfigOption, GlobalConfig, LocalConfig } from '../interfaces/interfaces';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations

@@ -3,7 +3,7 @@
 /**
  * The `CodeHelper` class handles code block manipulations like extraction, fuzzy matching, and replacement.
  */
-class CodeHelper {
+class DevServiceUtil {
   /**
    * Extracts a code block from the content based on a specific format.
    *
@@ -68,4 +68,4 @@ class CodeHelper {
   }
 }
 
-export default new CodeHelper();
+export default new DevServiceUtil();

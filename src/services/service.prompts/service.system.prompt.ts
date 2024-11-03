@@ -1,24 +1,79 @@
-import { PromptInfo } from '../../interfaces/interfaces';
-
 // Loading JSON structure into a variable
 import promptStructure from '../../../assets/prompt.structure.json';
+import { SystemPromptInfo } from '../../models/model.prompts';
 
-/**
- * The `FormatPrompt` class is responsible for constructing and formatting prompts
- * for different AI platforms (like OpenAI and DeepSeek). It uses a base prompt template
- * and dynamically fills in context based on the file content around the prompt.
- *
- * Responsibilities:
- * - Fetch the active platform's details (OpenAI, DeepSeek).
- * - Generate a formatted prompt based on the active platform.
- * - Load and process a base prompt template from configuration files.
- * - Dynamically construct context around the insertion point for prompt creation.
- */
-class FormatPrompt {
-  private basePrompt: PromptInfo;
+abstract class SystemPromptService {
+  abstract findContext(
+    index: number,
+    fileContent: string,
+    prompt: string,
+    verbose: boolean
+  ): Promise<[string, string]>;
+
+  abstract getOpenAiPrompt(
+    contextArray: string[],
+    prompt: string,
+    completionType: string
+  ): Promise<string>;
+
+  abstract getDeepSeekPrompt(
+    contextArray: string[],
+    prompt: string,
+    completionType: string
+  ): Promise<string>;
+
+  abstract getGroqPrompt(
+    contextArray: string[],
+    prompt: string,
+    completionType: string
+  ): Promise<string>;
+}
+
+class SystemPromptServiceImpl extends SystemPromptService {
+  private basePrompt: SystemPromptInfo;
 
   constructor() {
+    super();
     this.basePrompt = promptStructure;
+  }
+
+  /**
+   * Finds the context surrounding a prompt in the file content.
+   *
+   * @param {number} index - The index (line number) where the prompt appears in the file.
+   * @param {string} fileContent - The entire content of the file as a string.
+   * @param {string} prompt - The specific prompt text to find in the file.
+   * @param {boolean} verbose - A flag indicating whether to log detailed messages.
+   * @returns {Promise<[string, string]>} - A promise that resolves to an array containing the file content and trimmed prompt.
+   */
+  async findContext(
+    index: number,
+    fileContent: string,
+    prompt: string,
+    verbose: boolean
+  ): Promise<[string, string]> {
+    try {
+      if (index && verbose) {
+        console.log('Creating Prompt Context');
+      }
+
+      // Clean and trim the prompt text by removing delimiters and excess whitespace
+      const trimmedPrompt = prompt
+        .replace('//>', '')
+        .replace('<//', '')
+        .replace('\n', '')
+        .replace('//', '')
+        .trim();
+
+      // Return the extracted context: file content and trimmed prompt
+      return [fileContent, trimmedPrompt];
+    } catch (e) {
+      if (verbose) {
+        // Log and throw any errors encountered during context extraction
+        console.error('Error creating prompt context:', e);
+      }
+      throw e;
+    }
   }
 
   /**
@@ -175,4 +230,4 @@ class FormatPrompt {
   }
 }
 
-export default new FormatPrompt();
+export default new SystemPromptServiceImpl();

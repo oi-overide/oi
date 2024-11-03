@@ -1,15 +1,14 @@
-import FormatPrompt from './format.prompt';
-import CommandHelper from '../helpers/help.commands';
-import { ActivePlatformDetails } from '../../interfaces/interfaces';
-// import { PlatformConfig } from '../../interfaces/interfaces';
-import { CompletionType } from '../../types/type.promptInfo';
+import { ActivePlatformDetails } from '../../models/model.config';
+import { CompletionType } from '../../models/model.prompts';
+import SystemPromptServiceImpl from '../../services/service.prompts/service.system.prompt';
+import CommandHelper from '../../utilis/util.command.config';
 
 /**
  * The `FormatRequest` class is responsible for creating a dynamic request
  * based on the active AI service platform (OpenAI or DeepSeek). It formats
  * the prompt using `FormatPrompt` and constructs the request body accordingly.
  */
-class FormatRequest {
+class ProcessRequest {
   /**
    * Creates a dynamic request object based on the active service platform.
    * It calls either the OpenAI or DeepSeek-specific request formatting function.
@@ -89,7 +88,11 @@ class FormatRequest {
     completionType: CompletionType,
     verbose: boolean
   ): Promise<object> {
-    const finalPrompt = await FormatPrompt.getOpenAiPrompt(promptArray, prompt, completionType);
+    const finalPrompt = await SystemPromptServiceImpl.getOpenAiPrompt(
+      promptArray,
+      prompt,
+      completionType
+    );
 
     if (verbose) {
       console.log(`Prompt Text : ${finalPrompt}`);
@@ -130,7 +133,11 @@ class FormatRequest {
     completionType: CompletionType
   ): Promise<object | void> {
     try {
-      const finalPrompt = await FormatPrompt.getDeepSeekPrompt(promptArray, prompt, completionType);
+      const finalPrompt = await SystemPromptServiceImpl.getDeepSeekPrompt(
+        promptArray,
+        prompt,
+        completionType
+      );
       const messages = [
         { role: 'system', content: finalPrompt },
         { role: 'user', content: prompt }
@@ -166,7 +173,11 @@ class FormatRequest {
     completionType: CompletionType,
     verbose: boolean
   ): Promise<object> {
-    const finalPrompt = await FormatPrompt.getGroqPrompt(promptArray, prompt, completionType);
+    const finalPrompt = await SystemPromptServiceImpl.getGroqPrompt(
+      promptArray,
+      prompt,
+      completionType
+    );
 
     if (verbose) {
       console.log(`Prompt Text : ${finalPrompt}`);
@@ -190,4 +201,4 @@ class FormatRequest {
   }
 }
 
-export default new FormatRequest();
+export default new ProcessRequest();
