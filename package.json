@@ -7,7 +7,6 @@
     "oi": "dist/index.js"
   },
   "scripts": {
-    "pnpm": "pnpm",
     "build": "tsup",
     "start": "node dist/index.js",
     "lint:check": "eslint \"src/**/*.ts\"",
@@ -33,7 +32,6 @@
     "eslint": "^9.11.1",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^15.10.0",
-    "pnpm": "^9.12.2",
     "prettier": "^3.3.3",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"

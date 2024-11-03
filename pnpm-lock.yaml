@@ -51,9 +51,6 @@ importers:
       globals:
         specifier: ^15.10.0
         version: 15.11.0
-      pnpm:
-        specifier: ^9.12.2
-        version: 9.12.3
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
@@ -1075,11 +1072,6 @@ packages:
   pirates@4.0.6:
     resolution: {integrity: sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==}
     engines: {node: '>= 6'}
-
-  pnpm@9.12.3:
-    resolution: {integrity: sha512-zOD53pxafJW++UQWnMXf6HQav7FFB4wNUIuGgFaEiofIHmJiRstglny9f9KabAYu9z/4QNlrPIbECsks9KgT7g==}
-    engines: {node: '>=18.12'}
-    hasBin: true
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
@@ -2306,8 +2298,6 @@ snapshots:
   picomatch@4.0.2: {}
 
   pirates@4.0.6: {}
-
-  pnpm@9.12.3: {}
 
   postcss-load-config@6.0.1:
     dependencies:
