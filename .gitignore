@@ -17,6 +17,9 @@ npm-debug.log*
 dist/
 build/
 
+# Git
+.gitattributes
+
 # Other files
 .DS_Store
 *.tgz
