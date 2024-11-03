@@ -2,15 +2,23 @@
   "name": "overide",
   "version": "0.0.5",
   "description": "This is a CLI based Code Generation Tool.",
+  "type": "commonjs",
   "main": "dist/index.js",
   "bin": {
-    "oi": "dist/index.js"
+    "overide": "dist/index.js"
   },
+  "files": [
+    "assets",
+    "dist"
+  ],
   "scripts": {
-    "build": "tsup",
-    "start": "node dist/index.js",
+    "build": "tsup ./src/index.ts",
+    "dev": "tsup ./src/index.ts --watch",
     "lint:check": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix"
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "overide": "node dist/index.js",
+    "version": "npm run build && git add -A dist",
+    "postversion": "git push && git push --tags"
   },
   "author": "Abhijeet Dash",
   "license": "GPL-2.0",
@@ -24,7 +32,6 @@
     "inquirer": "^11.1.0",
     "openai": "^4.67.2"
   },
-  "type": "commonjs",
   "devDependencies": {
     "@eslint/js": "^9.11.1",
     "@typescript-eslint/eslint-plugin": "^8.12.2",
@@ -35,9 +42,5 @@
     "prettier": "^3.3.3",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"
-  },
-  "files": [
-    "assets",
-    "dist"
-  ]
+  }
 }

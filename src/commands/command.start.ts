@@ -9,7 +9,7 @@ import { LocalConfig } from '../models/model.config';
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
  * the file-watching mechanism that monitors specific files for changes
- * related to prompts in the `oi` project. It utilizes the `WatchInterface`
+ * related to prompts in the `overide` project. It utilizes the `WatchInterface`
  * to handle the actual file-watching process.
  *
  * Responsibilities:
