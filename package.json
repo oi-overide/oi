@@ -7,6 +7,10 @@
     "oi": "dist/index.js"
   },
   "scripts": {
+<<<<<<< HEAD
+=======
+    "pnpm": "pnpm",
+>>>>>>> dev
     "build": "tsup",
     "start": "node dist/index.js",
     "lint:check": "eslint \"src/**/*.ts\"",
