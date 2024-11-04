@@ -18,6 +18,7 @@
 - [Community](#community)
 - [License](#license)
 
+
 ## Key Features
 
 - **IDE Agnostic**: Works with any IDE or text editor
