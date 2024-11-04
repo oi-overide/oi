@@ -1,91 +1,97 @@
-import fs from 'fs'; // Import the file system module
+import fs from 'fs';
 import path from 'path';
-import {
-  ClassData,
-  DependencyGraph,
-  FileContents,
-  FileDependency,
-  FunctionData,
-  LanguagePatterns
-} from '../models/model.depgraph';
+import { execSync } from 'child_process';
+import { extensionToLanguageMap } from '../models/model.language.map';
 
 // Define file paths and types
-const DEPENDENCY_FILE_PATH = path.join(process.cwd(), 'oi-dependency.json');
+// const DEPENDENCY_FILE_PATH = path.join(process.cwd(), 'oi-dependency.json');
 
 abstract class ParserService {
-  abstract parseFile(filepath: string, fileContent: string): DependencyGraph;
-  abstract identifyLanguage(fileContent: string): string | undefined;
-  abstract updateDependencyFile(filepath: string): Promise<void>;
-  abstract createDependencyGraph(dirPath: string, ignoreList: string[], verbose: boolean): void;
+  abstract installTreeSitter(language: string): Promise<void>;
+  abstract identifyLanguageByExtension(filePath: string): string | undefined;
+  abstract getAllFilePaths(directory: string, ignoreList: string[], verbose: boolean): string[];
 }
 
 // Implementation for ParserService
 class ParserServiceImpl extends ParserService {
-  // Stores the contents of all files in the project
-  private fileContents: FileContents = {};
+  // Install tree-sitter parsers
+  async installTreeSitter(language: string): Promise<void> {
+    try {
+      // Check if Tree-sitter is installed, if not, install it
+      console.log('Setting up Tree-sitter parsers...');
+      execSync('npm install -g tree-sitter', { stdio: 'inherit' });
 
-  // Define regex patterns for different languages
-  private languagePatterns: LanguagePatterns[] = [
-    {
-      language: 'python',
-      functionRegex: /\bdef\s+([a-zA-Z_]\w*)\s*\((.*?)\)\s*:/g,
-      classRegex: /\b(class)\s+([a-zA-Z_]\w*)\s*(\((.*?)\))?:/g,
-      importRegex: /^\s*(import|from)\s+[a-zA-Z_][\w.]*\s*/gm
-    },
-    {
-      language: 'javascript',
-      functionRegex:
-        /\bfunction\s+([a-zA-Z_$][\w$]*)\s*\((.*?)\)\s*\{|([a-zA-Z_$][\w$]*)\s*=\s*\((.*?)\)\s*=>\s*\{/g,
-      classRegex: /\b(class)\s+([a-zA-Z_]\w*)\s*(extends\s+[a-zA-Z_]\w*)?\s*\{/g,
-      importRegex: /^\s*import\s+.*\s+from\s+['"][^'"]+['"]/gm
-    },
-    {
-      language: 'java',
-      functionRegex:
-        /\b(public|protected|private)?\s*(static\s+)?(final\s+)?\w+\s+([a-zA-Z_]\w*)\s*\((.*?)\)\s*\{/g,
-      classRegex:
-        /\b(public|protected|private)?\s*(abstract\s+)?(class|interface)\s+([a-zA-Z_]\w*)\s*(extends\s+[a-zA-Z_]\w*)?\s*(implements\s+[a-zA-Z_][\w\s,]*)?\s*\{/g,
-      importRegex: /^\s*import\s+[a-zA-Z_][\w.]*\s*;/gm
-    },
-    {
-      language: 'c_cpp',
-      functionRegex: /(?:[a-zA-Z_]\w*\s+)+([a-zA-Z_]\w*)\s*\((.*?)\)\s*\{/g,
-      classRegex: /\b(class|struct)\s+([a-zA-Z_]\w*)\s*\{/g
-    }
-    // Add similar patterns for other languages as needed...
-  ];
-
-  // Identify programming language based on content
-  identifyLanguage(fileContent: string): string | undefined {
-    for (const pattern of this.languagePatterns) {
-      if (pattern.classRegex.test(fileContent) || pattern.functionRegex.test(fileContent)) {
-        return pattern.language;
+      switch (language) {
+        case 'cpp':
+          execSync('npm install -g tree-sitter-cpp', { stdio: 'inherit' });
+          break;
+        case 'c++':
+          execSync('npm install -g tree-sitter-cpp', { stdio: 'inherit' });
+          break;
+        case 'c':
+          execSync('npm install -g tree-sitter-c', { stdio: 'inherit' });
+          break;
+        case 'java':
+          execSync('npm install -g tree-sitter-java', { stdio: 'inherit' });
+          break;
+        case 'python':
+          execSync('npm install -g tree-sitter-python', { stdio: 'inherit' });
+          break;
+        case 'ruby':
+          execSync('npm install -g tree-sitter-ruby', { stdio: 'inherit' });
+          break;
+        case 'go':
+          execSync('npm install -g tree-sitter-go', { stdio: 'inherit' });
+          break;
+        case 'javascript':
+          execSync('npm install -g tree-sitter-javascript', { stdio: 'inherit' });
+          break;
+        case 'typescript':
+          execSync('npm install -g tree-sitter-typescript', { stdio: 'inherit' });
+          break;
+        case 'csharp':
+          execSync('npm install -g tree-sitter-c-sharp', { stdio: 'inherit' });
+          break;
+        default:
+          console.log('No Tree-sitter parser found for language:', language);
+          break;
       }
+
+      console.log('Tree-sitter setup complete.');
+    } catch (error) {
+      console.error('Failed to set up Tree-sitter:', error);
     }
-    return undefined; // Unknown language
+  }
+
+  // Identify programming language based on file extension
+  identifyLanguageByExtension(filePath: string): string | undefined {
+    const extension = path.extname(filePath);
+    console.log('EXTENTION ', extension);
+    return extensionToLanguageMap[extension] || undefined;
   }
 
   /**
-   * Recursively gathers files in a directory, reading their contents and
-   * storing them in the provided object, while respecting ignore patterns.
+   * Recursively gathers all file paths in a directory, respecting ignore patterns.
    *
-   * @param {string} dirPath - The path of the directory to scan.
-   * @param {FileContents} fileContents - An object to store file paths and their contents.
+   * @param {string} directory - The path of the directory to scan.
    * @param {string[]} ignoreList - List of patterns for files to ignore.
    * @param {boolean} verbose - Flag to enable verbose logging.
+   * @returns {string[]} - An array of file paths.
    */
-  createDependencyGraph(
-    dirPath: string,
+  getAllFilePaths(
+    directory: string,
     ignoreList: string[] = [],
     verbose: boolean = false
-  ): void {
-    const files = fs.readdirSync(dirPath); // Read the contents of the directory
+  ): string[] {
+    let filePaths: string[] = [];
+
+    const files = fs.readdirSync(directory); // Read the contents of the directory
 
     for (const file of files) {
-      const filePath: string = path.join(dirPath, file); // Get the full path of the file
+      const filePath = path.join(directory, file); // Get the full path of the file
       const stat = fs.statSync(filePath); // Get file statistics
 
-      // Check if the file or directory (or its parent) is in the ignore list
+      // Check if the file or directory matches any ignore pattern
       const shouldIgnore = ignoreList.some(ignorePattern => filePath.includes(ignorePattern));
 
       if (shouldIgnore) {
@@ -100,114 +106,18 @@ class ParserServiceImpl extends ParserService {
         if (verbose) {
           console.log(`Entering directory: ${filePath}`);
         }
-        this.createDependencyGraph(filePath, ignoreList, verbose); // Recursive call
+        filePaths = filePaths.concat(this.getAllFilePaths(filePath, ignoreList, verbose)); // Recursive call
       } else {
-        // Read and store file content
-        const content = fs.readFileSync(filePath, 'utf-8');
-        this.fileContents[filePath] = content; // Store content in the provided object
+        // Add file path to the list
+        filePaths.push(filePath);
 
         if (verbose) {
-          console.log(`Read file: ${filePath}`); // Log file read if verbose
+          console.log(`Found file: ${filePath}`); // Log found file if verbose
         }
       }
     }
-  }
 
-  // New method to update oi-dependency.json with the latest graph of a changed file
-  async updateDependencyFile(filepath: string): Promise<void> {
-    try {
-      // Read the modified file content
-      const fileContent = fs.readFileSync(filepath, 'utf-8');
-
-      // Parse the file to get the dependency graph
-      const newGraph = this.parseFile(filepath, fileContent);
-
-      // Load the existing dependency JSON or create a new array if it doesn’t exist
-      let dependencyData: FileDependency[] = [];
-      if (fs.existsSync(DEPENDENCY_FILE_PATH)) {
-        const fileContent = fs.readFileSync(DEPENDENCY_FILE_PATH, 'utf-8');
-        dependencyData = JSON.parse(fileContent);
-      }
-
-      // Check if the file already exists in the dependency data
-      const existingIndex = dependencyData.findIndex(dep => dep.path === filepath);
-      if (existingIndex !== -1) {
-        // Update the existing entry
-        dependencyData[existingIndex] = newGraph;
-      } else {
-        // Add a new entry
-        dependencyData.push(newGraph);
-      }
-
-      // Save the updated dependency data back to oi-dependency.json
-      fs.writeFileSync(DEPENDENCY_FILE_PATH, JSON.stringify(dependencyData, null, 2));
-      console.log(`Updated dependency graph for ${filepath} in oi-dependency.json`);
-    } catch (error) {
-      console.error(`Error updating dependency graph for ${filepath}:`, error);
-    }
-  }
-
-  // Modified function for parsing
-  parseFile(filepath: string, fileContent: string): DependencyGraph {
-    const language = this.identifyLanguage(fileContent);
-    if (!language) {
-      throw new Error(`Unsupported or unidentified language for file: ${filepath}`);
-    }
-
-    const patterns = this.languagePatterns.find(p => p.language === language);
-    if (!patterns) {
-      throw new Error(`Patterns not found for language: ${language}`);
-    }
-
-    const classMatches = [...fileContent.matchAll(patterns.classRegex)];
-    const functionMatches = [...fileContent.matchAll(patterns.functionRegex)];
-    const imports = patterns.importRegex
-      ? [...fileContent.matchAll(patterns.importRegex)].map(match => match[0].trim())
-      : [];
-
-    const classes: ClassData[] = [];
-    const topLevelFunctions: FunctionData[] = [];
-    let currentClass: ClassData | null = null;
-
-    // Process each class match to build initial class structures
-    for (const classMatch of classMatches) {
-      const className = classMatch[2];
-      const newClass: ClassData = { className, functions: [] };
-      classes.push(newClass);
-    }
-
-    // Track the current class while iterating through function matches
-    for (const functionMatch of functionMatches) {
-      const functionCode = functionMatch[0].trim();
-
-      // Determine if the function belongs to the current class
-      if (currentClass) {
-        currentClass.functions.push({ code: functionCode });
-      } else {
-        // If there's no current class, add to top-level functions
-        topLevelFunctions.push({ code: functionCode });
-      }
-
-      // Check if a new class is encountered (and update `currentClass`)
-      const nextClassMatch = classMatches.find(match => match.index! > functionMatch.index!);
-      if (nextClassMatch) {
-        const className = nextClassMatch[2];
-        currentClass = classes.find(cls => cls.className === className) || null;
-      } else {
-        currentClass = null; // Reset if no more classes are found
-      }
-    }
-
-    // Construct the dependency graph
-    const graph: DependencyGraph = {
-      fileName: path.basename(filepath),
-      path: filepath,
-      imports: imports,
-      classes: classes,
-      topLevelFunctions: topLevelFunctions
-    };
-
-    return graph;
+    return filePaths;
   }
 }
 

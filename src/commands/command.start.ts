@@ -5,8 +5,8 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
-import { DependencyGraph } from '../models/model.depgraph';
-import serviceParser from '../services/service.parser';
+import { DependencyGraph, FileContents } from '../models/model.depgraph';
+// import serviceParser from '../services/service.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -20,6 +20,8 @@ import serviceParser from '../services/service.parser';
  * - Catch and handle any errors during the watch process.
  */
 class Start extends OiCommand {
+  // Stores the contents of all files in the project
+  private fileContents: FileContents[] = [];
   private dependencyGraph: Map<string, DependencyGraph> = new Map();
   private watcher: FSWatcher | null = null;
 
@@ -72,7 +74,7 @@ class Start extends OiCommand {
       // start watching the files.
       this.watcher
         .on('add', (filePath: string) => this.onAdd(filePath, verbose))
-        .on('change', (filePath: string) => this.onFileChanged(filePath, verbose))
+        .on('change', (filePath: string) => this.onFileChanged(filePath, ignoredFiles, verbose))
         .on('unlink', (filePath: string) => this.onUnlink(filePath, verbose))
         .on('error', err => this.onError(err, verbose))
         .on('ready', () => this.onReady(verbose));
@@ -87,7 +89,11 @@ class Start extends OiCommand {
     }
   }
 
-  async onFileChanged(filePath: string, verbose: boolean | undefined): Promise<void> {
+  async onFileChanged(
+    filePath: string,
+    ignoreFiles: string[],
+    verbose: boolean | undefined
+  ): Promise<void> {
     if (verbose) {
       console.log(`File ${filePath} has been changed`);
     }
@@ -95,8 +101,7 @@ class Start extends OiCommand {
     // Check if the dependency graph is empty
     if (this.dependencyGraph.size === 0) {
       console.log('Dependency graph is empty, creating dependency graph...');
-      // Create the dependency graph.
-      serviceParser.createDependencyGraph();
+      // TODO : Create dependency graph
       console.log('Dependency graph created successfully.');
       return;
     }

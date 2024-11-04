@@ -18,3 +18,29 @@ export interface ActivePlatformDetails {
   platform: string;
   platformConfig: GlobalPlatformInfo;
 }
+
+export const supportedPlatforms = ['OpenAI', 'DeepSeek', 'Groq'];
+
+export const supportedLanguages = [
+  'cpp',
+  'c',
+  'java',
+  'python',
+  'ruby',
+  'go',
+  'javascript',
+  'typescript',
+  'csharp'
+];
+
+export const platformQuestions = {
+  openai: [
+    { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
+    { type: 'input', name: 'orgId', message: 'Enter your Organization ID:' }
+  ],
+  deepseek: [
+    { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
+    { type: 'input', name: 'baseUrl', message: 'Enter the BaseUrl to use:' }
+  ],
+  groq: [{ type: 'input', name: 'apiKey', message: 'Enter your Groq API key:' }]
+};

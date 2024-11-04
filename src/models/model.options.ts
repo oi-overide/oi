@@ -14,4 +14,5 @@ export interface ConfigOption {
   global?: boolean;
   verbose?: boolean;
   setActive?: boolean;
+  parser?: boolean;
 }
