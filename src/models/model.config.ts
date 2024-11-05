@@ -21,18 +21,6 @@ export interface ActivePlatformDetails {
 
 export const supportedPlatforms = ['OpenAI', 'DeepSeek', 'Groq'];
 
-export const supportedLanguages = [
-  'cpp',
-  'c',
-  'java',
-  'python',
-  'ruby',
-  'go',
-  'javascript',
-  'typescript',
-  'csharp'
-];
-
 export const platformQuestions = {
   openai: [
     { type: 'input', name: 'apiKey', message: 'Enter your API key:' },

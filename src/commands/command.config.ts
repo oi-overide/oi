@@ -1,9 +1,11 @@
+import fs from 'fs';
+import path from 'path';
+
 import { ConfigOption } from '../models/model.options';
 import {
   GlobalConfig,
   LocalConfig,
   platformQuestions,
-  supportedLanguages,
   supportedPlatforms
 } from '../models/model.config';
 import CommandHelper from '../utilis/util.command.config';
@@ -25,14 +27,11 @@ import serviceParser from '../services/service.parser';
  * - Ensure that required directories and configuration files exist.
  */
 class Config extends OiCommand {
-  public supportedLanguages: string[];
   public platforms: string[];
   public platformQuestions: { [platform: string]: Question[] };
 
   constructor(program: Command) {
     super(program); // Pass the program instance to the parent constructor
-
-    this.supportedLanguages = supportedLanguages;
 
     // Define supported platforms and their respective configuration prompts
     this.platforms = supportedPlatforms;
@@ -65,9 +64,10 @@ class Config extends OiCommand {
     configCommand
       .command('global') // Sub-command for global configuration
       .description('Global configuration options')
-      .option('-pa, --parser', 'Installs tree-sitter parsers')
+      .option('-pa, --parse', 'Installs tree-sitter parsers')
       .option('-p, --platform', 'Set global variable like API keys and org IDs')
       .option('-sa, --set-active', 'Select active platform')
+      .option('-v, --verbose', 'Enable verbose output')
       .action(async options => {
         // Ensure that required directories exist
         await CommandHelper.makeRequiredDirectories();
@@ -75,8 +75,8 @@ class Config extends OiCommand {
         if (Object.keys(options).length === 0) {
           configCommand.outputHelp();
         }
-        if (options.parser) {
-          await this.handleParserInstall();
+        if (options.parse) {
+          await this.generateDependencyGraph(options.verbose);
         }
         if (options.platform) {
           await this.handleAddActivePlatform();
@@ -87,23 +87,30 @@ class Config extends OiCommand {
       });
   }
 
-  async handleParserInstall(): Promise<void> {
+  async generateDependencyGraph(verbose: boolean = false): Promise<void> {
     try {
-      // Prompt the user to select a platform to activate
-      const { selectedLanguage } = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'selectedLanguage',
-          message: 'Select the platform you want to activate:',
-          choices: this.supportedLanguages
-        }
-      ]);
+      console.log('Generating dependency graphs...');
+      // Get the current directory
+      const currentDir = process.cwd();
 
-      const languageName = selectedLanguage.toLowerCase().trim();
-      // Ensure tree-sitter is installed.
-      await serviceParser.installTreeSitter(languageName);
+      // Get the ignore list from the oi-config.json file
+      const config: LocalConfig = CommandHelper.readConfigFileData() as LocalConfig;
+      const ignoreList = config.ignore || [];
+
+      // Generate dependency graphs for all files in the current directory
+      const dependencyGraphs = await serviceParser.generateDependencyGraph(
+        currentDir,
+        ignoreList,
+        verbose
+      );
+
+      // Write the dependency graphs to a file
+      fs.writeFileSync(
+        path.join(currentDir, 'oi-dependency.json'),
+        JSON.stringify(dependencyGraphs, null, 2)
+      );
     } catch (error) {
-      console.error('Failed to install Tree-sitter parser:', error);
+      console.error('Failed to generate dependency graph:', error);
     }
   }
 

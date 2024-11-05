@@ -1,72 +1,39 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import Parser, { SyntaxNode } from 'tree-sitter'; // Import the Tree-sitter parser
+
+// Loading the required Tree-sitter language modules
+import Java from 'tree-sitter-java';
+import Python from 'tree-sitter-python';
+import Ruby from 'tree-sitter-ruby';
+import Go from 'tree-sitter-go';
+import JavaScript from 'tree-sitter-javascript';
+import TypeScript from 'tree-sitter-typescript';
+import Cpp from 'tree-sitter-cpp';
+import CSharp from 'tree-sitter-c-sharp';
+import C from 'tree-sitter-c';
+
 import { extensionToLanguageMap } from '../models/model.language.map';
+import { ClassData, DependencyGraph, FunctionData } from '../models/model.depgraph';
 
 // Define file paths and types
 // const DEPENDENCY_FILE_PATH = path.join(process.cwd(), 'oi-dependency.json');
 
 abstract class ParserService {
-  abstract installTreeSitter(language: string): Promise<void>;
   abstract identifyLanguageByExtension(filePath: string): string | undefined;
   abstract getAllFilePaths(directory: string, ignoreList: string[], verbose: boolean): string[];
+  abstract generateDependencyGraph(
+    directory: string,
+    ignoreList: string[],
+    verbose: boolean
+  ): Promise<DependencyGraph[]>;
 }
 
 // Implementation for ParserService
 class ParserServiceImpl extends ParserService {
-  // Install tree-sitter parsers
-  async installTreeSitter(language: string): Promise<void> {
-    try {
-      // Check if Tree-sitter is installed, if not, install it
-      console.log('Setting up Tree-sitter parsers...');
-      execSync('npm install -g tree-sitter', { stdio: 'inherit' });
-
-      switch (language) {
-        case 'cpp':
-          execSync('npm install -g tree-sitter-cpp', { stdio: 'inherit' });
-          break;
-        case 'c++':
-          execSync('npm install -g tree-sitter-cpp', { stdio: 'inherit' });
-          break;
-        case 'c':
-          execSync('npm install -g tree-sitter-c', { stdio: 'inherit' });
-          break;
-        case 'java':
-          execSync('npm install -g tree-sitter-java', { stdio: 'inherit' });
-          break;
-        case 'python':
-          execSync('npm install -g tree-sitter-python', { stdio: 'inherit' });
-          break;
-        case 'ruby':
-          execSync('npm install -g tree-sitter-ruby', { stdio: 'inherit' });
-          break;
-        case 'go':
-          execSync('npm install -g tree-sitter-go', { stdio: 'inherit' });
-          break;
-        case 'javascript':
-          execSync('npm install -g tree-sitter-javascript', { stdio: 'inherit' });
-          break;
-        case 'typescript':
-          execSync('npm install -g tree-sitter-typescript', { stdio: 'inherit' });
-          break;
-        case 'csharp':
-          execSync('npm install -g tree-sitter-c-sharp', { stdio: 'inherit' });
-          break;
-        default:
-          console.log('No Tree-sitter parser found for language:', language);
-          break;
-      }
-
-      console.log('Tree-sitter setup complete.');
-    } catch (error) {
-      console.error('Failed to set up Tree-sitter:', error);
-    }
-  }
-
   // Identify programming language based on file extension
   identifyLanguageByExtension(filePath: string): string | undefined {
     const extension = path.extname(filePath);
-    console.log('EXTENTION ', extension);
     return extensionToLanguageMap[extension] || undefined;
   }
 
@@ -118,6 +85,199 @@ class ParserServiceImpl extends ParserService {
     }
 
     return filePaths;
+  }
+
+  /**
+   * Generates a dependency graph for all files in a given directory.
+   *
+   * @param {string} directory - The root directory for generating dependency graphs.
+   * @param {string[]} ignoreList - List of file patterns to ignore.
+   * @param {boolean} verbose - Enable verbose logging.
+   * @returns {DependencyGraph[]} - Array of dependency graphs for each file.
+   */
+  async generateDependencyGraph(
+    directory: string,
+    ignoreList: string[] = [],
+    verbose: boolean = false
+  ): Promise<DependencyGraph[]> {
+    const filePaths = this.getAllFilePaths(directory, ignoreList, verbose);
+    const dependencyGraphs: DependencyGraph[] = [];
+
+    for (const filePath of filePaths) {
+      const language = this.identifyLanguageByExtension(filePath);
+
+      if (!language) {
+        if (verbose) console.log(`Language not identified for file: ${filePath}`);
+        continue;
+      }
+
+      // Load the corresponding Tree-sitter parser for the identified language
+      let parser: Parser | null = null;
+      try {
+        parser = this.loadParserForLanguage(language);
+      } catch (error) {
+        if (verbose) {
+          console.log(`Tree-sitter parser not found or failed to load for ${language} ${error}`);
+        }
+        continue;
+      }
+
+      console.log('PARSER ', parser);
+
+      if (parser) {
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        const tree = parser.parse(fileContent);
+        const dependencyGraph = this.extractDependencyData(filePath, fileContent, tree);
+        dependencyGraphs.push(dependencyGraph);
+      }
+    }
+
+    return dependencyGraphs;
+  }
+
+  /**
+   * Loads a Tree-sitter parser for a given language.
+   *
+   * @param {string} language - The language to load.
+   * @returns {Parser} - The Tree-sitter parser instance for the language.
+   */
+  private loadParserForLanguage(language: string): Parser | null {
+    try {
+      const parser = new Parser();
+      switch (language) {
+        case 'cpp':
+          parser.setLanguage(Cpp);
+          break;
+        case 'c++':
+          parser.setLanguage(Cpp);
+          break;
+        case 'c':
+          parser.setLanguage(C);
+          break;
+        case 'java':
+          parser.setLanguage(Java);
+          break;
+        case 'python':
+          parser.setLanguage(Python);
+          break;
+        case 'ruby':
+          parser.setLanguage(Ruby);
+          break;
+        case 'go':
+          parser.setLanguage(Go);
+          break;
+        case 'javascript':
+          parser.setLanguage(JavaScript);
+          break;
+        case 'typescript':
+          parser.setLanguage(TypeScript.typescript);
+          break;
+        case 'csharp':
+          parser.setLanguage(CSharp);
+          break;
+        default:
+          console.log('No Tree-sitter parser found for language:', language);
+          break;
+      }
+      return parser;
+    } catch (error) {
+      console.error(`Error loading Tree-sitter parser for ${language}:`, error);
+    }
+    return null;
+  }
+
+  /**
+   * Extracts dependency information from parsed Tree-sitter tree.
+   *
+   * @param {string} filePath - The file path.
+   * @param {string} fileContent - The file content.
+   * @param {Parser.Tree} tree - The parsed syntax tree.
+   * @param {string} language - The language of the file.
+   * @returns {DependencyGraph} - The dependency graph for the file.
+   */
+  private extractDependencyData(
+    filePath: string,
+    fileContent: string,
+    tree: Parser.Tree
+  ): DependencyGraph {
+    const fileName = path.basename(filePath);
+    const imports: string[] = [];
+    const classes: ClassData[] = [];
+    const functions: FunctionData[] = [];
+
+    const traverseNode = (node: SyntaxNode, currentClass: string | null = null): void => {
+      console.log(
+        `Node type: ${node.type}, Named: ${node.isNamed}, Grammar Type: ${node.grammarType}`
+      );
+
+      // Direct checks for import, class, and function nodes
+      if (node.isNamed) {
+        switch (node.type) {
+          case 'import_statement':
+            imports.push(node.text);
+            break;
+          case 'class_declaration':
+            const classData = this.extractClassData(node);
+
+            // Assigning the class name to the current class
+            currentClass = classData.className;
+            // Add the class to the list.
+
+            classes.push(classData);
+            break;
+          case 'method_definition':
+          case 'function_declaration':
+          case 'function_definition':
+            functions.push(this.extractFunctionData(node, fileContent, currentClass));
+            break;
+        }
+      }
+
+      // Recursively process named children
+      node.namedChildren.forEach(child => traverseNode(child, currentClass));
+    };
+
+    // Begin traversal from the root node
+    traverseNode(tree.rootNode);
+
+    return {
+      fileName,
+      path: filePath,
+      imports,
+      classes,
+      functions
+    };
+  }
+
+  /**
+   * Extracts data for a class.
+   *
+   * @param {Parser.SyntaxNode} classNode - The class node from Tree-sitter.
+   * @returns {ClassData} - The extracted class data.
+   */
+  private extractClassData(classNode: Parser.SyntaxNode): ClassData {
+    const className = classNode.childForFieldName('name')?.text || 'UnnamedClass';
+    return {
+      className,
+      embeddings: []
+    };
+  }
+
+  /**
+   * Extracts data for a function, associating it with its class if provided.
+   *
+   * @param {Parser.SyntaxNode} functionNode - The function node.
+   * @param {string} fileContent - The content of the file.
+   * @param {string | null} className - The name of the class the function belongs to.
+   * @returns {FunctionData} - The extracted function data.
+   */
+  private extractFunctionData(
+    functionNode: Parser.SyntaxNode,
+    fileContent: string,
+    className: string | null
+  ): FunctionData {
+    const code = fileContent.slice(functionNode.startIndex, functionNode.endIndex);
+    return { class: className || 'Global', code, embeddings: [] };
   }
 }
 
