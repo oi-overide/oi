@@ -25,6 +25,13 @@ jobs:
           node-version: 20.x
           cache: "pnpm"
 
+      - name: Check pnpm-lock.yaml
+        run: |
+          if [ ! -f "pnpm-lock.yaml" ]; then
+            echo "Error: pnpm-lock.yaml is missing"
+            exit 1
+          fi
+
       - run: pnpm install --frozen-lockfile
       - name: Create Release Pull Request or Publish
         id: changesets
