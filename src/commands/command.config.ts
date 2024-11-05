@@ -241,8 +241,8 @@ class Config extends OiCommand {
     }
 
     // Update the project name if provided in options
-    if (options.projectName) {
-      config.projectName = options.projectName;
+    if (options.name) {
+      config.projectName = options.name;
     }
 
     // Save the updated local configuration
