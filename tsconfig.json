@@ -1,18 +1,27 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "es2020",
-    "lib": ["es2020"],
-    "declaration": true,
-    "sourceMap": true,
+    "target": "ES2023",
+    "module": "ESNext",
+    "lib": ["ES2023"],
     "outDir": "./dist",
     "rootDir": "./src",
+    
+    // Type Checking
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    
+    // Module Resolution
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    
+    // Project Options
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "sourceMap": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
