@@ -1,7 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { ActivePlatformDetails, GlobalConfig, LocalConfig } from '../models/model.config';
+import {
+  ActivePlatformDetails,
+  GlobalConfig,
+  GlobalPlatformInfo,
+  LocalConfig
+} from '../models/model.config';
 import { DependencyGraph } from '../models/model.depgraph';
 
 /**
@@ -158,7 +163,7 @@ class ConfigCommandUtil {
   getActiveServiceDetails(): ActivePlatformDetails | null {
     const globalConfig = this.readConfigFileData(true) as GlobalConfig;
     for (const platform in globalConfig) {
-      const platformConfig = globalConfig[platform];
+      const platformConfig = globalConfig[platform] as GlobalPlatformInfo;
       if (platformConfig.isActive) {
         const activePlatformDetails: ActivePlatformDetails = {
           platform: platform,
