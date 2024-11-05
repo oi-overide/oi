@@ -7,7 +7,7 @@ import { InitOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
 
 /**
- * The `Initialize` class is responsible for setting up the initial configuration for the `oi` CLI application.
+ * The `Initialize` class is responsible for setting up the initial configuration for the `overide` CLI application.
  * It handles the creation of the project configuration file (`oi-config.json`), manages the ignore list for files
  * the user doesn't want tracked, and provides instructions on how to proceed with the setup. It also offers a dry-run option.
  *
@@ -44,10 +44,10 @@ class Initialize extends OiCommand {
    \\____/  |_|
                    
     `);
-    console.log('Oi Project initialized!');
+    console.log('Overide Project initialized!');
     console.log('\nNext steps:');
-    console.log("1. Use 'oi config -g' to define the API KEYs, BASE URLs and Platforms");
-    console.log("2. Run 'oi start' to start getting code suggestions.");
+    console.log("1. Use 'overide config -g' to define the API KEYs, BASE URLs and Platforms");
+    console.log("2. Run 'overide start' to start getting code suggestions.");
   }
 
   /**
@@ -126,8 +126,8 @@ class Initialize extends OiCommand {
       }
 
       // Check if the project has already been initialized (config file exists)
-      if (fs.existsSync(outputPath) && fs.existsSync(dependencyFilePath)) {
-        console.log(`Already initialized oi in project..`);
+      if (fs.existsSync(outputPath)) {
+        console.log(`Already initialized overide in project..`);
         process.exit(1);
       }
 

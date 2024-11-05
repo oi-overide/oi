@@ -14,7 +14,7 @@ import serviceParser from '../services/service.parser';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
- * for the `oi` CLI application. It manages configuration settings for different platforms
+ * for the `overide` CLI application. It manages configuration settings for different platforms
  * (like OpenAI and DeepSeek) and allows users to select an active platform, update config
  * details, and manage ignored files and project-specific settings.
  *
