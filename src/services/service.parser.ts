@@ -20,6 +20,11 @@ import { ClassData, DependencyGraph, FunctionData } from '../models/model.depgra
 // const DEPENDENCY_FILE_PATH = path.join(process.cwd(), 'oi-dependency.json');
 
 abstract class ParserService {
+  abstract generateIncrementalDepForFile(
+    filePath: string,
+    ignoreList: string[],
+    verbose: boolean
+  ): Promise<void>;
   abstract identifyLanguageByExtension(filePath: string): string | undefined;
   abstract getAllFilePaths(directory: string, ignoreList: string[], verbose: boolean): string[];
   abstract generateDependencyGraph(
@@ -131,7 +136,11 @@ class ParserServiceImpl extends ParserService {
    * @param {string} filePath - The path to the file to be incrementally updated.
    * @param {boolean} verbose - Enable verbose logging.
    */
-  async generateIncrementalDepForFile(filePath: string, verbose: boolean = false): Promise<void> {
+  async generateIncrementalDepForFile(
+    filePath: string,
+    ignoreList: string[],
+    verbose: boolean = false
+  ): Promise<void> {
     const dependencyFile = 'oi-dependency.json';
     let existingDependencies: DependencyGraph[] = [];
 
@@ -139,6 +148,16 @@ class ParserServiceImpl extends ParserService {
     if (fs.existsSync(dependencyFile)) {
       const rawData = fs.readFileSync(dependencyFile, 'utf8');
       existingDependencies = JSON.parse(rawData);
+    }
+
+    // Check if the file or directory matches any ignore pattern
+    const shouldIgnore = ignoreList.some(ignorePattern => filePath.includes(ignorePattern));
+
+    if (shouldIgnore) {
+      if (verbose) {
+        console.log(`Skipping ignored path: ${filePath}`); // Log ignored paths if verbose
+      }
+      return;
     }
 
     const newDependencyGraph = await this.getFileDependencyGraph(filePath, verbose);

@@ -23,7 +23,7 @@ import serviceParser from '../services/service.parser';
 class Start extends OiCommand {
   // Stores the contents of all files in the project
   private fileContents: FileContents[] = [];
-  private dependencyGraph: Map<string, DependencyGraph> = new Map();
+  private dependencyGraph: DependencyGraph[] | null = [];
   private watcher: FSWatcher | null = null;
 
   /**
@@ -37,7 +37,7 @@ class Start extends OiCommand {
     this.addCommonOptions(startCommand); // Add common options such as --verbose
 
     // Load the dependency graph from the oi-dependency.json file
-    configCommandUtil.loadDependencyGraph();
+    this.dependencyGraph = configCommandUtil.loadDependencyGraph() as DependencyGraph[] | null;
 
     startCommand.action((options: StartOption) => this.startWatch(options));
   }
@@ -100,11 +100,10 @@ class Start extends OiCommand {
     }
 
     // Check if the dependency graph is empty
-    if (this.dependencyGraph.size === 0) {
+    if (this.dependencyGraph?.length === 0) {
       console.log('Dependency graph is empty, creating dependency graph...');
-      serviceParser.generateIncrementalDepForFile(filePath, verbose);
+      serviceParser.generateIncrementalDepForFile(filePath, ignoreFiles, verbose);
       console.log('Dependency graph created successfully.');
-      return;
     }
 
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);

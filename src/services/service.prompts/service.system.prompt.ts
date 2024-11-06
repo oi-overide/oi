@@ -1,32 +1,25 @@
 // Loading JSON structure into a variable
+import { ChatCompletionMessageParam } from 'openai/resources';
 import promptStructure from '../../../assets/prompt.structure.json';
-import { SystemPromptInfo } from '../../models/model.prompts';
+import {
+  InsertionRequestInfo,
+  SystemPromptInfo,
+  SystemPromptPlatformInfo
+} from '../../models/model.prompts';
+import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 
 abstract class SystemPromptService {
-  abstract findContext(
-    index: number,
-    fileContent: string,
-    prompt: string,
-    verbose: boolean
-  ): Promise<[string, string]>;
+  abstract getOpenAiSystemMessage(
+    insertionRequest: InsertionRequestInfo
+  ): Promise<ChatCompletionMessageParam[]>;
 
-  abstract getOpenAiPrompt(
-    contextArray: string[],
-    prompt: string,
-    completionType: string
-  ): Promise<string>;
+  abstract getDeepSeekSystemMessage(
+    insertionRequest: InsertionRequestInfo
+  ): Promise<ChatCompletionMessageParam[]>;
 
-  abstract getDeepSeekPrompt(
-    contextArray: string[],
-    prompt: string,
-    completionType: string
-  ): Promise<string>;
-
-  abstract getGroqPrompt(
-    contextArray: string[],
-    prompt: string,
-    completionType: string
-  ): Promise<string>;
+  abstract getGroqSystemMessage(
+    insertionRequest: InsertionRequestInfo
+  ): Promise<GroqChatCompletionMessageParam[]>;
 }
 
 class SystemPromptServiceImpl extends SystemPromptService {
@@ -38,45 +31,6 @@ class SystemPromptServiceImpl extends SystemPromptService {
   }
 
   /**
-   * Finds the context surrounding a prompt in the file content.
-   *
-   * @param {number} index - The index (line number) where the prompt appears in the file.
-   * @param {string} fileContent - The entire content of the file as a string.
-   * @param {string} prompt - The specific prompt text to find in the file.
-   * @param {boolean} verbose - A flag indicating whether to log detailed messages.
-   * @returns {Promise<[string, string]>} - A promise that resolves to an array containing the file content and trimmed prompt.
-   */
-  async findContext(
-    index: number,
-    fileContent: string,
-    prompt: string,
-    verbose: boolean
-  ): Promise<[string, string]> {
-    try {
-      if (index && verbose) {
-        console.log('Creating Prompt Context');
-      }
-
-      // Clean and trim the prompt text by removing delimiters and excess whitespace
-      const trimmedPrompt = prompt
-        .replace('//>', '')
-        .replace('<//', '')
-        .replace('\n', '')
-        .replace('//', '')
-        .trim();
-
-      // Return the extracted context: file content and trimmed prompt
-      return [fileContent, trimmedPrompt];
-    } catch (e) {
-      if (verbose) {
-        // Log and throw any errors encountered during context extraction
-        console.error('Error creating prompt context:', e);
-      }
-      throw e;
-    }
-  }
-
-  /**
    * Creates and formats a prompt for OpenAI models.
    *
    * @param {Array<string>} contextArray - The array of context around the prompt.
@@ -84,31 +38,35 @@ class SystemPromptServiceImpl extends SystemPromptService {
    * @param {string} completionType - The type of completion (e.g., 'complete' or 'update').
    * @returns {Promise<string>} The formatted OpenAI prompt.
    */
-  async getOpenAiPrompt(
-    contextArray: string[],
-    prompt: string,
-    completionType: string
-  ): Promise<string> {
+  async getOpenAiSystemMessage(
+    insertionRequest: InsertionRequestInfo
+  ): Promise<ChatCompletionMessageParam[]> {
     try {
       const platform = 'openai';
 
       // In all the cases load the system prompt
-      const systemPrompt = this.basePrompt[platform].systemMessage;
-      const codeContext = this.getCodeContext(contextArray, prompt);
-      const instructions = this.getInstructions(completionType, platform);
+      const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
+      const codeContext = insertionRequest.fileContent;
+      const instructions = this.getInstructions(platform);
 
       let format = '';
       let contextPrompt = '';
 
-      if (completionType === 'update') {
-        contextPrompt = this.basePrompt[platform].update.context;
-        format = this.basePrompt[platform].update.format;
-      } else {
-        format = this.basePrompt[platform].complete.format;
-      }
+      contextPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).context;
+      format = (this.basePrompt[platform] as SystemPromptPlatformInfo).format;
 
-      const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
-      return finalPrompt;
+      const systemContent = `${systemPrompt}\n Instructions:${instructions}\n${format}\n${contextPrompt}:\n${codeContext}`;
+      const systemMessage: ChatCompletionMessageParam = {
+        role: 'system',
+        content: systemContent
+      };
+
+      const userMessage: ChatCompletionMessageParam = {
+        role: 'user',
+        content: insertionRequest.prompt
+      };
+
+      return [systemMessage, userMessage] as ChatCompletionMessageParam[];
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error generating OpenAI prompt: ${error.message}`);
@@ -123,34 +81,37 @@ class SystemPromptServiceImpl extends SystemPromptService {
    * @param {Array<string>} contextArray - The array of context around the prompt.
    * @param {string} prompt - The raw prompt text.
    * @param {string} completionType - The type of completion (e.g., 'complete' or 'update').
-   * @returns {Promise<string>} The formatted DeepSeek prompt.
+   * @returns {Promise<ChatCompletionMessageParam>} The formatted DeepSeek prompt.
    */
-  async getDeepSeekPrompt(
-    contextArray: string[],
-    prompt: string,
-    completionType: string
-  ): Promise<string> {
+  async getDeepSeekSystemMessage(
+    insertionRequest: InsertionRequestInfo
+  ): Promise<ChatCompletionMessageParam[]> {
     try {
       const platform = 'deepseek';
 
       // In all the cases load the system prompt
-      const systemPrompt = this.basePrompt[platform].systemMessage;
-      const codeContext = this.getCodeContext(contextArray, prompt);
-      const instructions = this.getInstructions(completionType, platform);
+      const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
+      const codeContext = insertionRequest.fileContent;
+      const instructions = this.getInstructions(platform);
 
       let format = '';
       let contextPrompt = '';
 
-      // If the completion type is 'update', load the context and update prompt
-      if (completionType === 'update') {
-        contextPrompt = this.basePrompt[platform].update.context;
-        format = this.basePrompt[platform].update.format;
-      } else {
-        format = this.basePrompt[platform].complete.format;
-      }
+      contextPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).context;
+      format = (this.basePrompt[platform] as SystemPromptPlatformInfo).format;
 
-      const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
-      return finalPrompt;
+      const systemContent = `${systemPrompt}\n Instructions:${instructions}\n${format}\n${contextPrompt}:\n${codeContext}`;
+      const systemMessage: ChatCompletionMessageParam = {
+        role: 'system',
+        content: systemContent
+      };
+
+      const userMessage: ChatCompletionMessageParam = {
+        role: 'user',
+        content: insertionRequest.prompt
+      };
+
+      return [systemMessage, userMessage] as ChatCompletionMessageParam[];
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error generating DeepSeek prompt: ${error.message}`);
@@ -167,30 +128,35 @@ class SystemPromptServiceImpl extends SystemPromptService {
    * @param {string} completionType - The type of completion (e.g., 'complete' or 'update').
    * @returns {Promise<string>} The formatted Groq prompt.
    */
-  async getGroqPrompt(
-    contextArray: string[],
-    prompt: string,
-    completionType: string
-  ): Promise<string> {
+  async getGroqSystemMessage(
+    insertionRequest: InsertionRequestInfo
+  ): Promise<GroqChatCompletionMessageParam[]> {
     try {
       const platform = 'groq';
 
-      const systemPrompt = this.basePrompt[platform].systemMessage;
-      const codeContext = this.getCodeContext(contextArray, prompt);
-      const instructions = this.getInstructions(completionType, platform);
+      // In all the cases load the system prompt
+      const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
+      const codeContext = insertionRequest.fileContent;
+      const instructions = this.getInstructions(platform);
 
       let format = '';
       let contextPrompt = '';
 
-      if (completionType === 'update') {
-        contextPrompt = this.basePrompt[platform].update.context;
-        format = this.basePrompt[platform].update.format;
-      } else {
-        format = this.basePrompt[platform].complete.format;
-      }
+      contextPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).context;
+      format = (this.basePrompt[platform] as SystemPromptPlatformInfo).format;
 
-      const finalPrompt = `${systemPrompt}${contextPrompt}${codeContext}\n${instructions}\n${format}`;
-      return finalPrompt;
+      const systemContent = `${systemPrompt}\n Instructions:${instructions}\n${format}\n${contextPrompt}:\n${codeContext}`;
+      const systemMessage: GroqChatCompletionMessageParam = {
+        role: 'system',
+        content: systemContent
+      };
+
+      const userMessage: GroqChatCompletionMessageParam = {
+        role: 'user',
+        content: insertionRequest.prompt
+      };
+
+      return [systemMessage, userMessage] as GroqChatCompletionMessageParam[];
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error generating Groq prompt: ${error.message}`);
@@ -204,11 +170,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
    *
    * @param contextArray - An array of strings representing the context (e.g., lines of code)
    *                      relevant to the user prompt.
-   * @param prompt - The user-provided prompt that needs to be included in the output.
    * @returns A formatted string that includes the first element of contextArray and the user prompt.
    */
-  private getCodeContext(contextArray: string[], prompt: string): string {
-    return `File Content :\n${contextArray[0]}\n user prompt :${prompt}\n`;
+  private getCodeContext(contextArray: string[]): string {
+    return `File Content :\n${contextArray[0]}`;
   }
 
   /**
@@ -219,13 +184,9 @@ class SystemPromptServiceImpl extends SystemPromptService {
    * @param platform - A string representing the platform for which instructions are to be retrieved.
    * @returns A string containing the instructions relevant to the specified completion type and platform.
    */
-  private getInstructions(completionType: string, platform: string): string {
+  private getInstructions(platform: string): string {
     let instructionList = [];
-    if (completionType === 'update') {
-      instructionList = this.basePrompt[platform].update.instructions;
-    } else {
-      instructionList = this.basePrompt[platform].complete.instructions;
-    }
+    instructionList = (this.basePrompt[platform] as SystemPromptPlatformInfo).instructions;
     return instructionList.join('');
   }
 }

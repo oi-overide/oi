@@ -20,7 +20,7 @@ class ConfigCommandUtil {
   private static globalConfigFileName = 'oi-global-config.json';
   private static dependencyFileName = 'oi-dependency.json';
 
-  loadDependencyGraph(): DependencyGraph | null {
+  loadDependencyGraph(): DependencyGraph[] | null {
     const dependencyFilePath = this.getDependencyFilePath();
     if (fs.existsSync(dependencyFilePath)) {
       const dependencyData = fs.readFileSync(dependencyFilePath, 'utf-8');

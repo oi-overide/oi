@@ -1,9 +1,5 @@
 import cacheService from '../../services/service.cache';
-import {
-  CompletionType,
-  InsertionRequestInfo,
-  InsertionResponseInfo
-} from '../../models/model.prompts';
+import { InsertionRequestInfo, InsertionResponseInfo } from '../../models/model.prompts';
 
 abstract class UserPromptService {
   // Regular expressions to match specific prompt types
@@ -19,8 +15,6 @@ abstract class UserPromptService {
   // abstract identifyPromptCase(text: string): UserPromptInfo[];
 
   abstract matchRegex(regex: RegExp, text: string): IterableIterator<RegExpMatchArray>;
-
-  abstract findCompletionType(fileContent: string, prompt: string): CompletionType;
 
   abstract findInsertionResponses(
     filePath: string,
@@ -47,67 +41,6 @@ class UserPromptServiceImpl extends UserPromptService {
     return text.matchAll(regex);
   }
 
-  /**
-   * Determines the completion type for the found prompt.
-   * If no code exists in the file and only a prompt is found, it returns 'complete'.
-   * If code exists and the user wants to update it, it returns 'update'.
-   *
-   * @param {string} fileContent - The content of the file being processed.
-   * @param {string} prompt - The prompt text found in the file.
-   * @returns {string} The completion type: 'complete' or 'update'.
-   */
-  findCompletionType(fileContent: string, prompt: string): CompletionType {
-    let hasCode: boolean = false;
-
-    // Basic logic to check if the file contains code besides the prompt
-    const fileLines = fileContent.trim().split('\n');
-
-    fileLines.forEach(line => {
-      if (!line.trim().includes(prompt)) {
-        console.log(line);
-        hasCode = true;
-      }
-    });
-
-    // Return 'complete' if no code exists, else 'update'
-    return hasCode ? 'update' : 'complete';
-  }
-
-  /**
-   * Finds the context surrounding a prompt in the file content.
-   *
-   * @param {string} fileContent - The entire content of the file as a string.
-   * @param {string} prompt - The specific prompt text to find in the file.
-   * @param {boolean} verbose - A flag indicating whether to log detailed messages.
-   * @returns {Promise<[string, string]>} - A promise that resolves to an array containing the file content and trimmed prompt.
-   */
-  async findPromptContext(
-    fileContent: string,
-    prompt: string,
-    verbose: boolean
-  ): Promise<[string, string]> {
-    try {
-      if (verbose) {
-        console.log('Creating Prompt Context');
-      }
-
-      // Clean and trim the prompt text by removing delimiters and excess whitespace
-      const trimmedPrompt = prompt
-        .replace('//>', '')
-        .replace('<//', '')
-        .replace('\n', '')
-        .replace('//', '')
-        .trim();
-
-      // Return the extracted context: file content and trimmed prompt
-      return [fileContent, trimmedPrompt];
-    } catch (e) {
-      // Log and throw any errors encountered during context extraction
-      console.error('Error creating prompt context:', e);
-      throw e;
-    }
-  }
-
   async findInsertionResponses(
     filePath: string,
     fileContent: string,
@@ -128,13 +61,20 @@ class UserPromptServiceImpl extends UserPromptService {
         const acceptanceMatches = this.matchRegex(UserPromptService.regAcceptance, match[0]);
         for (const acceptanceMatch of acceptanceMatches) {
           if (acceptanceMatch[1] === 'y' || acceptanceMatch[1] === 'n') {
+            // Pre-process the current code to match the saved content
+            const currentCode = (match[0] as string)
+              .split('\n')
+              .filter(line => !line.includes('//-') || !line.includes('-//'))
+              .join('\n');
+
             // Get the old and new code from cache.
-            const oldCode = cacheService.findOldCode(match[1]);
+            const oldCode = cacheService.findOldCode(currentCode);
+
             // Add the insertion request to the list
             insertionResponses.push({
               filePath: filePath,
               fileContent: fileContent,
-              newCode: match[1],
+              newCode: currentCode,
               oldCode: oldCode ? oldCode : '',
               insertionResponse: acceptanceMatch[1] === 'y' ? 'accepted' : 'rejected',
               acceptanceLine: acceptanceMatch[0]
@@ -170,15 +110,11 @@ class UserPromptServiceImpl extends UserPromptService {
       // Loop through each match and process it
       for (const match of promptMatches) {
         if (match[1]) {
-          // Get the completion type.
-          const completionType = this.findCompletionType(fileContent, match[1]);
-
           // Add the insertion request to the list
           insertionRequests.push({
             prompt: match[1].trim(),
             filePath: filePath,
-            fileContent: fileContent,
-            completionType: completionType
+            fileContent: fileContent
           });
         }
       }

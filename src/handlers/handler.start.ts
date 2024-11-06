@@ -5,18 +5,10 @@ import serviceDev from '../services/service.dev';
 import serviceNetwork from '../services/service.network';
 import processRequest from '../services/service.process/process.request';
 
-import {
-  CompletionType,
-  InsertionRequestInfo,
-  InsertionResponseInfo
-} from '../models/model.prompts';
-import { ActivePlatformDetails } from '../models/model.config';
-import { ChatCompletionMessageParam as OpenAIChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
+import { InsertionRequestInfo, InsertionResponseInfo } from '../models/model.prompts';
+import { GeneralRequestObject } from '../models/model.request';
 
 abstract class StartCommandHandler {
-  abstract findCompletionType(fileContent: string, prompt: string): CompletionType;
-
   abstract handleFoundAcceptance(
     insertionResponse: InsertionResponseInfo,
     verbose: boolean
@@ -31,32 +23,6 @@ abstract class StartCommandHandler {
 }
 
 class StartCommandHandlerImpl extends StartCommandHandler {
-  /**
-   * Determines the completion type for the found prompt.
-   * If no code exists in the file and only a prompt is found, it returns 'complete'.
-   * If code exists and the user wants to update it, it returns 'update'.
-   *
-   * @param {string} fileContent - The content of the file being processed.
-   * @param {string} prompt - The prompt text found in the file.
-   * @returns {string} The completion type: 'complete' or 'update'.
-   */
-  findCompletionType(fileContent: string, prompt: string): CompletionType {
-    let hasCode: boolean = false;
-
-    // Basic logic to check if the file contains code besides the prompt
-    const fileLines = fileContent.trim().split('\n');
-
-    fileLines.forEach(line => {
-      if (!line.trim().includes(prompt)) {
-        console.log(line);
-        hasCode = true;
-      }
-    });
-
-    // Return 'complete' if no code exists, else 'update'
-    return hasCode ? 'update' : 'complete';
-  }
-
   /**
    * Handles the acceptance case found in a file.
    * Removes either the entire code block if rejected, or the acceptance message if accepted.
@@ -108,59 +74,30 @@ class StartCommandHandlerImpl extends StartCommandHandler {
    */
   async handleFoundPrompt(insertionRequest: InsertionRequestInfo, verbose: boolean): Promise<void> {
     try {
-      // Determine completion type: 'complete' or 'update'
-      const completionType = this.findCompletionType(
-        insertionRequest.fileContent,
-        insertionRequest.prompt
-      );
-      // Create a prompt context by extracting surrounding content
-      const promptArray = await userPromptService.findPromptContext(
-        insertionRequest.fileContent,
-        insertionRequest.prompt,
-        verbose
-      );
+      // TODO : Create prompt context using dependency graph.
+
       // Create a request object with the gathered context
-      const requestObject = await processRequest.createRequest(
-        insertionRequest.prompt,
-        promptArray,
-        completionType,
+      const generalRequestObject: GeneralRequestObject | void = await processRequest.createRequest(
+        insertionRequest,
         verbose
       );
-      if (!requestObject) {
+
+      if (!generalRequestObject) {
         throw new Error('Failed to create request object');
       }
+
       // Send the request and retrieve a response from the network
-      const response = await serviceNetwork.doRequest(
-        requestObject as {
-          activeServiceDetails: ActivePlatformDetails;
-          metadata: {
-            model: string;
-            messages: OpenAIChatCompletionMessageParam[] | GroqChatCompletionMessageParam[];
-            temperature?: number;
-            top_p?: number;
-            n?: number;
-            stream?: boolean;
-            stop?: string | string[];
-            max_tokens?: number;
-            presence_penalty?: number;
-            frequency_penalty?: number;
-          };
-        }
-      );
+      const response: string = await serviceNetwork.doRequest(generalRequestObject);
       // Parse the network response to get the code
-      const codeData = await processResponse.formatResponse({
-        choices: [{ message: { content: response } }]
-      });
-      // Insert the generated code block into the file at the appropriate location
-      if (completionType === 'complete') {
-        await serviceDev.insertCodeBlock(
-          insertionRequest.filePath,
-          insertionRequest.prompt,
-          codeData ?? ''
-        );
+      const replacementBlock = await processResponse.formatResponse(response);
+
+      if (replacementBlock === null) {
+        console.log('No replacement bloc found during formatting the response');
         return;
       }
-      await serviceDev.applyCodeReplacement(insertionRequest.filePath, codeData ?? '');
+
+      // Insert the generated code block into the file at the appropriate location
+      await serviceDev.applyCodeReplacement(insertionRequest.filePath, replacementBlock);
     } catch (err) {
       if (err instanceof Error) {
         console.log(err.message);
@@ -193,13 +130,17 @@ class StartCommandHandlerImpl extends StartCommandHandler {
       )) as InsertionResponseInfo[];
 
       for (const insertionResponse of insertionResponses) {
-        console.log(insertionResponse);
+        if (verbose) {
+          console.log(insertionResponse);
+        }
         // Handle the found prompt
         await this.handleFoundAcceptance(insertionResponse, verbose);
       }
 
       for (const insertionRequest of insertionRequests) {
-        console.log(insertionRequest);
+        if (verbose) {
+          console.log(insertionRequest);
+        }
         await this.handleFoundPrompt(insertionRequest, verbose);
       }
     } catch (err) {
