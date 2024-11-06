@@ -1,8 +1,8 @@
 name: CI
 on:
-  push:
+  pull_request:
     branches:
-      - "**"
+      - 'staging'
 
 jobs:
   build:
@@ -18,5 +18,5 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - run: pnpm run lint:check && pnpm run build
