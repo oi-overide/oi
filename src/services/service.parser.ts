@@ -88,6 +88,83 @@ class ParserServiceImpl extends ParserService {
   }
 
   /**
+   * Generates a dependency graph for a single file.
+   *
+   * @param {string} filePath - The path to the file.
+   * @param {boolean} verbose - Enable verbose logging.
+   * @returns {DependencyGraph | null} - The dependency graph for the file or null if processing fails.
+   */
+  async getFileDependencyGraph(
+    filePath: string,
+    verbose: boolean = false
+  ): Promise<DependencyGraph | null> {
+    const language = this.identifyLanguageByExtension(filePath);
+
+    if (!language) {
+      if (verbose) console.log(`Language not identified for file: ${filePath}`);
+      return null;
+    }
+
+    // Load the corresponding Tree-sitter parser for the identified language
+    let parser: Parser | null = null;
+    try {
+      parser = this.loadParserForLanguage(language);
+    } catch (error) {
+      if (verbose) {
+        console.log(`Tree-sitter parser not found or failed to load for ${language}: ${error}`);
+      }
+      return null;
+    }
+
+    if (parser) {
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      const tree = parser.parse(fileContent);
+      return this.extractDependencyData(filePath, fileContent, tree);
+    }
+
+    return null;
+  }
+
+  /**
+   * Incrementally updates the `oi-dependency.json` with the dependency graph of a single file.
+   *
+   * @param {string} filePath - The path to the file to be incrementally updated.
+   * @param {boolean} verbose - Enable verbose logging.
+   */
+  async generateIncrementalDepForFile(filePath: string, verbose: boolean = false): Promise<void> {
+    const dependencyFile = 'oi-dependency.json';
+    let existingDependencies: DependencyGraph[] = [];
+
+    // Load existing dependency data if the file exists
+    if (fs.existsSync(dependencyFile)) {
+      const rawData = fs.readFileSync(dependencyFile, 'utf8');
+      existingDependencies = JSON.parse(rawData);
+    }
+
+    const newDependencyGraph = await this.getFileDependencyGraph(filePath, verbose);
+
+    if (newDependencyGraph) {
+      const index = existingDependencies.findIndex(dep => dep.path === filePath);
+
+      if (index !== -1) {
+        // Update existing entry
+        existingDependencies[index] = newDependencyGraph;
+        if (verbose) console.log(`Updated dependency graph for file: ${filePath}`);
+      } else {
+        // Add new entry
+        existingDependencies.push(newDependencyGraph);
+        if (verbose) console.log(`Added new dependency graph for file: ${filePath}`);
+      }
+
+      // Write updated dependencies back to file
+      fs.writeFileSync(dependencyFile, JSON.stringify(existingDependencies, null, 2));
+      if (verbose) console.log(`Dependency file updated at ${dependencyFile}`);
+    } else {
+      if (verbose) console.log(`Failed to generate dependency graph for file: ${filePath}`);
+    }
+  }
+
+  /**
    * Generates a dependency graph for all files in a given directory.
    *
    * @param {string} directory - The root directory for generating dependency graphs.

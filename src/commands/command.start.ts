@@ -6,6 +6,7 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
 import { DependencyGraph, FileContents } from '../models/model.depgraph';
+import serviceParser from '../services/service.parser';
 // import serviceParser from '../services/service.parser';
 
 /**
@@ -101,7 +102,7 @@ class Start extends OiCommand {
     // Check if the dependency graph is empty
     if (this.dependencyGraph.size === 0) {
       console.log('Dependency graph is empty, creating dependency graph...');
-      // TODO : Create dependency graph
+      serviceParser.generateIncrementalDepForFile(filePath, verbose);
       console.log('Dependency graph created successfully.');
       return;
     }
