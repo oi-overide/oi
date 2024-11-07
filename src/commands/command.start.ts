@@ -100,10 +100,9 @@ class Start extends OiCommand {
     }
 
     // Check if the dependency graph is empty
-    if (this.dependencyGraph?.length === 0) {
-      console.log('Dependency graph is empty, creating dependency graph...');
-      serviceParser.generateIncrementalDepForFile(filePath, ignoreFiles, verbose);
-      console.log('Dependency graph created successfully.');
+    serviceParser.generateIncrementalDepForFile(filePath, ignoreFiles, verbose);
+    if (verbose) {
+      console.log('Dependency graph updated...');
     }
 
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);

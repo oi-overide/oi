@@ -49,6 +49,7 @@ class Config extends OiCommand {
       .command('local') // Sub-command for local configuration
       .description('Local configuration options')
       .option('-i, --ignore <files...>', 'Ignore specific files or directories')
+      .option('-pa, --parse', 'Installs tree-sitter parsers')
       .option('-n, --name <name>', 'Set project name')
       .action(async options => {
         // Ensure that required directories exist
@@ -57,26 +58,25 @@ class Config extends OiCommand {
         if (Object.keys(options).length === 0) {
           configCommand.outputHelp();
         } else {
-          await this.handleLocalConfig(options);
+          if (options.parse) {
+            await this.generateDependencyGraph(options.verbose);
+          } else {
+            await this.handleLocalConfig(options);
+          }
         }
       });
 
     configCommand
       .command('global') // Sub-command for global configuration
       .description('Global configuration options')
-      .option('-pa, --parse', 'Installs tree-sitter parsers')
       .option('-p, --platform', 'Set global variable like API keys and org IDs')
       .option('-sa, --set-active', 'Select active platform')
-      .option('-v, --verbose', 'Enable verbose output')
       .action(async options => {
         // Ensure that required directories exist
         await CommandHelper.makeRequiredDirectories();
 
         if (Object.keys(options).length === 0) {
           configCommand.outputHelp();
-        }
-        if (options.parse) {
-          await this.generateDependencyGraph(options.verbose);
         }
         if (options.platform) {
           await this.handleAddActivePlatform();

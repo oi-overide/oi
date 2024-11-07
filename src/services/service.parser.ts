@@ -16,9 +16,6 @@ import C from 'tree-sitter-c';
 import { extensionToLanguageMap } from '../models/model.language.map';
 import { ClassData, DependencyGraph, FunctionData } from '../models/model.depgraph';
 
-// Define file paths and types
-// const DEPENDENCY_FILE_PATH = path.join(process.cwd(), 'oi-dependency.json');
-
 abstract class ParserService {
   abstract generateIncrementalDepForFile(
     filePath: string,
@@ -211,20 +208,18 @@ class ParserServiceImpl extends ParserService {
       let parser: Parser | null = null;
       try {
         parser = this.loadParserForLanguage(language);
+
+        if (parser) {
+          const fileContent = fs.readFileSync(filePath, 'utf8');
+          const tree = parser.parse(fileContent);
+          const dependencyGraph = this.extractDependencyData(filePath, fileContent, tree);
+          dependencyGraphs.push(dependencyGraph);
+        }
       } catch (error) {
         if (verbose) {
           console.log(`Tree-sitter parser not found or failed to load for ${language} ${error}`);
         }
         continue;
-      }
-
-      console.log('PARSER ', parser);
-
-      if (parser) {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        const tree = parser.parse(fileContent);
-        const dependencyGraph = this.extractDependencyData(filePath, fileContent, tree);
-        dependencyGraphs.push(dependencyGraph);
       }
     }
 

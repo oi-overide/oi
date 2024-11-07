@@ -20,6 +20,9 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      fast-cosine-similarity:
+        specifier: ^1.2.2
+        version: 1.2.2
       fuzzball:
         specifier: ^2.1.3
         version: 2.1.3
@@ -892,6 +895,9 @@ packages:
   external-editor@3.1.0:
     resolution: {integrity: sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==}
     engines: {node: '>=4'}
+
+  fast-cosine-similarity@1.2.2:
+    resolution: {integrity: sha512-VAAswiN4WOjvkbqSTXfatw+zKclDN9h2R3Si1pFoZSLd1jHjXizaOr1LLip7bI69IRcbyhOPQ3CjL5WfvHx2gg==}
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -2570,6 +2576,8 @@ snapshots:
       chardet: 0.7.0
       iconv-lite: 0.4.24
       tmp: 0.0.33
+
+  fast-cosine-similarity@1.2.2: {}
 
   fast-deep-equal@3.1.3: {}
 
