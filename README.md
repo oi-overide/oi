@@ -105,17 +105,19 @@ Configure Overide using `oi-config.json`:
 
 ### Development Workflow
 
-1. Fork and clone the repository
+1. Clone the repository
 2. Create feature branches from `dev`
 3. Make changes and test thoroughly
 4. Submit PR to merge into `dev`
 5. Once approved, changes merge to `dev`
-6. Periodically, `dev` merges to `staging`
-7. When ready, `staging` merges to `main`
+6. Periodically, `dev` will be merged to `staging`
+7. Finally, `staging` will eventually be merged to `main`
 
 ### Version Management with Changesets
 
-We use [changesets](https://github.com/changesets/changesets) for version management. After making changes:
+We use [changesets](https://github.com/changesets/changesets) for version management.
+
+After making changes in a feature branch, before submitting a PR:
 
 1. Create a changeset:
 
@@ -133,8 +135,7 @@ pnpm changeset
 
 When changes are merged to `main`:
 
-- A "Version Packages" PR is automatically created
-- When merged, it:
+- "Version Packages" PR is automatically created, which:
   - Updates package version
   - Updates changelog
   - Publishes to npm

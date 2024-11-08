@@ -1,22 +1,35 @@
 name: CI
 on:
-  push:
+  pull_request:
     branches:
-      - "**"
+      - 'staging'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
           cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-      - run: pnpm run lint:check && pnpm run build
+      - name: Check for pnpm-lock.yaml
+        run: |
+          if [ ! -f pnpm-lock.yaml ]; then
+              echo "The file pnpm-lock.yaml was apparently not found."
+              exit 1
+          fi
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile=true
+
+      - name: Lint and Build
+        run: pnpm run lint:check && pnpm run build
