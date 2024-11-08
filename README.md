@@ -135,7 +135,7 @@ pnpm changeset
 
 When changes are merged to `main`:
 
-- A "Version Packages" PR is automatically created, which:
+- "Version Packages" PR is automatically created, which:
   - Updates package version
   - Updates changelog
   - Publishes to npm
