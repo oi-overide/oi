@@ -245,6 +245,10 @@ class Config extends OiCommand {
           }
         }
       });
+
+      console.log('Following file will be watched :\n');
+      const watching = serviceParser.getAllFilePaths(process.cwd(), config.ignore);
+      console.log(watching);
     }
 
     // Update the project name if provided in options

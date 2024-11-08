@@ -7,6 +7,7 @@ import {
   SystemPromptPlatformInfo
 } from '../../models/model.prompts';
 import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
+import serviceParser from '../service.parser';
 
 abstract class SystemPromptService {
   abstract getOpenAiSystemMessage(
@@ -48,6 +49,8 @@ class SystemPromptServiceImpl extends SystemPromptService {
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
       const codeContext = insertionRequest.fileContent;
       const instructions = this.getInstructions(platform);
+
+      this.getCodeContext(insertionRequest.filePath);
 
       let format = '';
       let contextPrompt = '';
@@ -172,8 +175,9 @@ class SystemPromptServiceImpl extends SystemPromptService {
    *                      relevant to the user prompt.
    * @returns A formatted string that includes the first element of contextArray and the user prompt.
    */
-  private getCodeContext(contextArray: string[]): string {
-    return `File Content :\n${contextArray[0]}`;
+  private getCodeContext(filePath: string): void {
+    const contextGraph = serviceParser.buildContextGraph(filePath);
+    console.log('\nCONTEXT GRAPH : \n', contextGraph, '\n------------\n');
   }
 
   /**

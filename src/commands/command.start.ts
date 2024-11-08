@@ -68,7 +68,7 @@ class Start extends OiCommand {
         persistent: true,
         usePolling: true,
         interval: 100,
-        ignored: ignoredFiles,
+        ignored: file => ignoredFiles.some(ignoredFile => file.includes(ignoredFile)),
         ignoreInitial: true
       });
 
@@ -125,6 +125,8 @@ class Start extends OiCommand {
       console.log('Watcher is ready and scanning for changes');
     }
   }
+
+  //> Write a function to print hello world <//
 }
 
 export default Start;

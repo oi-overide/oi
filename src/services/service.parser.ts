@@ -15,6 +15,7 @@ import C from 'tree-sitter-c';
 
 import { extensionToLanguageMap } from '../models/model.language.map';
 import { ClassData, DependencyGraph, FunctionData } from '../models/model.depgraph';
+import utilCommandConfig from '../utilis/util.command.config';
 
 abstract class ParserService {
   abstract generateIncrementalDepForFile(
@@ -297,10 +298,6 @@ class ParserServiceImpl extends ParserService {
     const functions: FunctionData[] = [];
 
     const traverseNode = (node: SyntaxNode, currentClass: string | null = null): void => {
-      console.log(
-        `Node type: ${node.type}, Named: ${node.isNamed}, Grammar Type: ${node.grammarType}`
-      );
-
       // Direct checks for import, class, and function nodes
       if (node.isNamed) {
         switch (node.type) {
@@ -369,6 +366,50 @@ class ParserServiceImpl extends ParserService {
   ): FunctionData {
     const code = fileContent.slice(functionNode.startIndex, functionNode.endIndex);
     return { class: className || 'Global', code, embeddings: [] };
+  }
+
+  buildContextGraph(filePath: string): DependencyGraph[] {
+    // Load the dependency graph
+    const depgraph: DependencyGraph[] | null = utilCommandConfig.loadDependencyGraph();
+
+    if (!depgraph) {
+      return [];
+    }
+
+    const adjNodes: DependencyGraph[] = [];
+
+    // Find the current file in dep graph.
+    let currentNode: DependencyGraph | undefined = depgraph.filter(
+      node => node.path === filePath
+    )[0];
+
+    if (!currentNode) {
+      return [];
+    }
+
+    // Get all edges.
+    for (const importstm of currentNode.imports) {
+      // Get the fileName from the import.
+      const importParts = importstm.split('/');
+      if (importParts.length === 1) {
+        continue;
+      }
+      const fileName = (importParts[importParts.length - 1] as string)
+        .replace("'", '')
+        .replace(';', '');
+
+      const graphOfImport: DependencyGraph[] | undefined = depgraph.filter(node =>
+        node.path.includes(fileName)
+      );
+
+      if (!graphOfImport) {
+        continue;
+      } else {
+        adjNodes.push(...graphOfImport);
+      }
+    }
+
+    return adjNodes;
   }
 }
 
