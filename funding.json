@@ -18,8 +18,7 @@
       "name": "overide",
       "description": "Overide is a CLI tool that helps ai write code in any IDE. It streamlines the way we interact with ai by allowing prompts in between code using special identifires like '..code before //> prompt <// ..code after'. It gives controll on what gets generated and where it gets generated.",
       "webpageUrl": {
-        "url": "https://www.npmjs.com/package/overide",
-        "wellKnown": ""
+        "url": "https://github.com/oi-overide/oi/blob/main/funding.json"
       },
       "repositoryUrl": {
         "url": "https://github.com/oi-overide/oi",
@@ -33,7 +32,7 @@
     "channels": [
       {
         "guid": "personal-upi",
-        "type": "UPI",
+        "type": "payment-provider",
         "address": "abhijeetdash1999-1@okhdfcbank",
         "description": "Since this is public repo, not adding bank account number - upi instead. Email for any additional details."
       }
