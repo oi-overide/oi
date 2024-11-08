@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 // Loading JSON structure into a variable
 import { ChatCompletionMessageParam } from 'openai/resources';
 import promptStructure from '../../../assets/prompt.structure.json';
@@ -93,7 +95,7 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = insertionRequest.fileContent;
+      const codeContext = this.getCodeContext(insertionRequest.filePath);
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -138,7 +140,7 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = insertionRequest.fileContent;
+      const codeContext = this.getCodeContext(insertionRequest.filePath);
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -182,6 +184,12 @@ class SystemPromptServiceImpl extends SystemPromptService {
       // Add file line
       contextInformation.push('File : ');
       contextInformation.push(node.path);
+
+      if (node.functions.length === 0) {
+        const entireCode = fs.readFileSync(node.path, 'utf-8');
+        contextInformation.push(entireCode);
+        continue;
+      }
 
       // Add class and functions
       node.functions.forEach(func => {
