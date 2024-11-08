@@ -387,6 +387,9 @@ class ParserServiceImpl extends ParserService {
       return [];
     }
 
+    // Adding the current file details
+    adjNodes.push(currentNode);
+
     // Get all edges.
     for (const importstm of currentNode.imports) {
       // Get the fileName from the import.
