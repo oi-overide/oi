@@ -110,7 +110,7 @@ class Config extends OiCommand {
 
     if (enable) {
       // Check if chroma setup is complete.
-      await serviceScripts.installPython();
+      await serviceScripts.installChromadb();
     }
   }
 

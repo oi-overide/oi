@@ -70,6 +70,8 @@ class SystemPromptServiceImpl extends SystemPromptService {
         content: insertionRequest.prompt
       };
 
+      console.log(systemContent);
+
       return [systemMessage, userMessage] as ChatCompletionMessageParam[];
     } catch (error) {
       if (error instanceof Error) {

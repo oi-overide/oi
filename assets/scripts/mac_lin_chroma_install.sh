@@ -1,1 +1,0 @@
-//> Write a bash script to install cromadb using pip3 <//

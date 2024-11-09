@@ -16,7 +16,6 @@ import C from 'tree-sitter-c';
 import { extensionToLanguageMap } from '../models/model.language.map';
 import { ClassData, DependencyGraph, FunctionData } from '../models/model.depgraph';
 import utilCommandConfig from '../utilis/util.command.config';
-import serviceEmbeddings from './service.embeddings';
 
 abstract class ParserService {
   abstract generateIncrementalDepForFile(
@@ -329,7 +328,7 @@ class ParserServiceImpl extends ParserService {
     // Begin traversal from the root node
     traverseNode(tree.rootNode);
 
-    serviceEmbeddings.generateEmbeddingIfEnabled(functions);
+    // serviceEmbeddings.generateEmbeddingIfEnabled(functions);
 
     return {
       fileName,

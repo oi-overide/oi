@@ -83,12 +83,12 @@ class ProcessRequest {
     const metadata: OpenAiRequestObject = {
       model: 'gpt-4o', // Specify the model to use
       messages: messages,
-      temperature: 0.7, // Adjust temperature for creativity (lower = more deterministic)
+      temperature: 0.3, // Adjust temperature for creativity (lower = more deterministic)
       max_tokens: 1000, // Max tokens for the response
       n: 1, // Number of completions to generate
       stream: false, // Whether to stream results
-      presence_penalty: 0, // Adjusts frequency of introducing new ideas
-      frequency_penalty: 0 // Adjusts repetition
+      presence_penalty: 0.1, // Adjusts frequency of introducing new ideas
+      frequency_penalty: 0.1 // Adjusts repetition
     };
 
     // Construct the request body for OpenAI API
