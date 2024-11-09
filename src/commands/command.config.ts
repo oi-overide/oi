@@ -246,7 +246,7 @@ class Config extends OiCommand {
         }
       });
 
-      console.log('Following file will be watched :\n');
+      console.log('The following file will be watched:\n');
       const watching = serviceParser.getAllFilePaths(process.cwd(), config.ignore);
       console.log(watching);
     }
