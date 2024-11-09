@@ -1,9 +1,18 @@
+import fs from 'fs';
+import path from 'path';
+
 import { ConfigOption } from '../models/model.options';
-import { GlobalConfig, LocalConfig } from '../models/model.config';
+import {
+  GlobalConfig,
+  LocalConfig,
+  platformQuestions,
+  supportedPlatforms
+} from '../models/model.config';
 import CommandHelper from '../utilis/util.command.config';
 import OiCommand from './abstract.command';
 import { Command } from 'commander';
 import inquirer, { Question } from 'inquirer';
+import serviceParser from '../services/service.parser';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
@@ -25,38 +34,84 @@ class Config extends OiCommand {
     super(program); // Pass the program instance to the parent constructor
 
     // Define supported platforms and their respective configuration prompts
-    this.platforms = ['OpenAI', 'DeepSeek', 'Groq'];
+    this.platforms = supportedPlatforms;
 
     // Configuration questions for each platform (OpenAI, DeepSeek, Groq)
-    this.platformQuestions = {
-      openai: [
-        { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
-        { type: 'input', name: 'orgId', message: 'Enter your Organization ID:' }
-      ],
-      deepseek: [
-        { type: 'input', name: 'apiKey', message: 'Enter your API key:' },
-        { type: 'input', name: 'baseUrl', message: 'Enter the BaseUrl to use:' }
-      ],
-      groq: [{ type: 'input', name: 'apiKey', message: 'Enter your Groq API key:' }]
-    };
+    this.platformQuestions = platformQuestions;
   }
 
   configureCommand(): void {
     const configCommand = this.program
       .command('config')
-      .description('Update Local or Global settings')
-      .option('-n, --project-name <name>', 'Update project name')
-      .option('-i, --ignore <files...>', 'Specify files or directories to ignore')
-      .option('-g, --global', 'Set global variable like API keys and org IDs')
-      .option('-sa, --set-active', 'Set active');
+      .description('Update Local or Global settings');
 
-    // Add common options like verbose mode
-    this.addCommonOptions(configCommand);
+    configCommand
+      .command('local') // Sub-command for local configuration
+      .description('Local configuration options')
+      .option('-i, --ignore <files...>', 'Ignore specific files or directories')
+      .option('-pa, --parse', 'Installs tree-sitter parsers')
+      .option('-n, --name <name>', 'Set project name')
+      .action(async options => {
+        // Ensure that required directories exist
+        await CommandHelper.makeRequiredDirectories();
 
-    // Define further specific command configurations, if any
-    configCommand.action((options: ConfigOption) => {
-      this.config(options);
-    });
+        if (Object.keys(options).length === 0) {
+          configCommand.outputHelp();
+        } else {
+          if (options.parse) {
+            await this.generateDependencyGraph(options.verbose);
+          } else {
+            await this.handleLocalConfig(options);
+          }
+        }
+      });
+
+    configCommand
+      .command('global') // Sub-command for global configuration
+      .description('Global configuration options')
+      .option('-p, --platform', 'Set global variable like API keys and org IDs')
+      .option('-sa, --set-active', 'Select active platform')
+      .action(async options => {
+        // Ensure that required directories exist
+        await CommandHelper.makeRequiredDirectories();
+
+        if (Object.keys(options).length === 0) {
+          configCommand.outputHelp();
+        }
+        if (options.platform) {
+          await this.handleAddActivePlatform();
+        }
+        if (options.setActive) {
+          await this.handleChangeActivePlatform();
+        }
+      });
+  }
+
+  async generateDependencyGraph(verbose: boolean = false): Promise<void> {
+    try {
+      console.log('Generating dependency graphs...');
+      // Get the current directory
+      const currentDir = process.cwd();
+
+      // Get the ignore list from the oi-config.json file
+      const config: LocalConfig = CommandHelper.readConfigFileData() as LocalConfig;
+      const ignoreList = config.ignore || [];
+
+      // Generate dependency graphs for all files in the current directory
+      const dependencyGraphs = await serviceParser.generateDependencyGraph(
+        currentDir,
+        ignoreList,
+        verbose
+      );
+
+      // Write the dependency graphs to a file
+      fs.writeFileSync(
+        path.join(currentDir, 'oi-dependency.json'),
+        JSON.stringify(dependencyGraphs, null, 2)
+      );
+    } catch (error) {
+      console.error('Failed to generate dependency graph:', error);
+    }
   }
 
   // Method to handle switching the active platform
@@ -119,7 +174,7 @@ class Config extends OiCommand {
   }
 
   // Handle the global configuration process
-  async handleGlobalConfig(verbose = false): Promise<void> {
+  async handleAddActivePlatform(): Promise<void> {
     // Prompt the user to choose which platform they want to configure
     const { platform } = await inquirer.prompt([
       {
@@ -135,9 +190,6 @@ class Config extends OiCommand {
 
     // Get platform-specific answers from the user
     const answers = await this.promptPlatformConfig(platformName);
-
-    // Get the path to the global configuration file
-    const configFilePath = CommandHelper.getConfigFilePath(true);
 
     // Check if a global config file already exists, if not initialize an empty config
     const existingConfig = CommandHelper.configExists(true)
@@ -156,14 +208,7 @@ class Config extends OiCommand {
     // Save the updated global configuration
     await CommandHelper.writeConfigFileData(true, updatedConfig);
 
-    // Verbose logging to indicate whether the config was created or updated
-    if (verbose) {
-      console.log(
-        `${CommandHelper.configExists(true) ? 'Updated' : 'Created'} config at: ${configFilePath}`
-      );
-    }
-
-    console.log('Run `overide config -sa` to select active platform');
+    console.log('Run `overide config  -sa | --set-active` to select active platform');
   }
 
   // Handle the local configuration for the project
@@ -173,8 +218,17 @@ class Config extends OiCommand {
 
     // Check if the local configuration file exists
     if (!CommandHelper.configExists()) {
-      console.error('Local config (oi-config.json) not found.');
+      console.error(
+        'Local config (oi-config.json) not found. Run `overide init` to initialize the project.'
+      );
       process.exit(1); // Exit if the local config is not found
+    }
+
+    if (!CommandHelper.dependencyFileExists()) {
+      console.error(
+        'Dependency file (oi-dependency.json) not found. Run `overide init` to initialize the project.'
+      );
+      process.exit(1); // Exit if the dependency file is not found
     }
 
     // Read the local configuration
@@ -191,36 +245,20 @@ class Config extends OiCommand {
           }
         }
       });
+
+      console.log('The following file will be watched:\n');
+      const watching = serviceParser.getAllFilePaths(process.cwd(), config.ignore);
+      console.log(watching);
     }
 
     // Update the project name if provided in options
-    if (options.projectName) {
-      config.projectName = options.projectName;
+    if (options.name) {
+      config.projectName = options.name;
     }
 
     // Save the updated local configuration
     await CommandHelper.writeConfigFileData(false, config);
     console.log('Local config updated successfully.');
-  }
-
-  // Main config handler that determines whether global or local config should be updated
-  async config(options: ConfigOption): Promise<void> {
-    // Ensure that required directories exist
-    // await Directo.makeRequiredDirectories();
-    await CommandHelper.makeRequiredDirectories();
-
-    // Handle switching the active platform if the `setActive` option is provided
-    if (options.setActive) {
-      this.handleChangeActivePlatform();
-      return;
-    }
-
-    // Handle global or local configuration based on the provided options
-    if (options.global) {
-      await this.handleGlobalConfig(options.verbose);
-    } else {
-      await this.handleLocalConfig(options);
-    }
   }
 }
 

@@ -5,6 +5,9 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
+import { DependencyGraph, FileContents } from '../models/model.depgraph';
+import serviceParser from '../services/service.parser';
+// import serviceParser from '../services/service.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -18,6 +21,9 @@ import { LocalConfig } from '../models/model.config';
  * - Catch and handle any errors during the watch process.
  */
 class Start extends OiCommand {
+  // Stores the contents of all files in the project
+  private fileContents: FileContents[] = [];
+  private dependencyGraph: DependencyGraph[] | null = [];
   private watcher: FSWatcher | null = null;
 
   /**
@@ -29,6 +35,9 @@ class Start extends OiCommand {
       .command('start')
       .description('Start watching files for prompt changes');
     this.addCommonOptions(startCommand); // Add common options such as --verbose
+
+    // Load the dependency graph from the oi-dependency.json file
+    this.dependencyGraph = configCommandUtil.loadDependencyGraph() as DependencyGraph[] | null;
 
     startCommand.action((options: StartOption) => this.startWatch(options));
   }
@@ -59,14 +68,14 @@ class Start extends OiCommand {
         persistent: true,
         usePolling: true,
         interval: 100,
-        ignored: ignoredFiles,
+        ignored: file => ignoredFiles.some(ignoredFile => file.includes(ignoredFile)),
         ignoreInitial: true
       });
 
       // start watching the files.
       this.watcher
         .on('add', (filePath: string) => this.onAdd(filePath, verbose))
-        .on('change', (filePath: string) => this.onFileChanged(filePath, verbose))
+        .on('change', (filePath: string) => this.onFileChanged(filePath, ignoredFiles, verbose))
         .on('unlink', (filePath: string) => this.onUnlink(filePath, verbose))
         .on('error', err => this.onError(err, verbose))
         .on('ready', () => this.onReady(verbose));
@@ -81,10 +90,21 @@ class Start extends OiCommand {
     }
   }
 
-  async onFileChanged(filePath: string, verbose: boolean | undefined): Promise<void> {
+  async onFileChanged(
+    filePath: string,
+    ignoreFiles: string[],
+    verbose: boolean | undefined
+  ): Promise<void> {
     if (verbose) {
       console.log(`File ${filePath} has been changed`);
     }
+
+    // Check if the dependency graph is empty
+    serviceParser.generateIncrementalDepForFile(filePath, ignoreFiles, verbose);
+    if (verbose) {
+      console.log('Dependency graph updated...');
+    }
+
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);
   }
 
@@ -105,6 +125,8 @@ class Start extends OiCommand {
       console.log('Watcher is ready and scanning for changes');
     }
   }
+
+  //> Write a function to print hello world <//
 }
 
 export default Start;
