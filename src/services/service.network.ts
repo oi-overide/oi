@@ -60,7 +60,6 @@ class NetworkServiceImpl extends NetworkService {
     }
 
     const platform = activeServiceDetails.platform;
-    throw new Error('No valid model or platform selected.');
 
     // Handle requests based on the selected platform
     switch (platform) {
