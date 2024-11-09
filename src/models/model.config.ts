@@ -1,5 +1,6 @@
 export interface LocalConfig {
   projectName: string;
+  embeddingEnabled: boolean;
   ignore: string[];
 }
 

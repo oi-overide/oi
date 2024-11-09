@@ -8,11 +8,13 @@ import {
   platformQuestions,
   supportedPlatforms
 } from '../models/model.config';
-import CommandHelper from '../utilis/util.command.config';
-import OiCommand from './abstract.command';
 import { Command } from 'commander';
 import inquirer, { Question } from 'inquirer';
+
 import serviceParser from '../services/service.parser';
+import serviceScripts from '../services/service.scripts';
+import CommandHelper from '../utilis/util.command.config';
+import OiCommand from './abstract.command';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
@@ -42,49 +44,74 @@ class Config extends OiCommand {
 
   configureCommand(): void {
     const configCommand = this.program
+      .name('overide')
       .command('config')
       .description('Update Local or Global settings');
 
-    configCommand
+    const local = configCommand
       .command('local') // Sub-command for local configuration
       .description('Local configuration options')
+      .usage('overide local [options]')
       .option('-i, --ignore <files...>', 'Ignore specific files or directories')
       .option('-pa, --parse', 'Installs tree-sitter parsers')
       .option('-n, --name <name>', 'Set project name')
-      .action(async options => {
-        // Ensure that required directories exist
-        await CommandHelper.makeRequiredDirectories();
+      .option('-emd, --enable-embedding <enable>', 'Enable usage of Vector Embedding');
 
-        if (Object.keys(options).length === 0) {
-          configCommand.outputHelp();
+    local.action(async options => {
+      // Ensure that required directories exist
+      await CommandHelper.makeRequiredDirectories();
+
+      if (Object.keys(options).length === 0) {
+        local.outputHelp();
+      } else {
+        if (options.parse) {
+          await this.generateDependencyGraph(options.verbose);
+        } else if (options.enableEmbedding) {
+          console.log(options);
+          await this.handleEnableEmbeddings(options.enableEmbedding);
         } else {
-          if (options.parse) {
-            await this.generateDependencyGraph(options.verbose);
-          } else {
-            await this.handleLocalConfig(options);
-          }
+          await this.handleLocalConfig(options);
         }
-      });
+      }
+    });
 
-    configCommand
+    const global = configCommand
       .command('global') // Sub-command for global configuration
       .description('Global configuration options')
       .option('-p, --platform', 'Set global variable like API keys and org IDs')
-      .option('-sa, --set-active', 'Select active platform')
-      .action(async options => {
-        // Ensure that required directories exist
-        await CommandHelper.makeRequiredDirectories();
+      .option('-sa, --set-active', 'Select active platform');
 
-        if (Object.keys(options).length === 0) {
-          configCommand.outputHelp();
-        }
-        if (options.platform) {
-          await this.handleAddActivePlatform();
-        }
-        if (options.setActive) {
-          await this.handleChangeActivePlatform();
-        }
-      });
+    global.action(async options => {
+      // Ensure that required directories exist
+      await CommandHelper.makeRequiredDirectories();
+
+      if (Object.keys(options).length === 0) {
+        global.outputHelp();
+      }
+      if (options.platform) {
+        await this.handleAddActivePlatform();
+      } else if (options.setActive) {
+        await this.handleChangeActivePlatform();
+      }
+    });
+  }
+
+  async handleEnableEmbeddings(enable: boolean): Promise<void> {
+    // Read the local configuration
+    const config: LocalConfig = (await CommandHelper.readConfigFileData()) as LocalConfig;
+    // Update the embedding value.
+    const updateConfig: LocalConfig = {
+      projectName: config.projectName,
+      embeddingEnabled: enable,
+      ignore: config.ignore
+    };
+    // Save the updated local configuration
+    CommandHelper.writeConfigFileData(false, updateConfig as LocalConfig);
+
+    if (enable) {
+      // Check if chroma setup is complete.
+      await serviceScripts.installPython();
+    }
   }
 
   async generateDependencyGraph(verbose: boolean = false): Promise<void> {

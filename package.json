@@ -24,6 +24,8 @@
   "license": "GPL-2.0",
   "dependencies": {
     "chokidar": "^4.0.0",
+    "chromadb": "^1.9.2",
+    "chromadb-default-embed": "^2.13.2",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "fast-cosine-similarity": "^1.2.2",

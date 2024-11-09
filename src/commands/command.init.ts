@@ -146,6 +146,7 @@ class Initialize extends OiCommand {
       // Create the configuration object for the project
       const config: LocalConfig = {
         projectName: projectName,
+        embeddingEnabled: false,
         ignore: combinedIgnoreFiles
       };
 

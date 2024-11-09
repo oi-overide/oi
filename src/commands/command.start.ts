@@ -7,7 +7,6 @@ import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
 import { DependencyGraph, FileContents } from '../models/model.depgraph';
 import serviceParser from '../services/service.parser';
-// import serviceParser from '../services/service.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -125,8 +124,6 @@ class Start extends OiCommand {
       console.log('Watcher is ready and scanning for changes');
     }
   }
-
-  //> Write a function to print hello world <//
 }
 
 export default Start;
