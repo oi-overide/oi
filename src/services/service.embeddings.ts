@@ -36,19 +36,24 @@ class EmbeddingServiceImpl extends EmbeddingService {
 
   // Add records from the dependency graph.
   async saveVectorRecord(functions: FunctionData[]): Promise<void> {
+    this.client.heartbeat();
     // Get the project name.
     const projectName = await this.getProjectName();
     const collection = await this.client.createCollection({
-      name: projectName
+      name: projectName,
+      metadata: {
+        description: 'My project collection'
+      }
     });
+    this.client.listCollections();
 
-    const stringFunctions = this.stringifyFunctions(functions);
+    // const stringFunctions = this.stringifyFunctions(functions);
 
-    // Save the record.
-    await collection.add({
-      documents: stringFunctions,
-      ids: ['id1', 'id2']
-    });
+    // // Save the record.
+    // await collection.add({
+    //   documents: stringFunctions,
+    //   ids: ['id1', 'id2']
+    // });
   }
 
   // Get similar record to user prompt.

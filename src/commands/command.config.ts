@@ -116,7 +116,14 @@ class Config extends OiCommand {
 
   async generateDependencyGraph(verbose: boolean = false): Promise<void> {
     try {
+      // Loca the local config.
+      const localConfig = CommandHelper.readConfigFileData() as LocalConfig;
       console.log('Generating dependency graphs...');
+
+      if (localConfig.embeddingEnabled) {
+        // serviceScripts.startChromaServer();
+      }
+
       // Get the current directory
       const currentDir = process.cwd();
 

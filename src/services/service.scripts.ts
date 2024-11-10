@@ -5,9 +5,13 @@ import { spawn } from 'child_process';
 abstract class ScriptService {}
 
 class ScriptServiceImpl extends ScriptService {
-  permissionCommand = 'chmod +x';
-  macLinChromaInstallScriptPath = path.resolve(__dirname, '../assets/scripts/chroma.sh');
-  winChromaInstallScriptPath = path.resolve(__dirname, '../assets/scripts/chroma.ps1'); // Assuming a PowerShell script for Windows
+  private permissionCommand = 'chmod +x';
+  private macLinChromaInstallScriptPath = path.resolve(__dirname, '../assets/scripts/chroma.sh');
+  private winChromaInstallScriptPath = path.resolve(__dirname, '../assets/scripts/chroma.ps1');
+  private macLinStartChromaScriptPath = path.resolve(
+    __dirname,
+    '../assets/scripts/start.chroma.sh'
+  );
 
   private async executeScript(command: string, args: string[]): Promise<void> {
     try {
@@ -77,6 +81,22 @@ class ScriptServiceImpl extends ScriptService {
         'Please make sure pip is installed.\n You can also run `pip install chromadb` or  `pip3 install chromadb`. Make sure the command -> chroma is available globally.'
       );
       console.error(e); // Log the actual error for debugging purposes
+    }
+  }
+
+  async startChromaServer(): Promise<void> {
+    // Second command: run the install script directly using `sh` for macOS/Linux or `powershell.exe` for Windows
+    const command = process.platform === 'win32' ? this.winChromaInstallScriptPath : 'sh';
+    const args = process.platform === 'win32' ? [] : [this.macLinStartChromaScriptPath];
+
+    // Try starting the server.
+    try {
+      await this.executeScript(command, args);
+      return;
+    } catch (e) {
+      if (e instanceof Error) {
+        this.installChromadb();
+      }
     }
   }
 }
