@@ -160,10 +160,20 @@ class ConfigCommandUtil {
    * @returns {ActivePlatformDetails | null} An object containing the active platform's name and configuration details,
    * or `null` if no platform is marked as active.
    */
-  getActiveServiceDetails(): ActivePlatformDetails | null {
+  getActiveServiceDetails(isEmbedding: boolean = false): ActivePlatformDetails | null {
     const globalConfig = this.readConfigFileData(true) as GlobalConfig;
+
     for (const platform in globalConfig) {
-      const platformConfig = globalConfig[platform] as GlobalPlatformInfo;
+      let platformConfig = globalConfig[platform] as GlobalPlatformInfo;
+      if (isEmbedding) {
+        const platformName = 'openai';
+        platformConfig = globalConfig[platformName] as GlobalPlatformInfo;
+        const activePlatformDetails: ActivePlatformDetails = {
+          platform: platform,
+          platformConfig: platformConfig
+        };
+        return activePlatformDetails;
+      }
       if (platformConfig.isActive) {
         const activePlatformDetails: ActivePlatformDetails = {
           platform: platform,

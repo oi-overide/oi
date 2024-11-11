@@ -46,8 +46,11 @@ class Initialize extends OiCommand {
     `);
     console.log('Overide Project initialized!');
     console.log('\nNext steps:');
-    console.log("1. Use 'overide config -g' to define the API KEYs, BASE URLs and Platforms");
+    console.log(
+      "1. Use 'overide config global -p | --platform' to define the API KEYs, BASE URLs and Platforms"
+    );
     console.log("2. Run 'overide start' to start getting code suggestions.");
+    console.log("3. Run 'overide config -e' to enable embeddings based context.");
   }
 
   /**
@@ -146,6 +149,7 @@ class Initialize extends OiCommand {
       // Create the configuration object for the project
       const config: LocalConfig = {
         projectName: projectName,
+        embedding: false,
         ignore: combinedIgnoreFiles
       };
 

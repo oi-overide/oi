@@ -14,10 +14,16 @@ export interface ClassData {
   embeddings?: number[]; // The embedding can be optional.
 }
 
+export interface GlobalData {
+  code: string;
+  embeddings?: number[];
+}
+
 export interface DependencyGraph {
   fileName: string;
   path: string;
   imports: string[];
+  globals: GlobalData[];
   classes: ClassData[];
   functions: FunctionData[]; // Adding a separate array for top-level functions
 }

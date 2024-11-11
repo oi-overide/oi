@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+
 import Parser, { SyntaxNode } from 'tree-sitter'; // Import the Tree-sitter parser
 
 // Loading the required Tree-sitter language modules
@@ -14,8 +15,11 @@ import CSharp from 'tree-sitter-c-sharp';
 import C from 'tree-sitter-c';
 
 import { extensionToLanguageMap } from '../models/model.language.map';
-import { ClassData, DependencyGraph, FunctionData } from '../models/model.depgraph';
+import { ClassData, DependencyGraph, FunctionData, GlobalData } from '../models/model.depgraph';
 import utilCommandConfig from '../utilis/util.command.config';
+import serviceNetwork from './service.network';
+import CommandHelper from '../utilis/util.command.config';
+import { ActivePlatformDetails } from '../models/model.config';
 
 abstract class ParserService {
   abstract generateIncrementalDepForFile(
@@ -34,6 +38,15 @@ abstract class ParserService {
 
 // Implementation for ParserService
 class ParserServiceImpl extends ParserService {
+  activePlatformDetails?: ActivePlatformDetails;
+
+  constructor() {
+    super();
+    this.activePlatformDetails = CommandHelper.getActiveServiceDetails(
+      true
+    ) as ActivePlatformDetails;
+  }
+
   // Identify programming language based on file extension
   identifyLanguageByExtension(filePath: string): string | undefined {
     const extension = path.extname(filePath);
@@ -122,7 +135,7 @@ class ParserServiceImpl extends ParserService {
     if (parser) {
       const fileContent = fs.readFileSync(filePath, 'utf8');
       const tree = parser.parse(fileContent);
-      return this.extractDependencyData(filePath, fileContent, tree);
+      return this.extractDependencyData(filePath, tree);
     }
 
     return null;
@@ -192,10 +205,14 @@ class ParserServiceImpl extends ParserService {
   async generateDependencyGraph(
     directory: string,
     ignoreList: string[] = [],
+    isEmbedding: boolean = false,
     verbose: boolean = false
   ): Promise<DependencyGraph[]> {
     const filePaths = this.getAllFilePaths(directory, ignoreList, verbose);
     const dependencyGraphs: DependencyGraph[] = [];
+    let embeddingServiceDetails: ActivePlatformDetails = CommandHelper.getActiveServiceDetails(
+      true
+    ) as ActivePlatformDetails;
 
     for (const filePath of filePaths) {
       const language = this.identifyLanguageByExtension(filePath);
@@ -213,7 +230,15 @@ class ParserServiceImpl extends ParserService {
         if (parser) {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           const tree = parser.parse(fileContent);
-          const dependencyGraph = this.extractDependencyData(filePath, fileContent, tree);
+          let dependencyGraph = this.extractDependencyData(filePath, tree);
+
+          if (isEmbedding && embeddingServiceDetails) {
+            dependencyGraph = await this.getCodeEmbeddings(
+              dependencyGraph,
+              embeddingServiceDetails
+            );
+          }
+
           dependencyGraphs.push(dependencyGraph);
         }
       } catch (error) {
@@ -287,36 +312,55 @@ class ParserServiceImpl extends ParserService {
    * @param {string} language - The language of the file.
    * @returns {DependencyGraph} - The dependency graph for the file.
    */
-  private extractDependencyData(
-    filePath: string,
-    fileContent: string,
-    tree: Parser.Tree
-  ): DependencyGraph {
+  private extractDependencyData(filePath: string, tree: Parser.Tree): DependencyGraph {
     const fileName = path.basename(filePath);
     const imports: string[] = [];
     const classes: ClassData[] = [];
+    const globals: GlobalData[] = [];
     const functions: FunctionData[] = [];
 
     const traverseNode = (node: SyntaxNode, currentClass: string | null = null): void => {
       // Direct checks for import, class, and function nodes
       if (node.isNamed) {
         switch (node.type) {
+          // Combine import statements for different languages
           case 'import_statement':
+          case 'preproc_include': // C/C++ #include
+          case 'import_from_statement': // Python's `from ... import ...`
+          case 'require_statement': // Ruby `require ...`
+          case 'using_directive': // C# `using ...`
             imports.push(node.text);
             break;
-          case 'class_declaration':
+
+          // Combine class declarations for different languages
+          case 'class_definition': // Python
+          case 'class_declaration': // Java, JavaScript, TypeScript, C#
+          case 'class': // Ruby `class ... end`
+          case 'struct_declaration': // Go's struct as class
             const classData = this.extractClassData(node);
-
-            // Assigning the class name to the current class
             currentClass = classData.className;
-            // Add the class to the list.
-
             classes.push(classData);
             break;
-          case 'method_definition':
-          case 'function_declaration':
-          case 'function_definition':
-            functions.push(this.extractFunctionData(node, fileContent, currentClass));
+
+          // Combine function declarations for different languages
+          case 'function_declaration': // JavaScript, TypeScript, Go
+          case 'method_declaration': // Java, C#, C++ (methods)
+          case 'function_definition': // C, C++, Go, Python
+          case 'method_definition': // Ruby methods `def ... end`
+            functions.push(this.extractFunctionData(node, currentClass));
+            break;
+
+          // Global Code (any code outside of classes/functions)
+          default:
+            console.log(node.parent?.type);
+            // If node is not part of class or function, it's global code
+            if (
+              node.type === 'expression_statement' &&
+              node.parent &&
+              (node.parent.type === 'program' || node.parent.type === 'module')
+            ) {
+              globals.push({ code: node.text });
+            }
             break;
         }
       }
@@ -332,9 +376,31 @@ class ParserServiceImpl extends ParserService {
       fileName,
       path: filePath,
       imports,
+      globals,
       classes,
       functions
     };
+  }
+
+  async getCodeEmbeddings(
+    graph: DependencyGraph,
+    embeddingServiceDetails: ActivePlatformDetails
+  ): Promise<DependencyGraph> {
+    try {
+      // Get the dependency graph.
+      for (const functions of graph.functions) {
+        functions.embeddings = await serviceNetwork.getCodeEmbedding(
+          functions.code,
+          embeddingServiceDetails
+        );
+      }
+      return graph;
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(e);
+      }
+      throw e;
+    }
   }
 
   /**
@@ -361,11 +427,10 @@ class ParserServiceImpl extends ParserService {
    */
   private extractFunctionData(
     functionNode: Parser.SyntaxNode,
-    fileContent: string,
     className: string | null
   ): FunctionData {
-    const code = fileContent.slice(functionNode.startIndex, functionNode.endIndex);
-    return { class: className || 'Global', code, embeddings: [] };
+    const code = functionNode.text;
+    return { class: className || '', code, embeddings: [] };
   }
 
   buildContextGraph(filePath: string): DependencyGraph[] {
