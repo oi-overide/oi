@@ -143,11 +143,13 @@ class Config extends OiCommand {
       // Get the ignore list from the oi-config.json file
       const config: LocalConfig = CommandHelper.readConfigFileData() as LocalConfig;
       const ignoreList = config.ignore || [];
+      const embedding = config.embedding;
 
       // Generate dependency graphs for all files in the current directory
       const dependencyGraphs = await serviceParser.generateDependencyGraph(
         currentDir,
         ignoreList,
+        embedding,
         verbose
       );
 

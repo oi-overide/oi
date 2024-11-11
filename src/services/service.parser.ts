@@ -38,15 +38,6 @@ abstract class ParserService {
 
 // Implementation for ParserService
 class ParserServiceImpl extends ParserService {
-  activePlatformDetails?: ActivePlatformDetails;
-
-  constructor() {
-    super();
-    this.activePlatformDetails = CommandHelper.getActiveServiceDetails(
-      true
-    ) as ActivePlatformDetails;
-  }
-
   // Identify programming language based on file extension
   identifyLanguageByExtension(filePath: string): string | undefined {
     const extension = path.extname(filePath);
@@ -214,6 +205,8 @@ class ParserServiceImpl extends ParserService {
       true
     ) as ActivePlatformDetails;
 
+    console.log(embeddingServiceDetails);
+
     for (const filePath of filePaths) {
       const language = this.identifyLanguageByExtension(filePath);
 
@@ -352,7 +345,6 @@ class ParserServiceImpl extends ParserService {
 
           // Global Code (any code outside of classes/functions)
           default:
-            console.log(node.parent?.type);
             // If node is not part of class or function, it's global code
             if (
               node.type === 'expression_statement' &&
@@ -382,6 +374,13 @@ class ParserServiceImpl extends ParserService {
     };
   }
 
+  /**
+   * Generates Embeddings for the give dependency graph.
+   *
+   * @param graph - The dependency graph node.
+   * @param embeddingServiceDetails - Platform details for OpenAI.
+   * @returns - Updated dependency graph node with embeddings.
+   */
   async getCodeEmbeddings(
     graph: DependencyGraph,
     embeddingServiceDetails: ActivePlatformDetails
@@ -433,6 +432,12 @@ class ParserServiceImpl extends ParserService {
     return { class: className || '', code, embeddings: [] };
   }
 
+  /**
+   * Finds the nearest relative node to the given one.
+   *
+   * @param filePath The center node for which to find dependency.
+   * @returns returns the list of nodes (DependencyGraph[]) which are nearest relative.
+   */
   buildContextGraph(filePath: string): DependencyGraph[] {
     // Load the dependency graph
     const depgraph: DependencyGraph[] | null = utilCommandConfig.loadDependencyGraph();

@@ -19,6 +19,11 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 abstract class NetworkService {
+  abstract getCodeEmbedding(
+    codeSnippet: string,
+    activeServiceDetails: ActivePlatformDetails
+  ): Promise<number[]>;
+
   abstract doRequest(requestData: GeneralRequestObject): Promise<string>;
 
   abstract handleOpenAIRequest(
@@ -56,9 +61,15 @@ class NetworkServiceImpl extends NetworkService {
     try {
       const { apiKey, orgId } = activeServiceDetails.platformConfig;
       const openai = new OpenAI.OpenAI({ apiKey, organization: orgId });
+
+      // Logs
+      console.log('Getting embds');
+      console.log(activeServiceDetails.platform);
+      console.log(activeServiceDetails.platformConfig.apiKey);
+
       // Call the OpenAI API to get embeddings
       const response = await openai.embeddings.create({
-        model: 'text-embedding-ada-002', // Choose the embedding model
+        model: 'text-embedding-3-small', // Choose the embedding model
         input: codeSnippet // The input text (code snippet)
       });
 

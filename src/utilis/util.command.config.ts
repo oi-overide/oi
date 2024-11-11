@@ -169,17 +169,20 @@ class ConfigCommandUtil {
         const platformName = 'openai';
         platformConfig = globalConfig[platformName] as GlobalPlatformInfo;
         const activePlatformDetails: ActivePlatformDetails = {
-          platform: platform,
+          platform: platformName,
           platformConfig: platformConfig
         };
+
+        console.log(activePlatformDetails);
         return activePlatformDetails;
-      }
-      if (platformConfig.isActive) {
-        const activePlatformDetails: ActivePlatformDetails = {
-          platform: platform,
-          platformConfig: platformConfig
-        };
-        return activePlatformDetails;
+      } else {
+        if (platformConfig.isActive) {
+          const activePlatformDetails: ActivePlatformDetails = {
+            platform: platform,
+            platformConfig: platformConfig
+          };
+          return activePlatformDetails;
+        }
       }
     }
     return null;
