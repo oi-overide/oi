@@ -8,6 +8,7 @@ import {
   LocalConfig
 } from '../models/model.config';
 import { DependencyGraph } from '../models/model.depgraph';
+import express from 'express';
 
 /**
  * The `DirectoryHelper` class is responsible for managing configuration files and directories
@@ -186,6 +187,51 @@ class ConfigCommandUtil {
       }
     }
     return null;
+  }
+
+  /**
+   * Shows a 3d-visualization of the dependency graph.
+   * Nothing useful - just a cool thing to have.
+   */
+  async showGraphInSpace(): Promise<void> {
+    const open = (await import('open')).default; // Dynamic import for ES module
+    const app = express();
+
+    // Path to the assets directory (assuming assets are in the root of the project)
+    const assetsPath = path.join(__dirname, '..', 'assets'); // Go up one level from dist to get to src/assets
+
+    // Serve the graph.html from the assets folder
+    app.get('/', (req, res) => {
+      const graphFilePath = path.join(assetsPath, 'graph.html');
+      console.log(graphFilePath);
+      res.sendFile(graphFilePath);
+    });
+
+    // Serve static files (like JS, CSS) from the assets folder
+    app.use(express.static(assetsPath));
+
+    // Serve the oi-dependency.json from the root directory
+    app.get('/dependency-graph', (req, res) => {
+      const dependencyGraphPath = path.join(__dirname, '..', 'oi-dependency.json');
+      fs.readFile(dependencyGraphPath, 'utf-8', (err, data) => {
+        if (err) {
+          res.status(500).send('Error loading dependency graph');
+          return;
+        }
+        res.json(JSON.parse(data));
+      });
+    });
+
+    // Start the server
+    const port = 3000;
+    app.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}`);
+
+      // Automatically open the browser
+      open(`http://localhost:${port}`)
+        .then(() => console.log('Browser opened automatically.'))
+        .catch(err => console.error('Error opening browser:', err));
+    });
   }
 }
 

@@ -44,6 +44,7 @@ class Config extends OiCommand {
     const configCommand = this.program
       .command('config')
       .option('-e, --embedding', 'Enables embedding support')
+      .option('-g, --graph', 'Show dependency graph in 3d space')
       .description('Update Local or Global settings');
 
     const localConfig = configCommand
@@ -64,6 +65,9 @@ class Config extends OiCommand {
     configCommand.action(async options => {
       if (Object.keys(options).length === 0) {
         configCommand.outputHelp();
+      }
+      if (options.graph) {
+        CommandHelper.showGraphInSpace();
       }
       if (options.embedding) {
         this.handleEmbeddingEnable();
