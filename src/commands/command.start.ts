@@ -7,6 +7,7 @@ import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
 import { DependencyGraph, FileContents } from '../models/model.depgraph';
 import serviceParser from '../services/service.parser';
+import { systemPromptServiceImpl } from '../services/service.prompts/service.system.prompt';
 // import serviceParser from '../services/service.parser';
 
 /**
@@ -25,6 +26,7 @@ class Start extends OiCommand {
   private fileContents: FileContents[] = [];
   private dependencyGraph: DependencyGraph[] | null = [];
   private watcher: FSWatcher | null = null;
+  hasDependencyGraph: boolean = true;
 
   /**
    * Configures the `start` command, adding it to the program with any
@@ -100,10 +102,15 @@ class Start extends OiCommand {
     }
 
     // Check if the dependency graph is empty
-    serviceParser.generateIncrementalDepForFile(filePath, ignoreFiles, verbose);
+    this.hasDependencyGraph = await serviceParser.generateIncrementalDepForFile(
+      filePath,
+      ignoreFiles,
+      verbose
+    );
     if (verbose) {
       console.log('Dependency graph updated...');
     }
+    systemPromptServiceImpl.setDependencyExists(this.hasDependencyGraph);
 
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);
   }
@@ -125,8 +132,6 @@ class Start extends OiCommand {
       console.log('Watcher is ready and scanning for changes');
     }
   }
-
-  //> Write a function to print hello world <//
 }
 
 export default Start;

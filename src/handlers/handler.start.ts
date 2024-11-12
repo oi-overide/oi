@@ -131,7 +131,7 @@ class StartCommandHandlerImpl extends StartCommandHandler {
 
       for (const insertionResponse of insertionResponses) {
         if (verbose) {
-          console.log(insertionResponse);
+          console.log(insertionResponse.insertionResponse);
         }
         // Handle the found prompt
         await this.handleFoundAcceptance(insertionResponse, verbose);
@@ -139,7 +139,7 @@ class StartCommandHandlerImpl extends StartCommandHandler {
 
       for (const insertionRequest of insertionRequests) {
         if (verbose) {
-          console.log(insertionRequest);
+          console.log(insertionRequest.prompt);
         }
         await this.handleFoundPrompt(insertionRequest, verbose);
       }

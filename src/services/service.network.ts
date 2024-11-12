@@ -62,11 +62,6 @@ class NetworkServiceImpl extends NetworkService {
       const { apiKey, orgId } = activeServiceDetails.platformConfig;
       const openai = new OpenAI.OpenAI({ apiKey, organization: orgId });
 
-      // Logs
-      console.log('Getting embds');
-      console.log(activeServiceDetails.platform);
-      console.log(activeServiceDetails.platformConfig.apiKey);
-
       // Call the OpenAI API to get embeddings
       const response = await openai.embeddings.create({
         model: 'text-embedding-3-small', // Choose the embedding model

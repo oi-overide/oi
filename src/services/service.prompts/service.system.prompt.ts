@@ -27,11 +27,25 @@ abstract class SystemPromptService {
 }
 
 class SystemPromptServiceImpl extends SystemPromptService {
+  private static instance: SystemPromptServiceImpl;
   private basePrompt: SystemPromptInfo;
+  private hasDependencyGraph: boolean;
 
   constructor() {
     super();
+    this.hasDependencyGraph = false;
     this.basePrompt = promptStructure;
+  }
+
+  public static getInstance(): SystemPromptServiceImpl {
+    if (!SystemPromptServiceImpl.instance) {
+      SystemPromptServiceImpl.instance = new SystemPromptServiceImpl();
+    }
+    return SystemPromptServiceImpl.instance;
+  }
+
+  setDependencyExists(value: boolean): void {
+    this.hasDependencyGraph = value;
   }
 
   /**
@@ -50,7 +64,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(insertionRequest.filePath);
+      const codeContext = this.getCodeContext(
+        insertionRequest.filePath,
+        insertionRequest.promptEmbedding ?? []
+      );
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -69,6 +86,8 @@ class SystemPromptServiceImpl extends SystemPromptService {
         role: 'user',
         content: insertionRequest.prompt
       };
+
+      console.log(`\nSYSTEM ${systemMessage.content}\n`);
 
       return [systemMessage, userMessage] as ChatCompletionMessageParam[];
     } catch (error) {
@@ -95,7 +114,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(insertionRequest.filePath);
+      const codeContext = this.getCodeContext(
+        insertionRequest.filePath,
+        insertionRequest.promptEmbedding ?? []
+      );
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -140,7 +162,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(insertionRequest.filePath);
+      const codeContext = this.getCodeContext(
+        insertionRequest.filePath,
+        insertionRequest.promptEmbedding ?? []
+      );
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -176,9 +201,16 @@ class SystemPromptServiceImpl extends SystemPromptService {
    *                      relevant to the user prompt.
    * @returns A formatted string that includes the first element of contextArray and the user prompt.
    */
-  private getCodeContext(filePath: string): string {
+  private getCodeContext(filePath: string, promptEmbd: number[]): string {
+    if (!this.hasDependencyGraph || promptEmbd.length === 0) {
+      return fs.readFileSync(filePath, 'utf-8');
+    }
+
     const contextGraph: DependencyGraph[] = serviceParser.buildContextGraph(filePath);
     const contextInformation: string[] = [];
+
+    const currentFile = fs.readFileSync(filePath, 'utf-8');
+    contextInformation.push(currentFile);
 
     for (const node of contextGraph) {
       // Add file line
@@ -196,8 +228,11 @@ class SystemPromptServiceImpl extends SystemPromptService {
         if (!contextInformation.includes(func.class)) {
           contextInformation.push(func.class);
         }
-
-        contextInformation.push(func.code);
+        // TODO : Check for similarity between embeddings.
+        const similarity = serviceParser.cosineSimilarity(promptEmbd, func.embeddings ?? []);
+        if (similarity >= 0.5) {
+          contextInformation.push(func.code);
+        }
       });
     }
 
@@ -219,4 +254,4 @@ class SystemPromptServiceImpl extends SystemPromptService {
   }
 }
 
-export default new SystemPromptServiceImpl();
+export const systemPromptServiceImpl = SystemPromptServiceImpl.getInstance();

@@ -1,5 +1,6 @@
 import cacheService from '../../services/service.cache';
 import { InsertionRequestInfo, InsertionResponseInfo } from '../../models/model.prompts';
+import serviceParser from '../service.parser';
 
 abstract class UserPromptService {
   // Regular expressions to match specific prompt types
@@ -110,12 +111,20 @@ class UserPromptServiceImpl extends UserPromptService {
       // Loop through each match and process it
       for (const match of promptMatches) {
         if (match[1]) {
+          const prompt = match[1].trim();
+
+          // Get embedding for current prompt.
+          const promptEmbedding = await serviceParser.getEmbeddingForPrompt(prompt, fileContent);
+
           // Add the insertion request to the list
           insertionRequests.push({
-            prompt: match[1].trim(),
+            prompt: prompt,
             filePath: filePath,
-            fileContent: fileContent
+            fileContent: fileContent,
+            promptEmbedding: promptEmbedding
           });
+
+          console.log(`INSERTION REQUEST ${insertionRequests}`);
         }
       }
 

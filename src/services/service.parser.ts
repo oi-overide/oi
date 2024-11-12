@@ -20,13 +20,14 @@ import utilCommandConfig from '../utilis/util.command.config';
 import serviceNetwork from './service.network';
 import CommandHelper from '../utilis/util.command.config';
 import { ActivePlatformDetails } from '../models/model.config';
+import serviceDev from './service.dev';
 
 abstract class ParserService {
   abstract generateIncrementalDepForFile(
     filePath: string,
     ignoreList: string[],
     verbose: boolean
-  ): Promise<void>;
+  ): Promise<boolean>;
   abstract identifyLanguageByExtension(filePath: string): string | undefined;
   abstract getAllFilePaths(directory: string, ignoreList: string[], verbose: boolean): string[];
   abstract generateDependencyGraph(
@@ -109,7 +110,7 @@ class ParserServiceImpl extends ParserService {
 
     if (!language) {
       if (verbose) console.log(`Language not identified for file: ${filePath}`);
-      return null;
+      throw new Error('UNSUP_LANG');
     }
 
     // Load the corresponding Tree-sitter parser for the identified language
@@ -142,7 +143,7 @@ class ParserServiceImpl extends ParserService {
     filePath: string,
     ignoreList: string[],
     verbose: boolean = false
-  ): Promise<void> {
+  ): Promise<boolean> {
     const dependencyFile = 'oi-dependency.json';
     let existingDependencies: DependencyGraph[] = [];
 
@@ -159,30 +160,39 @@ class ParserServiceImpl extends ParserService {
       if (verbose) {
         console.log(`Skipping ignored path: ${filePath}`); // Log ignored paths if verbose
       }
-      return;
+      return true;
     }
 
-    const newDependencyGraph = await this.getFileDependencyGraph(filePath, verbose);
+    try {
+      const newDependencyGraph = await this.getFileDependencyGraph(filePath, verbose);
 
-    if (newDependencyGraph) {
-      const index = existingDependencies.findIndex(dep => dep.path === filePath);
+      if (newDependencyGraph) {
+        const index = existingDependencies.findIndex(dep => dep.path === filePath);
 
-      if (index !== -1) {
-        // Update existing entry
-        existingDependencies[index] = newDependencyGraph;
-        if (verbose) console.log(`Updated dependency graph for file: ${filePath}`);
+        if (index !== -1) {
+          // Update existing entry
+          existingDependencies[index] = newDependencyGraph;
+          if (verbose) console.log(`Updated dependency graph for file: ${filePath}`);
+        } else {
+          // Add new entry
+          existingDependencies.push(newDependencyGraph);
+          if (verbose) console.log(`Added new dependency graph for file: ${filePath}`);
+        }
+
+        // Write updated dependencies back to file
+        fs.writeFileSync(dependencyFile, JSON.stringify(existingDependencies, null, 2));
+        if (verbose) console.log(`Dependency file updated at ${dependencyFile}`);
       } else {
-        // Add new entry
-        existingDependencies.push(newDependencyGraph);
-        if (verbose) console.log(`Added new dependency graph for file: ${filePath}`);
+        if (verbose) console.log(`Failed to generate dependency graph for file: ${filePath}`);
+        return false;
       }
-
-      // Write updated dependencies back to file
-      fs.writeFileSync(dependencyFile, JSON.stringify(existingDependencies, null, 2));
-      if (verbose) console.log(`Dependency file updated at ${dependencyFile}`);
-    } else {
-      if (verbose) console.log(`Failed to generate dependency graph for file: ${filePath}`);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'UNSUP_LANG') {
+        return false;
+      }
     }
+
+    return true;
   }
 
   /**
@@ -457,9 +467,6 @@ class ParserServiceImpl extends ParserService {
       return [];
     }
 
-    // Adding the current file details
-    adjNodes.push(currentNode);
-
     // Get all edges.
     for (const importstm of currentNode.imports) {
       // Get the fileName from the import.
@@ -483,6 +490,66 @@ class ParserServiceImpl extends ParserService {
     }
 
     return adjNodes;
+  }
+
+  /**
+   * Generates a contextual prompt and gets embeddings for that.
+   *
+   * @param {string} prompt - Prompt entered by the user
+   * @param fileContent  - File contents with the prompt.
+   * @returns {number[]} - Embeddings for the prompt
+   */
+  async getEmbeddingForPrompt(prompt: string, fileContent: string): Promise<number[]> {
+    const platformDetails = CommandHelper.getActiveServiceDetails(true);
+
+    if (!platformDetails) {
+      return [];
+    }
+
+    const fileLines = fileContent.split('\n');
+    const promptIndex = serviceDev.findMatchingIndex(fileLines, prompt.split('\n'));
+    const remainingLines = fileLines.length - promptIndex - 1;
+    let lastIndex = fileLines.length - 1;
+
+    if (remainingLines > 5) {
+      lastIndex = promptIndex + 5;
+    }
+
+    const finalPromtArry = [];
+
+    for (let i = promptIndex - 5; i < lastIndex; i++) {
+      finalPromtArry.push(fileLines[i]);
+    }
+
+    const promptString = finalPromtArry.join('\n');
+
+    console.log(promptString);
+
+    return await serviceNetwork.getCodeEmbedding(promptString, platformDetails);
+  }
+
+  /**
+   * Checks the similarity of two vector embeddings.
+   * @param vec1 - Embedding prompt
+   * @param vec2 - Embedding for the functions.
+   * @returns {number} - Similarity factor.
+   */
+  cosineSimilarity(vec1: number[], vec2: number[]): number {
+    if (vec1.length !== vec2.length) {
+      throw new Error('Vectors must be of the same length');
+    }
+
+    // Calculate the dot product safely
+    const dotProduct = vec1.reduce((sum, value, index) => sum + value * vec2[index]!, 0);
+
+    const normVec1 = Math.sqrt(vec1.reduce((sum, value) => sum + value * value, 0));
+    const normVec2 = Math.sqrt(vec2.reduce((sum, value) => sum + value * value, 0));
+
+    if (normVec1 === 0 || normVec2 === 0) {
+      throw new Error('Vectors must not be zero-vectors');
+    }
+
+    return dotProduct / (normVec1 * normVec2);
   }
 }
 

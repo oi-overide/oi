@@ -7,8 +7,8 @@ import {
   OpenAiRequestObject
 } from '../../models/model.request';
 
-import SystemPromptServiceImpl from '../../services/service.prompts/service.system.prompt';
 import CommandHelper from '../../utilis/util.command.config';
+import { systemPromptServiceImpl } from '../service.prompts/service.system.prompt';
 
 /**
  * The `FormatRequest` class is responsible for creating a dynamic request
@@ -74,7 +74,7 @@ class ProcessRequest {
     activeServiceDetails: ActivePlatformDetails,
     verbose: boolean
   ): Promise<GeneralRequestObject> {
-    const messages = await SystemPromptServiceImpl.getOpenAiSystemMessage(insertionRequest);
+    const messages = await systemPromptServiceImpl.getOpenAiSystemMessage(insertionRequest);
 
     if (verbose) {
       console.log(`Prompt Text : ${messages}`);
@@ -83,7 +83,7 @@ class ProcessRequest {
     const metadata: OpenAiRequestObject = {
       model: 'gpt-4o', // Specify the model to use
       messages: messages,
-      temperature: 0.7, // Adjust temperature for creativity (lower = more deterministic)
+      temperature: 0.5, // Adjust temperature for creativity (lower = more deterministic)
       max_tokens: 1000, // Max tokens for the response
       n: 1, // Number of completions to generate
       stream: false, // Whether to stream results
@@ -113,7 +113,7 @@ class ProcessRequest {
     verbose: boolean
   ): Promise<GeneralRequestObject> {
     // Getting the final prompt.
-    const messages = await SystemPromptServiceImpl.getDeepSeekSystemMessage(insertionRequest);
+    const messages = await systemPromptServiceImpl.getDeepSeekSystemMessage(insertionRequest);
 
     if (verbose) {
       console.log(`Prompt Text : ${messages}`);
@@ -147,7 +147,7 @@ class ProcessRequest {
     activeServiceDetails: ActivePlatformDetails,
     verbose: boolean
   ): Promise<GeneralRequestObject> {
-    const messages = await SystemPromptServiceImpl.getGroqSystemMessage(insertionRequest);
+    const messages = await systemPromptServiceImpl.getGroqSystemMessage(insertionRequest);
 
     if (verbose) {
       console.log(`Prompt Text : ${messages}`);
