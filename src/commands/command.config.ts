@@ -140,7 +140,6 @@ class Config extends OiCommand {
 
   async generateDependencyGraph(verbose: boolean = false): Promise<void> {
     try {
-      console.log('Generating dependency graphs...');
       // Get the current directory
       const currentDir = process.cwd();
 
@@ -149,11 +148,14 @@ class Config extends OiCommand {
       const ignoreList = config.ignore || [];
       const embedding = config.embedding;
 
+      if (!embedding) {
+        return;
+      }
+
       // Generate dependency graphs for all files in the current directory
       const dependencyGraphs = await serviceParser.generateDependencyGraph(
         currentDir,
         ignoreList,
-        embedding,
         verbose
       );
 

@@ -128,12 +128,6 @@ class Initialize extends OiCommand {
         console.log(`Project name: ${projectName}`);
       }
 
-      // Check if the project has already been initialized (config file exists)
-      if (fs.existsSync(outputPath)) {
-        console.log(`Already initialized overide in project..`);
-        process.exit(1);
-      }
-
       // Default ignore files, including config and dependency files, and common directories
       const defaultIgnoreFiles = [
         'oi-config.json',

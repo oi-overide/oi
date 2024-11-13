@@ -174,7 +174,6 @@ class ConfigCommandUtil {
           platformConfig: platformConfig
         };
 
-        console.log(activePlatformDetails);
         return activePlatformDetails;
       } else {
         if (platformConfig.isActive) {

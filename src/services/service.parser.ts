@@ -188,6 +188,7 @@ class ParserServiceImpl extends ParserService {
       }
     } catch (e) {
       if (e instanceof Error && e.message === 'UNSUP_LANG') {
+        console.error('Overide does not support dependency graph in this language');
         return false;
       }
     }
@@ -206,7 +207,6 @@ class ParserServiceImpl extends ParserService {
   async generateDependencyGraph(
     directory: string,
     ignoreList: string[] = [],
-    isEmbedding: boolean = false,
     verbose: boolean = false
   ): Promise<DependencyGraph[]> {
     const filePaths = this.getAllFilePaths(directory, ignoreList, verbose);
@@ -215,7 +215,10 @@ class ParserServiceImpl extends ParserService {
       true
     ) as ActivePlatformDetails;
 
-    console.log(embeddingServiceDetails);
+    if (!embeddingServiceDetails) {
+      console.log("Please enable embeddings by running 'overide config --embedding'");
+      return [];
+    }
 
     for (const filePath of filePaths) {
       const language = this.identifyLanguageByExtension(filePath);
@@ -234,14 +237,7 @@ class ParserServiceImpl extends ParserService {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           const tree = parser.parse(fileContent);
           let dependencyGraph = this.extractDependencyData(filePath, tree);
-
-          if (isEmbedding && embeddingServiceDetails) {
-            dependencyGraph = await this.getCodeEmbeddings(
-              dependencyGraph,
-              embeddingServiceDetails
-            );
-          }
-
+          dependencyGraph = await this.getCodeEmbeddings(dependencyGraph, embeddingServiceDetails);
           dependencyGraphs.push(dependencyGraph);
         }
       } catch (error) {
