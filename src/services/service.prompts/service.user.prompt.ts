@@ -17,11 +17,12 @@ abstract class UserPromptService {
 
   abstract matchRegex(regex: RegExp, text: string): IterableIterator<RegExpMatchArray>;
 
-  abstract findInsertionResponses(
-    filePath: string,
+  abstract findInsertionRequests(
+    filePath: string, // filePath: string,
     fileContent: string,
-    verbose: boolean
-  ): Promise<InsertionResponseInfo[] | undefined>;
+    verbose: boolean,
+    isEmbedding: boolean
+  ): Promise<InsertionRequestInfo[] | undefined>;
 
   abstract findInsertionResponses(
     filePath: string,
@@ -96,7 +97,8 @@ class UserPromptServiceImpl extends UserPromptService {
   async findInsertionRequests(
     filePath: string, // filePath: string,
     fileContent: string,
-    verbose: boolean = false
+    verbose: boolean = false,
+    isEmbedding: boolean = false
   ): Promise<InsertionRequestInfo[] | undefined> {
     try {
       const insertionRequests: InsertionRequestInfo[] = [];
@@ -112,9 +114,12 @@ class UserPromptServiceImpl extends UserPromptService {
       for (const match of promptMatches) {
         if (match[1]) {
           const prompt = match[1].trim();
+          let promptEmbedding: number[] = [];
 
-          // Get embedding for current prompt.
-          const promptEmbedding = await serviceParser.getEmbeddingForPrompt(prompt, fileContent);
+          if (isEmbedding) {
+            // Get embedding for current prompt.
+            promptEmbedding = await serviceParser.getEmbeddingForPrompt(prompt, fileContent);
+          }
 
           // Add the insertion request to the list
           insertionRequests.push({
