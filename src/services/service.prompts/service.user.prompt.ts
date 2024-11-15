@@ -1,6 +1,7 @@
 import cacheService from '../../services/service.cache';
 import { InsertionRequestInfo, InsertionResponseInfo } from '../../models/model.prompts';
-import serviceParser from '../service.parser';
+import serviceEmbedding from '../service.embedding';
+import CommandHelper from '../../utilis/util.command.config';
 
 abstract class UserPromptService {
   // Regular expressions to match specific prompt types
@@ -20,8 +21,7 @@ abstract class UserPromptService {
   abstract findInsertionRequests(
     filePath: string, // filePath: string,
     fileContent: string,
-    verbose: boolean,
-    isEmbedding: boolean
+    verbose: boolean
   ): Promise<InsertionRequestInfo[] | undefined>;
 
   abstract findInsertionResponses(
@@ -97,11 +97,12 @@ class UserPromptServiceImpl extends UserPromptService {
   async findInsertionRequests(
     filePath: string, // filePath: string,
     fileContent: string,
-    verbose: boolean = false,
-    isEmbedding: boolean = false
+    verbose: boolean = false
   ): Promise<InsertionRequestInfo[] | undefined> {
     try {
       const insertionRequests: InsertionRequestInfo[] = [];
+
+      const isEmbedding = CommandHelper.isEmbeddingEnabled();
 
       if (verbose) {
         console.log(`Searching for prompts in ${filePath}`);
@@ -118,7 +119,8 @@ class UserPromptServiceImpl extends UserPromptService {
 
           if (isEmbedding) {
             // Get embedding for current prompt.
-            promptEmbedding = await serviceParser.getEmbeddingForPrompt(prompt, fileContent);
+            promptEmbedding = await serviceEmbedding.getEmbeddingForPrompt(prompt, fileContent);
+            console.log(promptEmbedding.length);
           }
 
           // Add the insertion request to the list
@@ -128,8 +130,6 @@ class UserPromptServiceImpl extends UserPromptService {
             fileContent: fileContent,
             promptEmbedding: promptEmbedding
           });
-
-          console.log(`INSERTION REQUEST ${insertionRequests}`);
         }
       }
 

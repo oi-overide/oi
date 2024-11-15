@@ -11,6 +11,9 @@ import {
 import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 import serviceParser from '../service.parser';
 import { DependencyGraph } from '../../models/model.depgraph';
+import serviceDependency from '../service.embedding';
+
+import CommandHelper from '../../utilis/util.command.config';
 
 abstract class SystemPromptService {
   abstract getOpenAiSystemMessage(
@@ -202,22 +205,23 @@ class SystemPromptServiceImpl extends SystemPromptService {
    * @returns A formatted string that includes the first element of contextArray and the user prompt.
    */
   private getCodeContext(filePath: string, promptEmbd: number[]): string {
-    if (!this.hasDependencyGraph || promptEmbd.length === 0) {
-      return fs.readFileSync(filePath, 'utf-8');
-    }
-
-    const contextGraph: DependencyGraph[] = serviceParser.buildContextGraph(filePath);
+    const contextGraph: DependencyGraph[] = serviceParser.makeContextFromDepGraph(filePath);
     const contextInformation: string[] = [];
 
     const currentFile = fs.readFileSync(filePath, 'utf-8');
     contextInformation.push(currentFile);
+
+    const isEmbeddingEnabled = CommandHelper.isEmbeddingEnabled();
 
     for (const node of contextGraph) {
       // Add file line
       contextInformation.push('File : ');
       contextInformation.push(node.path);
 
-      if (node.functions.length === 0) {
+      // If there is no functions in the file or Embedding is not enabled.
+      // It doesn't make sense to just send random function.. rather should
+      // send the file itself.
+      if (node.functions.length === 0 || !isEmbeddingEnabled) {
         const entireCode = fs.readFileSync(node.path, 'utf-8');
         contextInformation.push(entireCode);
         continue;
@@ -228,10 +232,12 @@ class SystemPromptServiceImpl extends SystemPromptService {
         if (!contextInformation.includes(func.class)) {
           contextInformation.push(func.class);
         }
-        // TODO : Check for similarity between embeddings.
-        const similarity = serviceParser.cosineSimilarity(promptEmbd, func.embeddings ?? []);
-        if (similarity >= 0.5) {
-          contextInformation.push(func.code);
+
+        if (isEmbeddingEnabled) {
+          const similarity = serviceDependency.cosineSimilarity(promptEmbd, func.embeddings ?? []);
+          if (similarity >= 0.5) {
+            contextInformation.push(func.code);
+          }
         }
       });
     }

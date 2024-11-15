@@ -84,7 +84,7 @@ class ProcessRequest {
       model: 'gpt-4o', // Specify the model to use
       messages: messages,
       temperature: 0.5, // Adjust temperature for creativity (lower = more deterministic)
-      max_tokens: 1000, // Max tokens for the response
+      max_tokens: 2500, // Max tokens for the response
       n: 1, // Number of completions to generate
       stream: false, // Whether to stream results
       presence_penalty: 0, // Adjusts frequency of introducing new ideas

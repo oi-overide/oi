@@ -144,6 +144,7 @@ class Initialize extends OiCommand {
       const config: LocalConfig = {
         projectName: projectName,
         embedding: false,
+        depgraph: true,
         ignore: combinedIgnoreFiles
       };
 

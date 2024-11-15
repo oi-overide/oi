@@ -13,6 +13,7 @@ import OiCommand from './abstract.command';
 import { Command } from 'commander';
 import inquirer, { Question } from 'inquirer';
 import serviceParser from '../services/service.parser';
+import utilParser from '../utilis/util.parser';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
@@ -44,7 +45,6 @@ class Config extends OiCommand {
     const configCommand = this.program
       .command('config')
       .option('-e, --embedding', 'Enables embedding support')
-      .option('-g, --graph', 'Show dependency graph in 3d space')
       .description('Update Local or Global settings');
 
     const localConfig = configCommand
@@ -52,7 +52,8 @@ class Config extends OiCommand {
       // .name('overide')
       .description('Local configuration options')
       .option('-i, --ignore <files...>', 'Ignore specific files or directories')
-      .option('-p, --parse', 'Installs tree-sitter parsers')
+      .option('-p, --parse', 'Creates dependency graph for the project')
+      .option('-g, --graph', 'Enables dependency graph support')
       .option('-n, --name <name>', 'Set project name');
 
     const globalConfig = configCommand
@@ -65,9 +66,6 @@ class Config extends OiCommand {
     configCommand.action(async options => {
       if (Object.keys(options).length === 0) {
         configCommand.outputHelp();
-      }
-      if (options.graph) {
-        CommandHelper.showGraphInSpace();
       }
       if (options.embedding) {
         this.handleEmbeddingEnable();
@@ -83,6 +81,8 @@ class Config extends OiCommand {
       } else {
         if (options.parse) {
           await this.generateDependencyGraph(options.verbose);
+        } else if (options.graph) {
+          this.handleDepGraphEnable();
         } else {
           await this.handleLocalConfig(options);
         }
@@ -103,6 +103,12 @@ class Config extends OiCommand {
         await this.handleChangeActivePlatform();
       }
     });
+  }
+
+  async handleDepGraphEnable(): Promise<void> {
+    // Set the embeddings flag to true.
+    this.handleLocalConfig({}, true);
+    return;
   }
 
   async handleEmbeddingEnable(): Promise<void> {
@@ -146,14 +152,9 @@ class Config extends OiCommand {
       // Get the ignore list from the oi-config.json file
       const config: LocalConfig = CommandHelper.readConfigFileData() as LocalConfig;
       const ignoreList = config.ignore || [];
-      const embedding = config.embedding;
-
-      if (!embedding) {
-        return;
-      }
 
       // Generate dependency graphs for all files in the current directory
-      const dependencyGraphs = await serviceParser.generateDependencyGraph(
+      const dependencyGraphs = await serviceParser.makeProjectDepGraph(
         currentDir,
         ignoreList,
         verbose
@@ -267,7 +268,11 @@ class Config extends OiCommand {
   }
 
   // Handle the local configuration for the project
-  async handleLocalConfig(options: ConfigOption, embedding: boolean = false): Promise<void> {
+  async handleLocalConfig(
+    options: ConfigOption,
+    embedding: boolean = false,
+    depgraph: boolean = false
+  ): Promise<void> {
     // Get the path to the local configuration file
     // const configFilePath = CommandHelper.getConfigFilePath();
 
@@ -302,7 +307,7 @@ class Config extends OiCommand {
       });
 
       console.log('Following file will be watched:\n');
-      const watching = serviceParser.getAllFilePaths(process.cwd(), config.ignore);
+      const watching = utilParser.getAllFilePaths(process.cwd(), config.ignore);
       console.log(watching);
     }
 
@@ -314,6 +319,11 @@ class Config extends OiCommand {
     if (embedding) {
       console.log('Embedding support for project enabled.');
       config.embedding = true;
+    }
+
+    if (depgraph) {
+      console.log('Embedding support for project enabled.');
+      config.depgraph = true;
     }
 
     // Save the updated local configuration

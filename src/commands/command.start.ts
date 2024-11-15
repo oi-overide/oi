@@ -5,10 +5,8 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
-import { DependencyGraph, FileContents } from '../models/model.depgraph';
+import { DependencyGraph } from '../models/model.depgraph';
 import serviceParser from '../services/service.parser';
-import { systemPromptServiceImpl } from '../services/service.prompts/service.system.prompt';
-// import serviceParser from '../services/service.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -23,10 +21,8 @@ import { systemPromptServiceImpl } from '../services/service.prompts/service.sys
  */
 class Start extends OiCommand {
   // Stores the contents of all files in the project
-  private fileContents: FileContents[] = [];
   private dependencyGraph: DependencyGraph[] | null = [];
   private watcher: FSWatcher | null = null;
-  hasDependencyGraph: boolean = true;
 
   /**
    * Configures the `start` command, adding it to the program with any
@@ -101,16 +97,12 @@ class Start extends OiCommand {
       console.log(`File ${filePath} has been changed`);
     }
 
+    // TODO : set the dep graph to false if project language is not supported.
     // Check if the dependency graph is empty
-    this.hasDependencyGraph = await serviceParser.generateIncrementalDepForFile(
-      filePath,
-      ignoreFiles,
-      verbose
-    );
+    await serviceParser.makeProjectDepGraphInc(filePath, ignoreFiles, verbose);
     if (verbose) {
       console.log('Dependency graph updated...');
     }
-    systemPromptServiceImpl.setDependencyExists(this.hasDependencyGraph);
 
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);
   }
