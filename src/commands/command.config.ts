@@ -49,16 +49,13 @@ class Config extends OiCommand {
 
     const localConfig = configCommand
       .command('local')
-      // .name('overide')
       .description('Local configuration options')
       .option('-i, --ignore <files...>', 'Ignore specific files or directories')
       .option('-p, --parse', 'Creates dependency graph for the project')
-      .option('-g, --graph', 'Enables dependency graph support')
       .option('-n, --name <name>', 'Set project name');
 
     const globalConfig = configCommand
       .command('global') // Sub-command for global configuration
-      // .name('overide')
       .description('Global configuration options')
       .option('-p, --platform', 'Set global variable like API keys and org IDs')
       .option('-a, --set-active', 'Select active platform');
@@ -268,11 +265,7 @@ class Config extends OiCommand {
   }
 
   // Handle the local configuration for the project
-  async handleLocalConfig(
-    options: ConfigOption,
-    embedding: boolean = false,
-    depgraph: boolean = false
-  ): Promise<void> {
+  async handleLocalConfig(options: ConfigOption, embedding: boolean = false): Promise<void> {
     // Get the path to the local configuration file
     // const configFilePath = CommandHelper.getConfigFilePath();
 
@@ -319,11 +312,6 @@ class Config extends OiCommand {
     if (embedding) {
       console.log('Embedding support for project enabled.');
       config.embedding = true;
-    }
-
-    if (depgraph) {
-      console.log('Embedding support for project enabled.');
-      config.depgraph = true;
     }
 
     // Save the updated local configuration
