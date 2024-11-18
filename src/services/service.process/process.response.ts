@@ -29,6 +29,7 @@ class ProcessResponse {
       }
       return replacementObject;
     } catch (error) {
+      console.log(response);
       console.error(`Error in formatting response: ${(error as Error).message}`);
       return null;
     }

@@ -8,10 +8,5 @@ export const extensionToLanguageMap: { [extension: string]: string } = {
   '.cs': 'c_sharp',
   '.rb': 'ruby',
   '.go': 'go',
-  '.php': 'php',
-  '.swift': 'swift',
-  '.rs': 'rust',
-  '.html': 'html',
-  '.css': 'css',
-  '.json': 'json'
+  '.c': 'c'
 };

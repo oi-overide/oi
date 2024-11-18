@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dependency Graph with Three.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/geometries/TextGeometry.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .control-button {
+      padding: 5px 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #444;
+      color: white;
+      font-size: 14px;
+    }
+
+    .active {
+      background-color: #0080FF;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <button class="control-button" id="zoom-btn">Zoom (Q)</button>
+    <button class="control-button" id="pan-btn">Pan (W)</button>
+    <button class="control-button" id="rotate-btn">Rotate (E)</button>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Set up scene, camera, and renderer
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Add lights
+      const ambientLight = new THREE.AmbientLight(0x404040); // Ambient light
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 1); // Directional light
+      directionalLight.position.set(5, 5, 5).normalize();
+      scene.add(directionalLight);
+
+      // Set the initial camera position
+      camera.position.z = 1200;
+      camera.position.y = 300;
+
+      // Orbit controls logic to rotate around the center
+      let controlMode = 'pan'; // default mode
+      let isDragging = false;
+      let previousMousePosition = { x: 0, y: 0 };
+
+      const controlsDiv = document.getElementById('controls');
+      const zoomBtn = document.getElementById('zoom-btn');
+      const panBtn = document.getElementById('pan-btn');
+      const rotateBtn = document.getElementById('rotate-btn');
+
+      function setControlMode(mode) {
+        controlMode = mode;
+        zoomBtn.classList.toggle('active', mode === 'zoom');
+        panBtn.classList.toggle('active', mode === 'pan');
+        rotateBtn.classList.toggle('active', mode === 'rotate');
+      }
+
+      // Event listeners for control buttons
+      zoomBtn.addEventListener('click', () => setControlMode('zoom'));
+      panBtn.addEventListener('click', () => setControlMode('pan'));
+      rotateBtn.addEventListener('click', () => setControlMode('rotate'));
+
+      // Keyboard shortcuts for control modes
+      window.addEventListener('keydown', (event) => {
+        switch (event.key.toLowerCase()) {
+          case 'q':
+            setControlMode('zoom');
+            break;
+          case 'w':
+            setControlMode('pan');
+            break;
+          case 'e':
+            setControlMode('rotate');
+            break;
+        }
+      });
+
+      window.addEventListener('mousedown', (event) => {
+        isDragging = true;
+        previousMousePosition.x = event.clientX;
+        previousMousePosition.y = event.clientY;
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      window.addEventListener('mousemove', (event) => {
+        if (isDragging) {
+          const deltaX = event.clientX - previousMousePosition.x;
+          const deltaY = event.clientY - previousMousePosition.y;
+
+          if (controlMode === 'pan') {
+            camera.position.x -= deltaX * 0.5;
+            camera.position.y += deltaY * 0.5;
+          } else if (controlMode === 'rotate') {
+            const pivot = new THREE.Vector3(0, 0, 0); // Center pivot point
+
+            // Calculate horizontal rotation (around the Y-axis)
+            camera.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * 0.005);
+
+            // Calculate vertical rotation (around the X-axis)
+            const rotationX = deltaY * 0.005;
+            const currentRotationX = camera.rotation.x;
+            const newRotationX = currentRotationX + rotationX;
+
+            // Set limits for vertical rotation to prevent flipping over
+            if (newRotationX > Math.PI / 2) {
+              camera.rotation.x = Math.PI / 2;
+            } else if (newRotationX < -Math.PI / 2) {
+              camera.rotation.x = -Math.PI / 2;
+            } else {
+              camera.rotation.x = newRotationX;
+            }
+
+            // Calculate Z-axis rotation (roll) based on additional input (e.g., mouse wheel or another axis)
+            const rotationZ = 0; // Replace with actual input if you want to control Z-axis (roll)
+            const currentRotationZ = camera.rotation.z;
+            const newRotationZ = currentRotationZ + rotationZ;
+
+            camera.rotation.z = newRotationZ;
+
+            camera.lookAt(pivot);
+          }
+
+          previousMousePosition.x = event.clientX;
+          previousMousePosition.y = event.clientY;
+          previousMousePosition.z = event.clientZ;
+        }
+      });
+
+      window.addEventListener('wheel', (event) => {
+        if (controlMode === 'zoom') {
+          const zoomSpeed = 0.1;
+          camera.position.z += event.deltaY * zoomSpeed;
+          camera.position.z = Math.max(500, Math.min(camera.position.z, 5000));
+        }
+      });
+
+
+      // Load dependency graph data
+      async function fetchDependencyGraph() {
+        const response = await fetch('/dependency-graph');
+        if (!response.ok) {
+          console.error('Failed to load dependency graph');
+          return null;
+        }
+        return await response.json();
+      }
+
+      // Create a 3D text for file names
+      function create3DText(text, position) {
+        const fontLoader = new THREE.FontLoader();
+        fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+          const textGeometry = new THREE.TextGeometry(text, {
+            font: font,
+            size: 16,
+            height: 3
+          });
+
+          // Create a white text material
+          const textMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: false });
+
+          const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+
+          // Position text below the cluster
+          textMesh.position.set(position.x, position.y - 50, position.z);
+
+          scene.add(textMesh);
+        });
+      }
+
+      // Draw the graph
+      fetchDependencyGraph().then(data => {
+        if (!data) return;
+
+        const nodes = [];
+        const links = [];
+
+        // Create nodes (file clusters)
+        data.forEach((file, index) => {
+          const node = new THREE.Mesh(
+            new THREE.SphereGeometry(30, 32, 32), // Higher-quality sphere
+            new THREE.MeshStandardMaterial({ color: 0x00FF00, roughness: 0.5, metalness: 0.5 }) // More realistic material
+          );
+          node.position.set(Math.random() * 800 - 400, Math.random() * 800 - 400, Math.random() * 800 - 400); // Random placement in 3D space
+          node.name = file.fileName;
+          scene.add(node);
+          nodes.push({ fileName: file.fileName, node });
+
+          // Create 3D text for file name below the node
+          create3DText(file.fileName, node.position);
+
+          // Add function circles as smaller spheres
+          file.functions.forEach((func, funcIndex) => {
+            const funcNode = new THREE.Mesh(
+              new THREE.SphereGeometry(8, 16, 16),
+              new THREE.MeshStandardMaterial({ color: 0xFF0000 })
+            );
+            const angle = funcIndex * (2 * Math.PI / file.functions.length);
+            const funcX = node.position.x + Math.cos(angle) * 50;
+            const funcY = node.position.y + Math.sin(angle) * 50;
+
+            funcNode.position.set(funcX, funcY, node.position.z);
+            scene.add(funcNode);
+          });
+        });
+
+        // Create links (lines between file clusters)
+        data.forEach(file => {
+          file.imports.forEach(importedFile => {
+            const sourceNode = nodes.find(n => n.fileName === file.fileName)?.node;
+            const targetNode = nodes.find(n => n.fileName === importedFile)?.node;
+
+            if (sourceNode && targetNode) {
+              const material = new THREE.LineBasicMaterial({ color: 0xAAAAAA });
+              const geometry = new THREE.Geometry();
+              geometry.vertices.push(sourceNode.position, targetNode.position);
+              const link = new THREE.Line(geometry, material);
+              scene.add(link);
+            }
+          });
+        });
+
+        // Render loop
+        function animate() {
+          requestAnimationFrame(animate);
+          renderer.render(scene, camera);
+        }
+        animate();
+      }).catch(err => console.error(err));
+    });
+  </script>
+</body>
+
+</html>

@@ -1,5 +1,7 @@
 import cacheService from '../../services/service.cache';
 import { InsertionRequestInfo, InsertionResponseInfo } from '../../models/model.prompts';
+import serviceEmbedding from '../service.embedding';
+import CommandHelper from '../../utilis/util.command.config';
 
 abstract class UserPromptService {
   // Regular expressions to match specific prompt types
@@ -16,11 +18,11 @@ abstract class UserPromptService {
 
   abstract matchRegex(regex: RegExp, text: string): IterableIterator<RegExpMatchArray>;
 
-  abstract findInsertionResponses(
-    filePath: string,
+  abstract findInsertionRequests(
+    filePath: string, // filePath: string,
     fileContent: string,
     verbose: boolean
-  ): Promise<InsertionResponseInfo[] | undefined>;
+  ): Promise<InsertionRequestInfo[] | undefined>;
 
   abstract findInsertionResponses(
     filePath: string,
@@ -100,6 +102,8 @@ class UserPromptServiceImpl extends UserPromptService {
     try {
       const insertionRequests: InsertionRequestInfo[] = [];
 
+      const isEmbedding = CommandHelper.isEmbeddingEnabled();
+
       if (verbose) {
         console.log(`Searching for prompts in ${filePath}`);
       }
@@ -110,11 +114,21 @@ class UserPromptServiceImpl extends UserPromptService {
       // Loop through each match and process it
       for (const match of promptMatches) {
         if (match[1]) {
+          const prompt = match[1].trim();
+          let promptEmbedding: number[] = [];
+
+          if (isEmbedding) {
+            // Get embedding for current prompt.
+            promptEmbedding = await serviceEmbedding.getEmbeddingForPrompt(prompt, fileContent);
+            console.log(promptEmbedding.length);
+          }
+
           // Add the insertion request to the list
           insertionRequests.push({
-            prompt: match[1].trim(),
+            prompt: prompt,
             filePath: filePath,
-            fileContent: fileContent
+            fileContent: fileContent,
+            promptEmbedding: promptEmbedding
           });
         }
       }

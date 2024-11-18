@@ -11,6 +11,9 @@ import {
 import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 import serviceParser from '../service.parser';
 import { DependencyGraph } from '../../models/model.depgraph';
+import serviceDependency from '../service.embedding';
+
+import CommandHelper from '../../utilis/util.command.config';
 
 abstract class SystemPromptService {
   abstract getOpenAiSystemMessage(
@@ -27,11 +30,25 @@ abstract class SystemPromptService {
 }
 
 class SystemPromptServiceImpl extends SystemPromptService {
+  private static instance: SystemPromptServiceImpl;
   private basePrompt: SystemPromptInfo;
+  private hasDependencyGraph: boolean;
 
   constructor() {
     super();
+    this.hasDependencyGraph = false;
     this.basePrompt = promptStructure;
+  }
+
+  public static getInstance(): SystemPromptServiceImpl {
+    if (!SystemPromptServiceImpl.instance) {
+      SystemPromptServiceImpl.instance = new SystemPromptServiceImpl();
+    }
+    return SystemPromptServiceImpl.instance;
+  }
+
+  setDependencyExists(value: boolean): void {
+    this.hasDependencyGraph = value;
   }
 
   /**
@@ -50,7 +67,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(insertionRequest.filePath);
+      const codeContext = this.getCodeContext(
+        insertionRequest.filePath,
+        insertionRequest.promptEmbedding ?? []
+      );
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -69,6 +89,8 @@ class SystemPromptServiceImpl extends SystemPromptService {
         role: 'user',
         content: insertionRequest.prompt
       };
+
+      console.log(`\nSYSTEM ${systemMessage.content}\n`);
 
       return [systemMessage, userMessage] as ChatCompletionMessageParam[];
     } catch (error) {
@@ -95,7 +117,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(insertionRequest.filePath);
+      const codeContext = this.getCodeContext(
+        insertionRequest.filePath,
+        insertionRequest.promptEmbedding ?? []
+      );
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -140,7 +165,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(insertionRequest.filePath);
+      const codeContext = this.getCodeContext(
+        insertionRequest.filePath,
+        insertionRequest.promptEmbedding ?? []
+      );
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -176,16 +204,24 @@ class SystemPromptServiceImpl extends SystemPromptService {
    *                      relevant to the user prompt.
    * @returns A formatted string that includes the first element of contextArray and the user prompt.
    */
-  private getCodeContext(filePath: string): string {
-    const contextGraph: DependencyGraph[] = serviceParser.buildContextGraph(filePath);
+  private getCodeContext(filePath: string, promptEmbd: number[]): string {
+    const contextGraph: DependencyGraph[] = serviceParser.makeContextFromDepGraph(filePath);
     const contextInformation: string[] = [];
+
+    const currentFile = fs.readFileSync(filePath, 'utf-8');
+    contextInformation.push(currentFile);
+
+    const isEmbeddingEnabled = CommandHelper.isEmbeddingEnabled();
 
     for (const node of contextGraph) {
       // Add file line
       contextInformation.push('File : ');
       contextInformation.push(node.path);
 
-      if (node.functions.length === 0) {
+      // If there is no functions in the file or Embedding is not enabled.
+      // It doesn't make sense to just send random function.. rather should
+      // send the file itself.
+      if (node.functions.length === 0 || !isEmbeddingEnabled) {
         const entireCode = fs.readFileSync(node.path, 'utf-8');
         contextInformation.push(entireCode);
         continue;
@@ -197,7 +233,12 @@ class SystemPromptServiceImpl extends SystemPromptService {
           contextInformation.push(func.class);
         }
 
-        contextInformation.push(func.code);
+        if (isEmbeddingEnabled) {
+          const similarity = serviceDependency.cosineSimilarity(promptEmbd, func.embeddings ?? []);
+          if (similarity >= 0.5) {
+            contextInformation.push(func.code);
+          }
+        }
       });
     }
 
@@ -219,4 +260,4 @@ class SystemPromptServiceImpl extends SystemPromptService {
   }
 }
 
-export default new SystemPromptServiceImpl();
+export const systemPromptServiceImpl = SystemPromptServiceImpl.getInstance();

@@ -1,5 +1,7 @@
 export interface LocalConfig {
   projectName: string;
+  embedding: boolean;
+  depgraph: boolean;
   ignore: string[];
 }
 

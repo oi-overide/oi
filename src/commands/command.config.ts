@@ -13,6 +13,7 @@ import OiCommand from './abstract.command';
 import { Command } from 'commander';
 import inquirer, { Question } from 'inquirer';
 import serviceParser from '../services/service.parser';
+import utilParser from '../utilis/util.parser';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
@@ -43,53 +44,105 @@ class Config extends OiCommand {
   configureCommand(): void {
     const configCommand = this.program
       .command('config')
+      .option('-e, --embedding', 'Enables embedding support')
       .description('Update Local or Global settings');
 
-    configCommand
-      .command('local') // Sub-command for local configuration
+    const localConfig = configCommand
+      .command('local')
       .description('Local configuration options')
       .option('-i, --ignore <files...>', 'Ignore specific files or directories')
-      .option('-pa, --parse', 'Installs tree-sitter parsers')
-      .option('-n, --name <name>', 'Set project name')
-      .action(async options => {
-        // Ensure that required directories exist
-        await CommandHelper.makeRequiredDirectories();
+      .option('-p, --parse', 'Creates dependency graph for the project')
+      .option('-n, --name <name>', 'Set project name');
 
-        if (Object.keys(options).length === 0) {
-          configCommand.outputHelp();
-        } else {
-          if (options.parse) {
-            await this.generateDependencyGraph(options.verbose);
-          } else {
-            await this.handleLocalConfig(options);
-          }
-        }
-      });
-
-    configCommand
+    const globalConfig = configCommand
       .command('global') // Sub-command for global configuration
       .description('Global configuration options')
       .option('-p, --platform', 'Set global variable like API keys and org IDs')
-      .option('-sa, --set-active', 'Select active platform')
-      .action(async options => {
-        // Ensure that required directories exist
-        await CommandHelper.makeRequiredDirectories();
+      .option('-a, --set-active', 'Select active platform');
 
-        if (Object.keys(options).length === 0) {
-          configCommand.outputHelp();
+    configCommand.action(async options => {
+      if (Object.keys(options).length === 0) {
+        configCommand.outputHelp();
+      }
+      if (options.embedding) {
+        this.handleEmbeddingEnable();
+      }
+    });
+
+    localConfig.action(async options => {
+      // Ensure that required directories exist
+      await CommandHelper.makeRequiredDirectories();
+
+      if (Object.keys(options).length === 0) {
+        localConfig.outputHelp();
+      } else {
+        if (options.parse) {
+          await this.generateDependencyGraph(options.verbose);
+        } else if (options.graph) {
+          this.handleDepGraphEnable();
+        } else {
+          await this.handleLocalConfig(options);
         }
-        if (options.platform) {
-          await this.handleAddActivePlatform();
+      }
+    });
+
+    globalConfig.action(async options => {
+      // Ensure that required directories exist
+      await CommandHelper.makeRequiredDirectories();
+
+      if (Object.keys(options).length === 0) {
+        globalConfig.outputHelp();
+      }
+      if (options.platform) {
+        await this.handleAddActivePlatform();
+      }
+      if (options.setActive) {
+        await this.handleChangeActivePlatform();
+      }
+    });
+  }
+
+  async handleDepGraphEnable(): Promise<void> {
+    // Set the embeddings flag to true.
+    this.handleLocalConfig({}, true);
+    return;
+  }
+
+  async handleEmbeddingEnable(): Promise<void> {
+    // Check if OpenAi platform details are available.
+    const activePlatform = CommandHelper.getActiveServiceDetails(true);
+    if (!activePlatform) {
+      console.warn(
+        'Overide supports embeddings over OpenAI\nEnabling this will incure additional cost'
+      );
+      // Ask for open ai platform details.
+      const answers = await this.promptPlatformConfig('openai');
+
+      // Check if a global config file already exists, if not initialize an empty config
+      const existingConfig = CommandHelper.configExists(true)
+        ? await CommandHelper.readConfigFileData(true)
+        : {};
+
+      // Merge the new platform configuration with the existing config
+      const updatedConfig = {
+        ...existingConfig,
+        ['openai']: {
+          ...answers,
+          isActive: Object.keys(existingConfig as GlobalConfig).length === 0 ? true : false // Set isActive for first platform
         }
-        if (options.setActive) {
-          await this.handleChangeActivePlatform();
-        }
-      });
+      };
+
+      // Save the updated global configuration
+      await CommandHelper.writeConfigFileData(true, updatedConfig);
+    }
+
+    // Set the embeddings flag to true.
+    this.handleLocalConfig({}, true);
+    return;
   }
 
   async generateDependencyGraph(verbose: boolean = false): Promise<void> {
     try {
-      console.log('Generating dependency graphs...');
       // Get the current directory
       const currentDir = process.cwd();
 
@@ -98,7 +151,7 @@ class Config extends OiCommand {
       const ignoreList = config.ignore || [];
 
       // Generate dependency graphs for all files in the current directory
-      const dependencyGraphs = await serviceParser.generateDependencyGraph(
+      const dependencyGraphs = await serviceParser.makeProjectDepGraph(
         currentDir,
         ignoreList,
         verbose
@@ -208,11 +261,11 @@ class Config extends OiCommand {
     // Save the updated global configuration
     await CommandHelper.writeConfigFileData(true, updatedConfig);
 
-    console.log('Run `overide config  -sa | --set-active` to select active platform');
+    console.log('Run `overide config global -a | --set-active` to select active platform');
   }
 
   // Handle the local configuration for the project
-  async handleLocalConfig(options: ConfigOption): Promise<void> {
+  async handleLocalConfig(options: ConfigOption, embedding: boolean = false): Promise<void> {
     // Get the path to the local configuration file
     // const configFilePath = CommandHelper.getConfigFilePath();
 
@@ -247,13 +300,18 @@ class Config extends OiCommand {
       });
 
       console.log('Following file will be watched:\n');
-      const watching = serviceParser.getAllFilePaths(process.cwd(), config.ignore);
+      const watching = utilParser.getAllFilePaths(process.cwd(), config.ignore);
       console.log(watching);
     }
 
     // Update the project name if provided in options
     if (options.name) {
       config.projectName = options.name;
+    }
+
+    if (embedding) {
+      console.log('Embedding support for project enabled.');
+      config.embedding = true;
     }
 
     // Save the updated local configuration

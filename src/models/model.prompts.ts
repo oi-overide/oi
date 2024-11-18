@@ -4,6 +4,7 @@ export interface InsertionRequestInfo {
   prompt: string;
   filePath: string;
   fileContent: string;
+  promptEmbedding?: number[];
 }
 
 export interface InsertionResponseInfo {
