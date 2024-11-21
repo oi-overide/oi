@@ -9,9 +9,10 @@ export interface StartOption {
 }
 
 export interface ConfigOption {
-  projectName?: string;
+  name?: string;
   ignore?: string[];
   global?: boolean;
   verbose?: boolean;
   setActive?: boolean;
+  parser?: boolean;
 }

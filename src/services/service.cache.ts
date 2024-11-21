@@ -40,19 +40,21 @@ class LocalCache {
    * @returns {string[]|null} - Returns the corresponding find array or null if not found.
    */
   findOldCode(replacedCode: string): string | null {
-    const newCodeString = replacedCode;
-
     for (const entry of this.cache) {
       const replaceString = entry.replace.join('\n');
 
       // Check for similarity using Fuzzball's fuzzyScore
-      const score = ratio(newCodeString, replaceString);
+      const score = ratio(replacedCode, replaceString);
 
       // Threshold for similarity
       const threshold = 75;
 
       if (score >= threshold) {
-        return entry.find.join('\n'); // Return the corresponding code.
+        // if the prompt was the only find and replace line then we can return the empty string.
+        return entry.find
+          .filter(line => !line.includes('//>') || !line.includes('<//'))
+          .join('\n')
+          .trim(); // Return the corresponding code.
       }
     }
     return null; // Return null if no match found

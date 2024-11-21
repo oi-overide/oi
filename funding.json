@@ -1,0 +1,63 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "maintainer",
+    "name": "Abhijeet D",
+    "email": "oi.overide@gmail.com",
+    "phone": "",
+    "description": "I'm a software developer and I love to build products for startups and contribute to open-source communit.",
+    "webpageUrl": {
+      "url": "https://github.com/oi-overide",
+      "wellKnown": ""
+    }
+  },
+  "projects": [
+    {
+      "guid": "oi-overide",
+      "name": "overide",
+      "description": "Overide is a CLI tool that helps ai write code in any IDE. It streamlines the way we interact with ai by allowing prompts in between code using special identifires like '..code before //> prompt <// ..code after'. It gives controll on what gets generated and where it gets generated.",
+      "webpageUrl": {
+        "url": "https://github.com/oi-overide/oi/blob/main/funding.json"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/oi-overide/oi",
+        "wellKnown": ""
+      },
+      "licenses": ["GPL-2.0"],
+      "tags": ["ai-code-generation", "ide-agnostic", "cli-tool"]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "personal-upi",
+        "type": "payment-provider",
+        "address": "abhijeetdash1999-1@okhdfcbank",
+        "description": "Since this is public repo, not adding bank account number - upi instead. Email for any additional details."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "domain-support-funding",
+        "status": "active",
+        "name": "Domain Support",
+        "description": "Will be used to purchase the domain name 'overide.ai'.",
+        "amount": 18000,
+        "currency": "INR",
+        "frequency": "one-time",
+        "channels": ["personal-upi"]
+      },
+      {
+        "guid": "dev-support-funding",
+        "status": "active",
+        "name": "Development Support",
+        "description": "To support development cost i.e LLM API subscriptions and cloud hosting costs in initial days. It'll also help us properly test new platform support before launch. Initially, this also covers cost for high frequency contributors.",
+        "amount": 5000,
+        "currency": "INR",
+        "frequency": "monthly",
+        "channels": ["personal-upi"]
+      }
+    ]
+  }
+}
