@@ -1,72 +1,40 @@
 {
     "openai": {
-        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON.",
-        "complete": {
-            "format": "```complete code here```",
-            "instructions": [
-                "Do not include comments explaining the changes.",
-                "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
-                "Include proper indentation in code.",
-                "Use the following format to respond:"
-            ]
-        },
-        "update": {
-            "context": "Below is the current code context:",
-            "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
-            "instructions": [
-                "Do not include comments explaining the changes.",
-                "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
-                "Include proper indentation in code.",
-                "Use the following JSON format to respond:"
-            ]
-        }
+        "systemMessage": "Your task is to provide accurate and efficient code completions and respond in VALID JSON.",
+        "context": "Below is the current code context:",
+        "format": "```[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n```",
+        "instructions": [
+            "Do not include comments explaining the changes.",
+            "Make sure that the structure of the file is maintained. Imports, Global Variables and should be placed at the top of the file below other imports or global variables.",
+            "Make sure that the {lines in find} accounts for empty spaces and empty lines in the existing code.",
+            "Include tabs and spaces in the replace lines to PROPERLY INDENT according to existing code.",
+            "Use the following JSON format to respond:"
+        ]
     },
     "deepseek": {
-        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON.",
-        "complete": {
-            "format": "```complete code here```",
-            "instructions": [
-                "Do not include comments explaining the changes.",
-                "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
-                "Include proper indentation in code.",
-                "Return the completed code inside a markdown block quote using triple backticks (```)."
-            ]
-        },
-        "update": {
-            "context": "Below is the current code context:",
-            "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
-            "instructions": [
-                "Do not include comments explaining the changes.",
-                "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
-                "Return the JSON inside a markdown block quote using triple backticks (```).",
-                "Include proper indentation in code.",
-                "Use the following JSON format to respond:"
-            ]
-        }
+        "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON.", 
+        "context": "Below is the current code context:",
+        "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
+        "instructions": [
+            "Do not include comments explaining the changes.",
+            "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
+            "Return the JSON inside a markdown block quote using triple backticks (```).",
+            "If code to be replaced is separated by even ONE OR MORE empty line then return multiple {find, replace} structures in a list",
+            "Include proper indentation in code.",
+            "Use the following JSON format to respond:"
+        ]
     },
     "groq": {
         "systemMessage": "You are a coding assistant API specialized in generating accurate and efficient code completions and responding in valid JSON while following the instructions STRICTLY.",
-        "complete": {
-            "format": "```complete code here```",
-            "instructions": [
-                "Do not include comments explaining the changes.",
-                "Please generate the complete code. Ensure the functionality is correct, efficient, and follows best practices. Do not provide any explanations.",
-                "Include proper indentation in code.",
-                "Return the completed code inside a markdown block quote using triple backticks (```)."
-            ]
-        },
-        "update": {
-            "context": "Below is the current code context:",
-            "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
-            "instructions": [
-                "Do not include comments explaining the changes.",
-                "Do not include lines with //>, <// and comments in find array",
-                "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
-                "Return the VALID JSON inside a markdown block quote using triple backticks (```).",
-                "Return multiple find/replace structures for lines separated by empty lines",
-                "Include proper indentation in code.",
-                "Use the following JSON format to respond:"
-            ]
-        }
+        "context": "Below is the current code context:",
+        "format": "[\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n},\n{\n \"find\": [lines to find],\n \"replace\": [lines to replace]\n}\n]\n",
+        "instructions": [
+            "Do not include comments explaining the changes.",
+            "Please provide the entire code block that should be replaced, and the entire new code block as the replacement, as list of lines.",
+            "Return the VALID JSON inside a markdown block quote using triple backticks (```).",
+            "If code to be replaced is separated by even ONE OR MORE empty line then return multiple {find, replace} structures in a list",
+            "Include proper indentation in code.",
+            "Use the following JSON format to respond:"
+        ]
     }
 }

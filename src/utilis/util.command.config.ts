@@ -1,7 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { ActivePlatformDetails, GlobalConfig, LocalConfig } from '../models/model.config';
+import {
+  ActivePlatformDetails,
+  GlobalConfig,
+  GlobalPlatformInfo,
+  LocalConfig
+} from '../models/model.config';
+import { DependencyGraph } from '../models/model.depgraph';
 
 /**
  * The `DirectoryHelper` class is responsible for managing configuration files and directories
@@ -12,6 +18,33 @@ class ConfigCommandUtil {
   // File names for configuration
   private static configFileName = 'oi-config.json';
   private static globalConfigFileName = 'oi-global-config.json';
+  private static dependencyFileName = 'oi-dependency.json';
+
+  loadDependencyGraph(): DependencyGraph[] | null {
+    const dependencyFilePath = this.getDependencyFilePath();
+    if (fs.existsSync(dependencyFilePath)) {
+      const dependencyData = fs.readFileSync(dependencyFilePath, 'utf-8');
+      const dependencyGraph = JSON.parse(dependencyData);
+      return dependencyGraph;
+    }
+    return null;
+  }
+
+  /**
+   * Get the file path for the dependency file.
+   */
+  public getDependencyFilePath(): string {
+    return path.join(process.cwd(), ConfigCommandUtil.dependencyFileName);
+  }
+
+  /**
+   * Checks if the dependency file exists.
+   *
+   * @returns {boolean} - True if the dependency file exists, false otherwise.
+   */
+  public dependencyFileExists(): boolean {
+    return fs.existsSync(this.getDependencyFilePath());
+  }
 
   /**
    * Checks if the specified configuration file (local or global) exists.
@@ -119,6 +152,11 @@ class ConfigCommandUtil {
     }
   }
 
+  isEmbeddingEnabled(): boolean {
+    const localConfig = this.readConfigFileData() as LocalConfig;
+    return localConfig.embedding;
+  }
+
   /**
    * Retrieves the details of the currently active AI service platform.
    * It reads the global configuration file to determine which platform is marked as active.
@@ -127,16 +165,28 @@ class ConfigCommandUtil {
    * @returns {ActivePlatformDetails | null} An object containing the active platform's name and configuration details,
    * or `null` if no platform is marked as active.
    */
-  getActiveServiceDetails(): ActivePlatformDetails | null {
+  getActiveServiceDetails(isEmbedding: boolean = false): ActivePlatformDetails | null {
     const globalConfig = this.readConfigFileData(true) as GlobalConfig;
+
     for (const platform in globalConfig) {
-      const platformConfig = globalConfig[platform];
-      if (platformConfig.isActive) {
+      let platformConfig = globalConfig[platform] as GlobalPlatformInfo;
+      if (isEmbedding) {
+        const platformName = 'openai';
+        platformConfig = globalConfig[platformName] as GlobalPlatformInfo;
         const activePlatformDetails: ActivePlatformDetails = {
-          platform: platform,
+          platform: platformName,
           platformConfig: platformConfig
         };
+
         return activePlatformDetails;
+      } else {
+        if (platformConfig.isActive) {
+          const activePlatformDetails: ActivePlatformDetails = {
+            platform: platform,
+            platformConfig: platformConfig
+          };
+          return activePlatformDetails;
+        }
       }
     }
     return null;

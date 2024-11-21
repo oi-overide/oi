@@ -10,6 +10,7 @@ import Start from './commands/command.start';
 const program = new Command();
 
 program.version(getVersion());
+program.name('overide');
 
 const initCommand = new Initialize(program);
 const configCommand = new Config(program);

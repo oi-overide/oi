@@ -1,7 +1,6 @@
 import fs from 'fs';
 // import CommandHelper from '../helpers/help.commands';
 import LocalCache from './service.cache'; // Only for utility use, no functional dependency.
-import CodeHelper from '../utilis/util.service.dev'; // Only for utility use, no functional dependency.
 import { InsertionResponseInfo } from '../models/model.prompts';
 import { ReplacementBlock } from '../models/model.response';
 
@@ -16,6 +15,76 @@ abstract class DevService {
 }
 
 class DevServiceImpl extends DevService {
+  /**
+   * Extracts a code block from the content based on a specific format.
+   *
+   * @param content - The content to extract the code block from.
+   * @param verbose - If true, logs the extracted block.
+   * @returns The extracted code block.
+   * @throws Error if no code block is found.
+   */
+  extractCodeBlock(content: string, verbose: boolean = false): ReplacementBlock[] {
+    console.log(content);
+    const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
+    if (codeMatch && codeMatch[1]) {
+      if (verbose) {
+        console.log(`Extracted Code Block: ${codeMatch[1]}`);
+      }
+      try {
+        return JSON.parse(codeMatch[1]) as ReplacementBlock[];
+      } catch (err) {
+        throw new Error(`No valid JSON found in response ${(err as Error).message}`);
+      }
+    } else {
+      throw new Error('No code block found in the response');
+    }
+  }
+
+  /**
+   * Finds the index of the old block in the file content using a flexible matching approach.
+   *
+   * @param fileContentLines - The file content split into lines.
+   * @param oldBlock - The block of old code to find.
+   * @returns The starting index of the old block in the file content or -1 if not found.
+   */
+  findMatchingIndex(fileContentLines: string[], oldBlock: string[]): number {
+    const lineToFind = oldBlock[0] as string;
+    for (const line of fileContentLines) {
+      if (line.includes(lineToFind)) {
+        return fileContentLines.indexOf(line);
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Replaces the old block with the new block in the file content.
+   *
+   * @param fileContentLines - The content of the file as an array of lines.
+   * @param oldBlock - The block of old code to replace as an array of lines.
+   * @param newBlock - The block of new code to insert as an array of lines.
+   * @param matchIndex - The index of the old block in the file content.
+   * @returns The updated file content as an array of lines.
+   */
+  replaceOldCodeWithNew(
+    fileContentLines: string[],
+    oldBlock: string[],
+    newBlock: string[],
+    matchIndex: number
+  ): string[] {
+    if (matchIndex !== -1) {
+      // Remove the old block
+      fileContentLines.splice(matchIndex, oldBlock.length);
+
+      // Insert the new block
+      fileContentLines.splice(matchIndex, 0, ...newBlock);
+      return fileContentLines; // Return updated content
+    } else {
+      console.log('No significant match found for replacement.');
+      return fileContentLines; // No changes made
+    }
+  }
+
   /**
    * Removes an acceptance message from the file content if it exists.
    *
@@ -65,18 +134,17 @@ class DevServiceImpl extends DevService {
     try {
       let updatedContent = insertionResponse.fileContent;
 
+      // Remove the acceptance line
+      updatedContent.replace(insertionResponse.acceptanceLine, '');
       if (insertionResponse.oldCode) {
         updatedContent = insertionResponse.fileContent.replace(
-          '//-\n' + insertionResponse.newCode + '\n-//',
+          insertionResponse.newCode,
           insertionResponse.oldCode
         );
 
         console.log('Code block processed successfully');
       } else {
-        updatedContent = insertionResponse.fileContent.replace(
-          '//-\n' + insertionResponse.newCode + '\n-//',
-          ''
-        );
+        updatedContent = insertionResponse.fileContent.replace(insertionResponse.newCode, '');
         console.log('Code block not found');
       }
 
@@ -87,64 +155,26 @@ class DevServiceImpl extends DevService {
   }
 
   /**
-   * Inserts a new code block into the file at the position of the specified prompt.
-   *
-   * @param {string} filePath - The path to the file to be modified.
-   * @param {string} prompt - The prompt that identifies where to insert the new code.
-   * @param {string} newCode - The new code to be inserted.
-   */
-  insertCodeBlock(filePath: string, prompt: string, newCode: string): void {
-    try {
-      const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
-      // Just remove the prompt line.
-      const nopromptContent = fileContent.replace('//>', '').replace('<//', '').trim();
-      if (fileContent.includes(prompt)) {
-        const codeBlock = `
-                    //-
-                    ${newCode}
-                    //> Accept the changes (y/n): -//
-                `;
-        const updatedContent = nopromptContent.replace(prompt, codeBlock); // Replace prompt with new code block
-        fs.writeFileSync(filePath, updatedContent, 'utf-8'); // Write updated content
-        console.log('Code block inserted successfully');
-      } else {
-        console.log('Prompt not found');
-      }
-    } catch (error) {
-      console.log('Error inserting code block:', error);
-    }
-  }
-
-  /**
    * Applies code replacements to the specified file using the `CodeHelper` utility for fuzzy matching.
    *
    * @param {string} filePath - The path to the file.
-   * @param {Array} replacementBlocks - The blocks containing find and replace info.
+   * @param {Array} parsedBlocks - The blocks containing find and replace info.
    */
-  async applyCodeReplacement(filePath: string, replacementBlocks: string): Promise<void> {
+  async applyCodeReplacement(filePath: string, parsedBlocks: ReplacementBlock[]): Promise<void> {
     try {
       const fileContent = fs.readFileSync(filePath, 'utf-8'); // Read current file content
       let fileContentLines = fileContent.split('\n'); // Split content into lines
 
-      const parsedBlocks: ReplacementBlock[] = JSON.parse(replacementBlocks);
-
-      // Remove all lines with //> prompt markers
-      fileContentLines = fileContentLines.filter(
-        line => !line.includes('//>') || !line.includes('<//')
-      );
-
       for (const block of parsedBlocks) {
         const oldBlock = block.find; // Access the find property
         const newBlock = ['//-', ...block.replace, '//> Accept the changes (y/n): -//']; // Access the replace property
-
         LocalCache.addOldCode(block); // Add old block to cache
 
         // Find the index of the matching old block using CodeHelper
-        const matchIndex = CodeHelper.findMatchingIndex(fileContentLines, oldBlock);
-
+        const matchIndex = this.findMatchingIndex(fileContentLines, oldBlock);
         if (matchIndex !== -1) {
           // Replace the old block with the new block
-          fileContentLines = CodeHelper.replaceOldCodeWithNew(
+          fileContentLines = this.replaceOldCodeWithNew(
             fileContentLines,
             oldBlock,
             newBlock,
@@ -154,6 +184,11 @@ class DevServiceImpl extends DevService {
           console.warn(`No match found for block: ${oldBlock}`);
         }
       }
+
+      // Remove all lines with prompt markers after processing the entire thing.
+      fileContentLines = fileContentLines.filter(
+        line => !line.includes('//>') || !line.includes('<//')
+      );
 
       // Write updated content back to the file
       const updatedContent = fileContentLines.join('\n');

@@ -46,8 +46,11 @@ class Initialize extends OiCommand {
     `);
     console.log('Overide Project initialized!');
     console.log('\nNext steps:');
-    console.log("1. Use 'overide config -g' to define the API KEYs, BASE URLs and Platforms");
+    console.log(
+      "1. Use 'overide config global -p | --platform' to define the API KEYs, BASE URLs and Platforms"
+    );
     console.log("2. Run 'overide start' to start getting code suggestions.");
+    console.log("3. Run 'overide config -e' to enable embeddings based context.");
   }
 
   /**
@@ -109,6 +112,7 @@ class Initialize extends OiCommand {
     try {
       // Determine the output path for the configuration file
       const outputPath = path.join(process.cwd(), 'oi-config.json');
+      const dependencyFilePath = path.join(process.cwd(), 'oi-dependency.json');
       const ignoreFiles = options.ignore || [];
       const verbose = options.verbose || false;
       const projectName = options.projectName || 'default-project';
@@ -124,19 +128,18 @@ class Initialize extends OiCommand {
         console.log(`Project name: ${projectName}`);
       }
 
-      // Check if the project has already been initialized (config file exists)
-      if (fs.existsSync(outputPath)) {
-        console.log(`Already initialized overide in project..`);
-        process.exit(1);
-      }
-
       // Default ignore files, including config and dependency files, and common directories
       const defaultIgnoreFiles = [
         'oi-config.json',
         'oi-dependency.json',
         '/(^|[/\\])../',
         'node_modules',
-        '*.swp'
+        '*.swp',
+        '.git',
+        'node_modules',
+        '.vscode',
+        '.gitignore',
+        '.gitattributes'
       ];
 
       // Combine user-specified ignore files with default ignore files (removing duplicates)
@@ -145,6 +148,8 @@ class Initialize extends OiCommand {
       // Create the configuration object for the project
       const config: LocalConfig = {
         projectName: projectName,
+        embedding: false,
+        depgraph: true,
         ignore: combinedIgnoreFiles
       };
 
@@ -156,8 +161,15 @@ class Initialize extends OiCommand {
         fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
         // Write the configuration file to disk
-        fs.writeFileSync(outputPath, JSON.stringify(config, null, 2));
-        console.log(`Project initialized with config at ${outputPath}`);
+        if (!fs.existsSync(outputPath)) {
+          fs.writeFileSync(outputPath, JSON.stringify(config, null, 2));
+          console.log(`Project initialized with config at ${outputPath}`);
+        }
+
+        if (!fs.existsSync(dependencyFilePath)) {
+          fs.writeFileSync(dependencyFilePath, JSON.stringify([], null, 2));
+          console.log(`Project initialized with dependency file at ${dependencyFilePath}`);
+        }
 
         // Display ASCII art and instructions after initialization
         this.displayAsciiArt();
