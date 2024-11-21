@@ -134,7 +134,12 @@ class Initialize extends OiCommand {
         'oi-dependency.json',
         '/(^|[/\\])../',
         'node_modules',
-        '*.swp'
+        '*.swp',
+        '.git',
+        'node_modules',
+        '.vscode',
+        '.gitignore',
+        '.gitattributes'
       ];
 
       // Combine user-specified ignore files with default ignore files (removing duplicates)
