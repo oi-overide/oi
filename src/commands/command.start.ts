@@ -32,13 +32,17 @@ class Start extends OiCommand {
   configureCommand(): void {
     const startCommand = this.program
       .command('start')
+      .option('-p, --path <path>', 'Specify the path to the project directory')
       .description('Start watching files for prompt changes');
     this.addCommonOptions(startCommand); // Add common options such as --verbose
 
-    // Load the dependency graph from the oi-dependency.json file
-    this.dependencyGraph = configCommandUtil.loadDependencyGraph() as DependencyGraph[] | null;
-
-    startCommand.action((options: StartOption) => this.startWatch(options));
+    startCommand.action((options: StartOption) => {
+      // Load the dependency graph from the oi-dependency.json file
+      this.dependencyGraph = configCommandUtil.loadDependencyGraph(options.path) as
+        | DependencyGraph[]
+        | null;
+      this.startWatch(options);
+    });
   }
 
   /**
@@ -51,7 +55,7 @@ class Start extends OiCommand {
     console.log('Watching files for prompts...');
 
     try {
-      const { verbose } = options;
+      const { verbose, path } = options;
 
       if (!configCommandUtil.configExists()) {
         console.error('Error: oi-config.json file not found in the current directory.');
@@ -59,9 +63,13 @@ class Start extends OiCommand {
       }
 
       // get current config.
-      const config = (await configCommandUtil.readConfigFileData()) as LocalConfig;
+      const config = (await configCommandUtil.readConfigFileData(false, path)) as LocalConfig;
       const ignoredFiles = config.ignore || [];
-      const currentDir = process.cwd();
+      const currentDir = options.path ?? process.cwd();
+
+      if (verbose) {
+        console.log(`Watching files in directory: ${currentDir}`);
+      }
 
       this.watcher = chokidar.watch(currentDir, {
         persistent: true,
