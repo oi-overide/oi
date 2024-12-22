@@ -20,8 +20,8 @@ class ConfigCommandUtil {
   private static globalConfigFileName = 'oi-global-config.json';
   private static dependencyFileName = 'oi-dependency.json';
 
-  loadDependencyGraph(localPath?: string): DependencyGraph[] | null {
-    const dependencyFilePath = this.getDependencyFilePath(localPath);
+  loadDependencyGraph(): DependencyGraph[] | null {
+    const dependencyFilePath = this.getDependencyFilePath();
     if (fs.existsSync(dependencyFilePath)) {
       const dependencyData = fs.readFileSync(dependencyFilePath, 'utf-8');
       const dependencyGraph = JSON.parse(dependencyData);
@@ -33,8 +33,8 @@ class ConfigCommandUtil {
   /**
    * Get the file path for the dependency file.
    */
-  public getDependencyFilePath(localPath?: string): string {
-    return path.join(localPath ?? process.cwd(), ConfigCommandUtil.dependencyFileName);
+  public getDependencyFilePath(): string {
+    return path.join(process.cwd(), ConfigCommandUtil.dependencyFileName);
   }
 
   /**
@@ -52,8 +52,8 @@ class ConfigCommandUtil {
    * @param {boolean} global - True if checking the global config, false for local.
    * @returns {boolean} - True if the configuration file exists, false otherwise.
    */
-  public configExists(global: boolean = false, localPath?: string): boolean {
-    const configPath = this.getConfigFilePath(global, localPath);
+  public configExists(global: boolean = false): boolean {
+    const configPath = this.getConfigFilePath(global);
     return fs.existsSync(configPath);
   }
 
@@ -63,16 +63,10 @@ class ConfigCommandUtil {
    * @param {boolean} global - True if retrieving the global config file path.
    * @returns {string} - The full path to the configuration file.
    */
-  public getConfigFilePath(global: boolean = false, localPath?: string): string {
+  public getConfigFilePath(global: boolean = false): string {
     if (global) {
       return path.join(this.getGlobalConfigDirectory(), ConfigCommandUtil.globalConfigFileName);
     }
-
-    if (localPath) {
-      // Return the local config file path from the specified directory
-      return path.join(localPath, ConfigCommandUtil.configFileName);
-    }
-    // Return the local config file path
     return path.join(process.cwd(), ConfigCommandUtil.configFileName);
   }
 
@@ -116,11 +110,8 @@ class ConfigCommandUtil {
    * @param {boolean} global - True if reading global config, false for local.
    * @returns {LocalConfig | GlobalConfig | null} - The configuration object or null if not found.
    */
-  public readConfigFileData(
-    global: boolean = false,
-    localPath?: string
-  ): LocalConfig | GlobalConfig | null {
-    const configPath = this.getConfigFilePath(global, localPath);
+  public readConfigFileData(global: boolean = false): LocalConfig | GlobalConfig | null {
+    const configPath = this.getConfigFilePath(global);
 
     if (!this.configExists(global)) {
       console.error(`Configuration file not found at ${configPath}`);
@@ -145,12 +136,8 @@ class ConfigCommandUtil {
    * @param {boolean} global - True if writing to global config, false for local.
    * @param {LocalConfig | GlobalConfig} data - The configuration data to write.
    */
-  public writeConfigFileData(
-    global: boolean = false,
-    data: LocalConfig | GlobalConfig,
-    localPath?: string
-  ): void {
-    const configPath = this.getConfigFilePath(global, localPath);
+  public writeConfigFileData(global: boolean = false, data: LocalConfig | GlobalConfig): void {
+    const configPath = this.getConfigFilePath(global);
 
     // Ensure the directory exists
     this.makeRequiredDirectories();
