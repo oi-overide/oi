@@ -1,5 +1,4 @@
 export interface InitOption {
-  path?: string;
   ignore?: string[];
   verbose?: boolean;
   projectName?: string;
@@ -7,7 +6,6 @@ export interface InitOption {
 
 export interface StartOption {
   verbose?: boolean;
-  path?: string;
 }
 
 export interface ConfigOption {
