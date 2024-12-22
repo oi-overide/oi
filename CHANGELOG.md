@@ -1,5 +1,11 @@
 # overide
 
+## 0.2.1
+
+### Patch Changes
+
+- 275c7d7: Added support for `--path` option in `init` and `start` commands. This allows user to initialise and start overide in any target path on a system.
+
 ## 0.2.0
 
 ### Minor Changes
