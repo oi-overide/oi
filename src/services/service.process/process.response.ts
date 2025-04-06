@@ -20,6 +20,13 @@ class ProcessResponse {
     response: string,
     verbose: boolean = false
   ): Promise<ReplacementBlock[] | null> {
+    // IN case of OpenAi we receive a proper json format.
+    try {
+      return JSON.parse(response)['changes'] as ReplacementBlock[];
+    } catch (error) {
+      console.error(`Error in formatting response: ${(error as Error).message}`);
+    }
+
     try {
       const replacementObject: ReplacementBlock[] = serviceDev.extractCodeBlock(response, verbose);
       for (const bloc of replacementObject) {

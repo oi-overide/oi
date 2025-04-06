@@ -98,10 +98,7 @@ class NetworkServiceImpl extends NetworkService {
     // Handle requests based on the selected platform
     switch (platform) {
       case 'openai':
-        return this.handleOpenAIRequest(activeServiceDetails, {
-          ...metadata,
-          messages: metadata.messages as OpenAIChatCompletionMessageParam[]
-        });
+        return this.handleOpenAIRequest(activeServiceDetails, metadata as OpenAiRequestObject);
       case 'deepseek':
         return this.handleDeepSeekRequest(activeServiceDetails, {
           ...metadata,
@@ -141,6 +138,7 @@ class NetworkServiceImpl extends NetworkService {
         ...metadata,
         stream: false
       });
+      console.log(completions.choices[0]);
       return (completions.choices[0] as ChatCompletion.Choice).message.content || ''; // Return the content string from OpenAI completion
     } catch (error) {
       if (error instanceof Error) {

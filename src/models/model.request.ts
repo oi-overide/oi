@@ -1,3 +1,4 @@
+import { ResponseFormatJSONSchema } from 'openai/resources';
 import { ChatCompletionMessageParam as OpenAIChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 import { ActivePlatformDetails } from './model.config';
@@ -16,6 +17,7 @@ export interface OpenAiRequestObject {
   stream?: boolean;
   presence_penalty?: number;
   frequency_penalty?: number;
+  response_format: ResponseFormatJSONSchema;
 }
 
 export interface DeepSeekRequestObject {
