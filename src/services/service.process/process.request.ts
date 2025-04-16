@@ -81,14 +81,45 @@ class ProcessRequest {
     }
 
     const metadata: OpenAiRequestObject = {
-      model: 'gpt-4o', // Specify the model to use
+      model: 'gpt-4o',
       messages: messages,
-      temperature: 0.5, // Adjust temperature for creativity (lower = more deterministic)
-      max_tokens: 2500, // Max tokens for the response
-      n: 1, // Number of completions to generate
-      stream: false, // Whether to stream results
-      presence_penalty: 0, // Adjusts frequency of introducing new ideas
-      frequency_penalty: 0 // Adjusts repetition
+      temperature: 0.5,
+      max_tokens: 2500,
+      n: 1,
+      stream: false,
+      presence_penalty: 0,
+      frequency_penalty: 0,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'changes',
+          schema: {
+            type: 'object',
+            properties: {
+              changes: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    find: {
+                      type: 'array',
+                      items: { type: 'string' }
+                    },
+                    replace: {
+                      type: 'array',
+                      items: { type: 'string' }
+                    }
+                  },
+                  required: ['find', 'replace'],
+                  additionalProperties: false
+                }
+              }
+            },
+            required: ['changes'],
+            additionalProperties: false
+          }
+        }
+      }
     };
 
     // Construct the request body for OpenAI API
