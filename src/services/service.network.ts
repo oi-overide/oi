@@ -1,18 +1,7 @@
 import OpenAI from 'openai';
-import Groq from 'groq-sdk';
-
-import {
-  DeepSeekRequestObject,
-  GeneralRequestObject,
-  GroqRequestObject,
-  OpenAiRequestObject
-} from '../models/model.request';
-import {
-  ChatCompletion,
-  ChatCompletionMessageParam as OpenAIChatCompletionMessageParam
-} from 'openai/resources/chat/completions';
+import { GeneralRequestObject, OpenAiRequestObject } from '../models/model.request';
+import { ChatCompletion } from 'openai/resources/chat/completions';
 import { ActivePlatformDetails } from '../models/model.config';
-import { ChatCompletionMessageParam as GroqChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
 
 import * as dotenv from 'dotenv';
 
@@ -30,22 +19,11 @@ abstract class NetworkService {
     activeServiceDetails: ActivePlatformDetails,
     metadata: OpenAiRequestObject
   ): Promise<string>;
-
-  abstract handleDeepSeekRequest(
-    activeServiceDetails: ActivePlatformDetails,
-    metadata: DeepSeekRequestObject
-  ): Promise<string>;
-
-  abstract handleGroqRequest(
-    activeServiceDetails: ActivePlatformDetails,
-    metadata: GroqRequestObject
-  ): Promise<string>;
 }
 
 /**
- * The `Network` class is responsible for making API requests to different
- * services (OpenAI, DeepSeek, and Groq) to generate code based on the
- * provided request data.
+ * The `Network` class is responsible for making API requests to OpenAI
+ * to generate code based on the provided request data.
  */
 class NetworkServiceImpl extends NetworkService {
   /**
@@ -78,7 +56,7 @@ class NetworkServiceImpl extends NetworkService {
   }
 
   /**
-   * Generates code based on the active service (OpenAI, DeepSeek, or Groq).
+   * Generates code based on OpenAI service.
    *
    * @param {object} requestData - The request data containing service details and metadata.
    * @returns {Promise<string>} - The generated code response.
@@ -96,22 +74,10 @@ class NetworkServiceImpl extends NetworkService {
     const platform = activeServiceDetails.platform;
 
     // Handle requests based on the selected platform
-    switch (platform) {
-      case 'openai':
-        return this.handleOpenAIRequest(activeServiceDetails, metadata as OpenAiRequestObject);
-      case 'deepseek':
-        return this.handleDeepSeekRequest(activeServiceDetails, {
-          ...metadata,
-          messages: metadata.messages as OpenAIChatCompletionMessageParam[]
-        });
-      case 'groq':
-        return this.handleGroqRequest(activeServiceDetails, {
-          ...metadata,
-          messages: metadata.messages as GroqChatCompletionMessageParam[]
-        });
-      default:
-        throw new Error('No valid model or platform selected.');
+    if (platform === 'openai') {
+      return this.handleOpenAIRequest(activeServiceDetails, metadata as OpenAiRequestObject);
     }
+    throw new Error('No valid model or platform selected.');
   }
 
   /**
@@ -144,74 +110,6 @@ class NetworkServiceImpl extends NetworkService {
       if (error instanceof Error) {
         console.error(`Error generating code with OpenAI: ${error.message}`);
         throw error; // Rethrow error for handling at a higher level
-      }
-      throw error;
-    }
-  }
-
-  /**
-   * Handles requests to the DeepSeek service.
-   *
-   * @param {object} activeServiceDetails - The details of the active DeepSeek service.
-   * @param {object} metadata - The metadata for the API request.
-   * @returns {Promise<string>} - The generated code response from DeepSeek.
-   * @throws Will throw an error if the API key or base URL is missing.
-   */
-  async handleDeepSeekRequest(
-    activeServiceDetails: ActivePlatformDetails,
-    metadata: DeepSeekRequestObject
-  ): Promise<string> {
-    const { apiKey, baseUrl } = activeServiceDetails.platformConfig;
-
-    if (!apiKey || !baseUrl) {
-      throw new Error('API key or BaseUrl missing for DeepSeek.');
-    }
-
-    try {
-      const openai = new OpenAI.OpenAI({ apiKey, baseURL: baseUrl });
-      const completions = await openai.chat.completions.create({
-        ...metadata,
-        stream: false
-      });
-      return (completions.choices[0] as ChatCompletion.Choice).message.content || ''; // Return the content string from DeepSeek completion
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error generating code with DeepSeek: ${error.message}`);
-        throw error; // Rethrow error for handling at a higher level
-      }
-      throw error;
-    }
-  }
-
-  /**
-   * Handles requests to the Groq service.
-   *
-   * @param {object} activeServiceDetails - The details of the active Groq service.
-   * @param {object} metadata - The metadata for the API request.
-   * @returns {Promise<string>} - The generated code response from Groq.
-   * @throws Will throw an error if the API key is missing.
-   */
-  async handleGroqRequest(
-    activeServiceDetails: ActivePlatformDetails,
-    metadata: GroqRequestObject
-  ): Promise<string> {
-    const { apiKey } = activeServiceDetails.platformConfig;
-
-    if (!apiKey) {
-      throw new Error('API key missing for Groq.');
-    }
-
-    try {
-      const groq = new Groq({ apiKey });
-      const completions = await groq.chat.completions.create({
-        ...metadata,
-        stream: false
-      });
-      return (completions.choices[0] as ChatCompletion.Choice).message.content || ''; // Return the content string from Groq completion
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error generating code with Groq: ${error.message}`);
-        throw error;
       }
       throw error;
     }
