@@ -17,12 +17,11 @@ import utilParser from '../utilis/util.parser';
 
 /**
  * The `Config` class is responsible for handling both global and local configurations
- * for the `overide` CLI application. It manages configuration settings for different platforms
- * (like OpenAI and DeepSeek) and allows users to select an active platform, update config
- * details, and manage ignored files and project-specific settings.
+ * for the `overide` CLI application. It manages configuration settings for OpenAI
+ * and allows users to update config details, and manage ignored files and project-specific settings.
  *
  * Responsibilities:
- * - Prompt the user for platform-specific configuration details.
+ * - Prompt the user for OpenAI configuration details.
  * - Manage global configuration, including setting the active platform and updating platform settings.
  * - Handle local configuration updates, including project name and ignored files.
  * - Ensure that required directories and configuration files exist.
@@ -37,7 +36,7 @@ class Config extends OiCommand {
     // Define supported platforms and their respective configuration prompts
     this.platforms = supportedPlatforms;
 
-    // Configuration questions for each platform (OpenAI, DeepSeek, Groq)
+    // Configuration questions for OpenAI
     this.platformQuestions = platformQuestions;
   }
 
@@ -109,18 +108,18 @@ class Config extends OiCommand {
   }
 
   async handleEmbeddingEnable(): Promise<void> {
-    // Check if OpenAi platform details are available.
+    // Check if OpenAI platform details are available.
     const activePlatform = CommandHelper.getActiveServiceDetails(true);
     if (!activePlatform) {
       console.warn(
-        'Overide supports embeddings over OpenAI\nEnabling this will incure additional cost'
+        'Overide supports embeddings over OpenAI\nEnabling this will incur additional cost'
       );
-      // Ask for open ai platform details.
+      // Ask for OpenAI platform details.
       const answers = await this.promptPlatformConfig('openai');
 
       // Check if a global config file already exists, if not initialize an empty config
       const existingConfig = CommandHelper.configExists(true)
-        ? await CommandHelper.readConfigFileData(true)
+        ? CommandHelper.readConfigFileData(true)
         : {};
 
       // Merge the new platform configuration with the existing config
@@ -128,12 +127,12 @@ class Config extends OiCommand {
         ...existingConfig,
         ['openai']: {
           ...answers,
-          isActive: Object.keys(existingConfig as GlobalConfig).length === 0 ? true : false // Set isActive for first platform
+          isActive: true // OpenAI is always active for embeddings
         }
       };
 
       // Save the updated global configuration
-      await CommandHelper.writeConfigFileData(true, updatedConfig);
+      CommandHelper.writeConfigFileData(true, updatedConfig);
     }
 
     // Set the embeddings flag to true.
@@ -179,7 +178,7 @@ class Config extends OiCommand {
     }
 
     // Read the existing global configuration file
-    const existingConfig = (await CommandHelper.readConfigFileData(true)) as GlobalConfig;
+    const existingConfig = CommandHelper.readConfigFileData(true) as GlobalConfig;
 
     // Get a list of available platforms from the existing configuration
     const activePlatforms = Object.keys(existingConfig);
@@ -209,7 +208,7 @@ class Config extends OiCommand {
     });
 
     // Save the updated configuration back to the global config file
-    await CommandHelper.writeConfigFileData(true, updatedConfig);
+    CommandHelper.writeConfigFileData(true, updatedConfig);
     console.log(`Successfully updated the active platform to: ${selectedPlatform}`);
   }
 
@@ -246,7 +245,7 @@ class Config extends OiCommand {
 
     // Check if a global config file already exists, if not initialize an empty config
     const existingConfig = CommandHelper.configExists(true)
-      ? await CommandHelper.readConfigFileData(true)
+      ? CommandHelper.readConfigFileData(true)
       : {};
 
     // Merge the new platform configuration with the existing config
@@ -259,7 +258,7 @@ class Config extends OiCommand {
     };
 
     // Save the updated global configuration
-    await CommandHelper.writeConfigFileData(true, updatedConfig);
+    CommandHelper.writeConfigFileData(true, updatedConfig);
 
     console.log('Run `overide config global -a | --set-active` to select active platform');
   }
@@ -285,7 +284,7 @@ class Config extends OiCommand {
     }
 
     // Read the local configuration
-    const config: LocalConfig = (await CommandHelper.readConfigFileData()) as LocalConfig;
+    const config: LocalConfig = CommandHelper.readConfigFileData() as LocalConfig;
 
     // Update the list of ignored files if provided in options
     if (options.ignore) {
@@ -315,7 +314,7 @@ class Config extends OiCommand {
     }
 
     // Save the updated local configuration
-    await CommandHelper.writeConfigFileData(false, config);
+    CommandHelper.writeConfigFileData(false, config);
     console.log('Local config updated successfully.');
   }
 }

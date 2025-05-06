@@ -20,11 +20,10 @@
 - [Community](#community)
 - [License](#license)
 
-
 ## Key Features
 
 - **IDE Agnostic**: Works with any IDE or text editor
-- **AI-Powered Code Generation**: Uses OpenAI, DeepSeek, or Groq APIs
+- **AI-Powered Code Generation**: Uses OpenAI API
 - **Live File Monitoring**: Continuously monitors files for code generation prompts
 - **Simple Prompting Syntax**: Uses intuitive `//> <//` patterns for code generation
 
@@ -44,16 +43,10 @@ For more installation options, see our [installation guide](https://github.com/O
 
 ### Adding API Key
 
-Configure your AI platform credentials:
+Configure your OpenAI credentials:
 
 ```bash
 overide config --global
-```
-
-Select an active platform if you've configured multiple:
-
-```bash
-overide config --select-active
 ```
 
 ### Configure a Project
@@ -85,7 +78,7 @@ Overide will generate and insert code:
 ```javascript
 //- 'Hello, World!' Function
 function helloWorld() {
-    console.log("Hello, World!");
+	console.log("Hello, World!");
 }
 //> Accept the changes (y/n): -//
 ```
@@ -96,8 +89,8 @@ Configure Overide using `oi-config.json`:
 
 ```json
 {
-  "name": "project name",
-  "ignore": ["node_modules", "*.test.js"]
+	"name": "project name",
+	"ignore": ["node_modules", "*.test.js"]
 }
 ```
 
