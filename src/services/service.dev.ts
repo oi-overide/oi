@@ -16,31 +16,6 @@ abstract class DevService {
 
 class DevServiceImpl extends DevService {
   /**
-   * Extracts a code block from the content based on a specific format.
-   *
-   * @param content - The content to extract the code block from.
-   * @param verbose - If true, logs the extracted block.
-   * @returns The extracted code block.
-   * @throws Error if no code block is found.
-   */
-  extractCodeBlock(content: string, verbose: boolean = false): ReplacementBlock[] {
-    console.log(content);
-    const codeMatch = content.match(/```[\s\S]*?\n([\s\S]*?)\n```/);
-    if (codeMatch && codeMatch[1]) {
-      if (verbose) {
-        console.log(`Extracted Code Block: ${codeMatch[1]}`);
-      }
-      try {
-        return JSON.parse(codeMatch[1]) as ReplacementBlock[];
-      } catch (err) {
-        throw new Error(`No valid JSON found in response ${(err as Error).message}`);
-      }
-    } else {
-      throw new Error('No code block found in the response');
-    }
-  }
-
-  /**
    * Finds the index of the old block in the file content using a flexible matching approach.
    *
    * @param fileContentLines - The file content split into lines.

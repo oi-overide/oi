@@ -8,11 +8,6 @@ import {
   SystemPromptInfo,
   SystemPromptPlatformInfo
 } from '../../models/model.prompts';
-import serviceParser from '../service.parser';
-import { DependencyGraph } from '../../models/model.depgraph';
-import serviceDependency from '../service.embedding';
-
-import CommandHelper from '../../utilis/util.command.config';
 
 abstract class SystemPromptService {
   abstract getOpenAiSystemMessage(
@@ -52,10 +47,7 @@ class SystemPromptServiceImpl extends SystemPromptService {
 
       // In all the cases load the system prompt
       const systemPrompt = (this.basePrompt[platform] as SystemPromptPlatformInfo).systemMessage;
-      const codeContext = this.getCodeContext(
-        insertionRequest.filePath,
-        insertionRequest.promptEmbedding ?? []
-      );
+      const codeContext = this.getCodeContext(insertionRequest.filePath);
       const instructions = this.getInstructions(platform);
 
       let format = '';
@@ -93,44 +85,10 @@ class SystemPromptServiceImpl extends SystemPromptService {
    *                      relevant to the user prompt.
    * @returns A formatted string that includes the first element of contextArray and the user prompt.
    */
-  private getCodeContext(filePath: string, promptEmbd: number[]): string {
-    const contextGraph: DependencyGraph[] = serviceParser.makeContextFromDepGraph(filePath);
+  private getCodeContext(filePath: string): string {
     const contextInformation: string[] = [];
-
     const currentFile = fs.readFileSync(filePath, 'utf-8');
     contextInformation.push(currentFile);
-
-    const isEmbeddingEnabled = CommandHelper.isEmbeddingEnabled();
-
-    for (const node of contextGraph) {
-      // Add file line
-      contextInformation.push('File : ');
-      contextInformation.push(node.path);
-
-      // If there is no functions in the file or Embedding is not enabled.
-      // It doesn't make sense to just send random function.. rather should
-      // send the file itself.
-      if (node.functions.length === 0 || !isEmbeddingEnabled) {
-        const entireCode = fs.readFileSync(node.path, 'utf-8');
-        contextInformation.push(entireCode);
-        continue;
-      }
-
-      // Add class and functions
-      node.functions.forEach(func => {
-        if (!contextInformation.includes(func.class)) {
-          contextInformation.push(func.class);
-        }
-
-        if (isEmbeddingEnabled) {
-          const similarity = serviceDependency.cosineSimilarity(promptEmbd, func.embeddings ?? []);
-          if (similarity >= 0.5) {
-            contextInformation.push(func.code);
-          }
-        }
-      });
-    }
-
     return contextInformation.join('\n');
   }
 

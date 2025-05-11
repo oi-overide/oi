@@ -1,7 +1,5 @@
 import cacheService from '../../services/service.cache';
 import { InsertionRequestInfo, InsertionResponseInfo } from '../../models/model.prompts';
-import serviceEmbedding from '../service.embedding';
-import CommandHelper from '../../utilis/util.command.config';
 
 abstract class UserPromptService {
   // Regular expressions to match specific prompt types
@@ -101,9 +99,6 @@ class UserPromptServiceImpl extends UserPromptService {
   ): Promise<InsertionRequestInfo[] | undefined> {
     try {
       const insertionRequests: InsertionRequestInfo[] = [];
-
-      const isEmbedding = CommandHelper.isEmbeddingEnabled();
-
       if (verbose) {
         console.log(`Searching for prompts in ${filePath}`);
       }
@@ -116,12 +111,6 @@ class UserPromptServiceImpl extends UserPromptService {
         if (match[1]) {
           const prompt = match[1].trim();
           let promptEmbedding: number[] = [];
-
-          if (isEmbedding) {
-            // Get embedding for current prompt.
-            promptEmbedding = await serviceEmbedding.getEmbeddingForPrompt(prompt, fileContent);
-            console.log(promptEmbedding.length);
-          }
 
           // Add the insertion request to the list
           insertionRequests.push({

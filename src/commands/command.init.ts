@@ -48,10 +48,9 @@ class Initialize extends OiCommand {
     console.log('Overide Project initialized!');
     console.log('\nNext steps:');
     console.log(
-      "1. Use 'overide config global -p | --platform' to define the API KEYs, BASE URLs and Platforms"
+      "1. Use 'overide config global -p | --platform' to define the API KEYs, & BASE URLs"
     );
     console.log("2. Run 'overide start' to start getting code suggestions.");
-    console.log("3. Run 'overide config -e' to enable embeddings based context.");
   }
 
   /**
@@ -72,7 +71,6 @@ class Initialize extends OiCommand {
         outputPath = path.join(process.cwd(), 'oi-config.json');
       }
 
-      const dependencyFilePath = path.join(options.path ?? process.cwd(), 'oi-dependency.json');
       const ignoreFiles = options.ignore || [];
       const verbose = options.verbose || false;
       const projectName = options.projectName || 'default-project';
@@ -89,7 +87,6 @@ class Initialize extends OiCommand {
       // Default ignore files, including config and dependency files, and common directories
       const defaultIgnoreFiles = [
         'oi-config.json',
-        'oi-dependency.json',
         '/(^|[/\\])../',
         'node_modules',
         '*.swp',
@@ -122,11 +119,6 @@ class Initialize extends OiCommand {
         if (!fs.existsSync(outputPath)) {
           fs.writeFileSync(outputPath, JSON.stringify(config, null, 2));
           console.log(`Project initialized with config at ${outputPath}`);
-        }
-
-        if (!fs.existsSync(dependencyFilePath)) {
-          fs.writeFileSync(dependencyFilePath, JSON.stringify([], null, 2));
-          console.log(`Project initialized with dependency file at ${dependencyFilePath}`);
         }
 
         // Display ASCII art and instructions after initialization
