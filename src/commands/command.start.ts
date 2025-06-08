@@ -5,9 +5,6 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
-import { DependencyGraph } from '../models/model.depgraph';
-import serviceParser from '../services/service.parser';
-import utilParser from '../utilis/util.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -22,7 +19,6 @@ import utilParser from '../utilis/util.parser';
  */
 class Start extends OiCommand {
   // Stores the contents of all files in the project
-  private dependencyGraph: DependencyGraph[] | null = [];
   private watcher: FSWatcher | null = null;
 
   /**
@@ -36,13 +32,7 @@ class Start extends OiCommand {
       .description('Start watching files for prompt changes');
     this.addCommonOptions(startCommand); // Add common options such as --verbose
 
-    startCommand.action((options: StartOption) => {
-      // Load the dependency graph from the oi-dependency.json file
-      this.dependencyGraph = configCommandUtil.loadDependencyGraph(options.path) as
-        | DependencyGraph[]
-        | null;
-      this.startWatch(options);
-    });
+    startCommand.action((options: StartOption) => this.startWatch(options));
   }
 
   /**
@@ -104,16 +94,6 @@ class Start extends OiCommand {
   ): Promise<void> {
     if (verbose) {
       console.log(`File ${filePath} has been changed`);
-    }
-
-    // Set the dep graph to false if project language is not supported.
-    const language = utilParser.identifyLanguageByExtension(filePath);
-    if (language) {
-      utilParser.loadParserForLanguage(language); // Check if the dependency graph is empty
-      await serviceParser.makeProjectDepGraphInc(filePath, ignoreFiles, verbose);
-      if (verbose) {
-        console.log('Dependency graph updated...');
-      }
     }
 
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);

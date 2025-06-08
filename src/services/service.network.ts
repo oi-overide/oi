@@ -8,11 +8,6 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 abstract class NetworkService {
-  abstract getCodeEmbedding(
-    codeSnippet: string,
-    activeServiceDetails: ActivePlatformDetails
-  ): Promise<number[]>;
-
   abstract doRequest(requestData: GeneralRequestObject): Promise<string>;
 
   abstract handleOpenAIRequest(
@@ -26,35 +21,6 @@ abstract class NetworkService {
  * to generate code based on the provided request data.
  */
 class NetworkServiceImpl extends NetworkService {
-  /**
-   *
-   * @param codeSnippet - The string code from the dependency graph.
-   * @param activeServiceDetails - The API key and other metadata.
-   * @returns {Promise<number[]>} The generated embedding.
-   */
-  async getCodeEmbedding(
-    codeSnippet: string,
-    activeServiceDetails: ActivePlatformDetails
-  ): Promise<number[]> {
-    try {
-      const { apiKey, orgId } = activeServiceDetails.platformConfig;
-      const openai = new OpenAI.OpenAI({ apiKey, organization: orgId });
-
-      // Call the OpenAI API to get embeddings
-      const response = await openai.embeddings.create({
-        model: 'text-embedding-3-small', // Choose the embedding model
-        input: codeSnippet // The input text (code snippet)
-      });
-
-      // Extract the embedding from the response
-      const embedding = (response.data[0] as OpenAI.Embedding).embedding; // This is an array of numbers
-      return embedding;
-    } catch (error) {
-      console.error('Error fetching embedding:', error);
-      throw error;
-    }
-  }
-
   /**
    * Generates code based on OpenAI service.
    *

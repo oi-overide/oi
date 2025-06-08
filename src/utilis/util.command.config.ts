@@ -7,7 +7,6 @@ import {
   GlobalPlatformInfo,
   LocalConfig
 } from '../models/model.config';
-import { DependencyGraph } from '../models/model.depgraph';
 
 /**
  * The `DirectoryHelper` class is responsible for managing configuration files and directories
@@ -18,33 +17,6 @@ class ConfigCommandUtil {
   // File names for configuration
   private static configFileName = 'oi-config.json';
   private static globalConfigFileName = 'oi-global-config.json';
-  private static dependencyFileName = 'oi-dependency.json';
-
-  loadDependencyGraph(localPath?: string): DependencyGraph[] | null {
-    const dependencyFilePath = this.getDependencyFilePath(localPath);
-    if (fs.existsSync(dependencyFilePath)) {
-      const dependencyData = fs.readFileSync(dependencyFilePath, 'utf-8');
-      const dependencyGraph = JSON.parse(dependencyData);
-      return dependencyGraph;
-    }
-    return null;
-  }
-
-  /**
-   * Get the file path for the dependency file.
-   */
-  public getDependencyFilePath(localPath?: string): string {
-    return path.join(localPath ?? process.cwd(), ConfigCommandUtil.dependencyFileName);
-  }
-
-  /**
-   * Checks if the dependency file exists.
-   *
-   * @returns {boolean} - True if the dependency file exists, false otherwise.
-   */
-  public dependencyFileExists(): boolean {
-    return fs.existsSync(this.getDependencyFilePath());
-  }
 
   /**
    * Checks if the specified configuration file (local or global) exists.
@@ -163,11 +135,6 @@ class ConfigCommandUtil {
         console.error(`Error writing configuration file: ${error.message}`);
       }
     }
-  }
-
-  isEmbeddingEnabled(): boolean {
-    const localConfig = this.readConfigFileData() as LocalConfig;
-    return localConfig.embedding;
   }
 
   /**
