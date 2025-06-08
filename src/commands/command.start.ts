@@ -5,9 +5,6 @@ import startCommandHandlerImpl from '../handlers/handler.start';
 
 import { StartOption } from '../models/model.options';
 import { LocalConfig } from '../models/model.config';
-import { DependencyGraph } from '../models/model.depgraph';
-import serviceParser from '../services/service.parser';
-import utilParser from '../utilis/util.parser';
 
 /**
  * The `Start` class extends `OiCommand` and is responsible for initiating
@@ -22,7 +19,6 @@ import utilParser from '../utilis/util.parser';
  */
 class Start extends OiCommand {
   // Stores the contents of all files in the project
-  private dependencyGraph: DependencyGraph[] | null = [];
   private watcher: FSWatcher | null = null;
 
   /**
@@ -32,11 +28,9 @@ class Start extends OiCommand {
   configureCommand(): void {
     const startCommand = this.program
       .command('start')
+      .option('-p, --path <path>', 'Specify the path to the project directory')
       .description('Start watching files for prompt changes');
     this.addCommonOptions(startCommand); // Add common options such as --verbose
-
-    // Load the dependency graph from the oi-dependency.json file
-    this.dependencyGraph = configCommandUtil.loadDependencyGraph() as DependencyGraph[] | null;
 
     startCommand.action((options: StartOption) => this.startWatch(options));
   }
@@ -51,7 +45,7 @@ class Start extends OiCommand {
     console.log('Watching files for prompts...');
 
     try {
-      const { verbose } = options;
+      const { verbose, path } = options;
 
       if (!configCommandUtil.configExists()) {
         console.error('Error: oi-config.json file not found in the current directory.');
@@ -59,9 +53,13 @@ class Start extends OiCommand {
       }
 
       // get current config.
-      const config = (await configCommandUtil.readConfigFileData()) as LocalConfig;
+      const config = (await configCommandUtil.readConfigFileData(false, path)) as LocalConfig;
       const ignoredFiles = config.ignore || [];
-      const currentDir = process.cwd();
+      const currentDir = options.path ?? process.cwd();
+
+      if (verbose) {
+        console.log(`Watching files in directory: ${currentDir}`);
+      }
 
       this.watcher = chokidar.watch(currentDir, {
         persistent: true,
@@ -96,16 +94,6 @@ class Start extends OiCommand {
   ): Promise<void> {
     if (verbose) {
       console.log(`File ${filePath} has been changed`);
-    }
-
-    // Set the dep graph to false if project language is not supported.
-    const language = utilParser.identifyLanguageByExtension(filePath);
-    if (language) {
-      utilParser.loadParserForLanguage(language); // Check if the dependency graph is empty
-      await serviceParser.makeProjectDepGraphInc(filePath, ignoreFiles, verbose);
-      if (verbose) {
-        console.log('Dependency graph updated...');
-      }
     }
 
     await startCommandHandlerImpl.findPromptInFile(filePath, verbose);
