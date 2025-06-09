@@ -1,6 +1,6 @@
 {
   "name": "overide",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "This is a CLI based Code Generation Tool.",
   "type": "commonjs",
   "main": "dist/index.js",

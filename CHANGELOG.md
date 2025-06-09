@@ -1,5 +1,20 @@
 # overide
 
+## 1.0.0
+
+### Major Changes
+
+- 8f7ee3b: This change removes all other platform support besides OpenAI, as well as some code refactoring.
+
+### Minor Changes
+
+- 924d737: Now we are able to use response_format in case of OpenAi api
+- 448b40e: Rollback: Embeddings and Dependency graph support.
+
+### Patch Changes
+
+- f3e5e61: Added support for `--path` option in `init` and `start` commands. This allows user to initialise and start overide in any target path on a system.
+
 ## 0.2.0
 
 ### Minor Changes
